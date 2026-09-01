@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  STAFF
+  MANAGER
+  SUPER_ADMIN
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  ACCEPTED
+  REJECTED
+  READY
+  DELIVERED
+}
+
+enum FulfillmentType {
+  PICKUP
+  DELIVERY
+}
+
+enum DiscountType {
+  PERCENT
+  FLAT
+}
+
+model Area {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  stores Store[]
+}
+
+model Store {
+  id       String  @id @default(cuid())
+  name     String
+  areaId   String
+  area     Area    @relation(fields: [areaId], references: [id])
+  isActive Boolean @default(true)
+  users    User[]
+  items    Item[]
+  orders   Order[]
+
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id           String  @id @default(cuid())
+  name         String
+  email        String  @unique
+  phone        String?
+  passwordHash String
+  role         Role    @default(CUSTOMER)
+  storeId      String?
+  store        Store?  @relation(fields: [storeId], references: [id])
+
+  orders Order[] @relation("CustomerOrders")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Item {
+  id          String  @id @default(cuid())
+  storeId     String
+  store       Store   @relation(fields: [storeId], references: [id])
+  name        String
+  description String?
+  price       Decimal @db.Decimal(10, 2)
+  imageUrl    String?
+  isAvailable Boolean @default(true)
+  category    String?
+
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Coupon {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  discountType  DiscountType
+  discountValue Decimal      @db.Decimal(10, 2)
+  minOrderValue Decimal?     @db.Decimal(10, 2)
+  maxUses       Int?
+  usedCount     Int          @default(0)
+  expiresAt     DateTime?
+  isActive      Boolean      @default(true)
+
+  orders Order[]
+
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id              String          @id @default(cuid())
+  customerId      String
+  customer        User            @relation("CustomerOrders", fields: [customerId], references: [id])
+  storeId         String
+  store           Store           @relation(fields: [storeId], references: [id])
+  status          OrderStatus     @default(PENDING_PAYMENT)
+  fulfillment     FulfillmentType
+  deliveryAddress String?
+  couponId        String?
+  coupon          Coupon?         @relation(fields: [couponId], references: [id])
+  subtotal        Decimal         @db.Decimal(10, 2)
+  discount        Decimal         @default(0) @db.Decimal(10, 2)
+  total           Decimal         @db.Decimal(10, 2)
+  notes           String?
+
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  itemId    String
+  item      Item    @relation(fields: [itemId], references: [id])
+  itemName  String  // snapshot of name at order time
+  itemPrice Decimal @db.Decimal(10, 2)  // snapshot of price at order time
+  quantity  Int
+}
