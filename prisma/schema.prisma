@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  CUSTOMER
+  STAFF
+  MANAGER
+  SUPER_ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum FulfillmentType {
+  PICKUP
+  DELIVERY
+}
+
+enum DiscountType {
+  PERCENT
+  FLAT
+}
+
+model Area {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  stores    Store[]
+  createdAt DateTime @default(now())
+}
+
+model Store {
+  id         String     @id @default(cuid())
+  name       String
+  areaId     String
+  area       Area       @relation(fields: [areaId], references: [id])
+  address    String?
+  phone      String?
+  isActive   Boolean    @default(true)
+  users      User[]
+  categories Category[]
+  items      Item[]
+  orders     Order[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([areaId])
+}
+
+model User {
+  id              String         @id @default(cuid())
+  name            String
+  email           String?        @unique
+  phone           String?        @unique
+  passwordHash    String?
+  role            Role           @default(CUSTOMER)
+  storeId         String?
+  store           Store?         @relation(fields: [storeId], references: [id])
+  isPhoneVerified Boolean        @default(false)
+  isActive        Boolean        @default(true)
+  orders          Order[]        @relation("CustomerOrders")
+  refreshTokens   RefreshToken[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([phone])
+  @@index([storeId])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])  // for cleanup queries: DELETE WHERE expiresAt < NOW()
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name      String
+  sortOrder Int      @default(0)
+  items     Item[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([storeId, name])
+  @@index([storeId])
+}
+
+model Item {
+  id          String      @id @default(cuid())
+  storeId     String
+  store       Store       @relation(fields: [storeId], references: [id])
+  categoryId  String?
+  category    Category?   @relation(fields: [categoryId], references: [id])
+  name        String
+  description String?
+  price       Decimal     @db.Decimal(10, 2)
+  imageUrl    String?
+  isAvailable Boolean     @default(true)
+  sortOrder   Int         @default(0)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([storeId, isAvailable])
+  @@index([categoryId])
+}
+
+model Coupon {
+  id            String       @id @default(cuid())
+  code          String       @unique
+  discountType  DiscountType
+  discountValue Decimal      @db.Decimal(10, 2)
+  minOrderValue Decimal?     @db.Decimal(10, 2)
+  maxUses       Int?
+  usedCount     Int          @default(0)
+  expiresAt     DateTime?
+  isActive      Boolean      @default(true)
+  orders        Order[]
+  createdAt     DateTime     @default(now())
+}
+
+model Order {
+  id              String          @id @default(cuid())
+  idempotencyKey  String?         @unique
+  customerId      String
+  customer        User            @relation("CustomerOrders", fields: [customerId], references: [id])
+  storeId         String
+  store           Store           @relation(fields: [storeId], references: [id])
+  status          OrderStatus     @default(PENDING)
+  fulfillment     FulfillmentType
+  deliveryAddress String?
+  couponId        String?
+  coupon          Coupon?         @relation(fields: [couponId], references: [id])
+  subtotal        Decimal         @db.Decimal(10, 2)
+  discount        Decimal         @default(0) @db.Decimal(10, 2)
+  total           Decimal         @db.Decimal(10, 2)
+  notes           String?
+  rejectedReason  String?
+  items           OrderItem[]
+  auditLogs       AuditLog[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([customerId])
+  @@index([storeId, status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  itemId    String
+  item      Item    @relation(fields: [itemId], references: [id])
+  itemName  String
+  itemPrice Decimal @db.Decimal(10, 2)
+  quantity  Int
+
+  @@index([orderId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  entity    String
+  entityId  String
+  action    String
+  actorId   String?
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([actorId])
+  @@index([orderId])
+  @@index([createdAt])
+}
