@@ -4,6 +4,7 @@ import 'package:esouq/core/routing/role_routing.dart';
 import 'package:esouq/core/theme/app_theme.dart';
 import 'package:esouq/features/auth/domain/models/user_role.dart';
 import 'package:esouq/features/auth/presentation/widgets/auth_scope.dart';
+import 'package:esouq/features/customer/domain/models/store_model.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_account_screen.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_cart_screen.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_chat_screen.dart';
@@ -15,26 +16,43 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../auth/mocks/mock_auth_repository.dart';
+import '../../mocks/mock_product_repository.dart';
+import '../../mocks/mock_store_repository.dart';
 
 void main() {
   late MockAuthRepository mockAuthRepository;
+  late MockStoreRepository mockStoreRepository;
+  late MockProductRepository mockProductRepository;
 
   setUp(() {
     mockAuthRepository = MockAuthRepository();
+    mockStoreRepository = MockStoreRepository();
+    mockProductRepository = MockProductRepository();
   });
 
-  Widget buildCustomerShell({int initialIndex = 0}) {
+  Widget buildCustomerShell({
+    int initialIndex = 0,
+    StoreModel? initialStore,
+  }) {
     return MaterialApp(
       theme: AppTheme.lightTheme,
       routes: {
         AppRoutes.login: (_) => const Scaffold(body: Text('Customer Login Screen')),
-        AppRoutes.customerHome: (_) => CustomerShell(authRepository: mockAuthRepository),
+        AppRoutes.customerHome: (_) => CustomerShell(
+              authRepository: mockAuthRepository,
+              storeRepository: mockStoreRepository,
+              productRepository: mockProductRepository,
+              initialSelectedStore: initialStore,
+            ),
       },
       home: AuthScope(
         repository: mockAuthRepository,
         child: CustomerShell(
           initialIndex: initialIndex,
           authRepository: mockAuthRepository,
+          storeRepository: mockStoreRepository,
+          productRepository: mockProductRepository,
+          initialSelectedStore: initialStore,
         ),
       ),
     );
@@ -58,13 +76,8 @@ void main() {
       expect(find.text('Orders'), findsOneWidget);
       expect(find.text('Account'), findsOneWidget);
 
-      // Verify Market screen content is visible
+      // Verify Market screen is loaded
       expect(find.byType(CustomerMarketScreen), findsOneWidget);
-      expect(find.text('Marketplace'), findsOneWidget);
-      expect(
-        find.text('Browse fresh produce, dairy, and pantry essentials from local stores.'),
-        findsOneWidget,
-      );
     });
 
     testWidgets('switches to Chat tab when tapped', (tester) async {
@@ -188,7 +201,8 @@ void main() {
       tester.view.devicePixelRatio = 2.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(buildCustomerShell());
+      final store = mockStoreRepository.defaultStores.first;
+      await tester.pumpWidget(buildCustomerShell(initialStore: store));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
@@ -200,7 +214,8 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(buildCustomerShell());
+      final store = mockStoreRepository.defaultStores.first;
+      await tester.pumpWidget(buildCustomerShell(initialStore: store));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);

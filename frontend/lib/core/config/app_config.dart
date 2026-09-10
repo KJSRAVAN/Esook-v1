@@ -8,12 +8,14 @@ import 'environment.dart';
 class AppConfig {
   final String apiBaseUrl;
   final Environment environment;
+  final String defaultCurrency;
   final Duration connectTimeout;
   final Duration receiveTimeout;
 
   const AppConfig({
     required this.apiBaseUrl,
     required this.environment,
+    this.defaultCurrency = const String.fromEnvironment('APP_CURRENCY', defaultValue: 'SAR'),
     this.connectTimeout = const Duration(seconds: 15),
     this.receiveTimeout = const Duration(seconds: 15),
   });
@@ -23,10 +25,12 @@ class AppConfig {
     const defaultBaseUrl = 'http://localhost:3000/api';
     const baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: defaultBaseUrl);
     const envString = String.fromEnvironment('APP_ENV', defaultValue: 'dev');
+    const currency = String.fromEnvironment('APP_CURRENCY', defaultValue: 'SAR');
 
     return AppConfig(
       apiBaseUrl: baseUrl,
       environment: Environment.fromString(envString),
+      defaultCurrency: currency,
     );
   }
 
