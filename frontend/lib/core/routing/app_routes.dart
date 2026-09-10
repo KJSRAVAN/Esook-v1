@@ -16,4 +16,7 @@ abstract final class AppRoutes {
   static const String riderHome = '/rider/home';
   static const String storeHome = '/store/home';
   static const String adminHome = '/admin/home';
+
+  // Development/Debug-Only Routes (guarded by kDebugMode)
+  static const String devCustomerPreview = '/dev/customer-preview';
 }

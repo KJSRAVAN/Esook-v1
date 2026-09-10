@@ -14,6 +14,24 @@ void main() {
       expect(route.settings.name, equals(AppRoutes.initial));
     });
 
+    test('generates MaterialPageRoute for customerHome route', () {
+      final route = AppRouter.onGenerateRoute(
+        const RouteSettings(name: AppRoutes.customerHome),
+      );
+
+      expect(route, isA<MaterialPageRoute<void>>());
+      expect(route.settings.name, equals(AppRoutes.customerHome));
+    });
+
+    test('generates MaterialPageRoute for devCustomerPreview in debug mode', () {
+      final route = AppRouter.onGenerateRoute(
+        const RouteSettings(name: AppRoutes.devCustomerPreview),
+      );
+
+      expect(route, isA<MaterialPageRoute<void>>());
+      expect(route.settings.name, equals(AppRoutes.devCustomerPreview));
+    });
+
     test('generates fallback route for unknown routes', () {
       final route = AppRouter.onGenerateRoute(
         const RouteSettings(name: '/some-undefined-route'),

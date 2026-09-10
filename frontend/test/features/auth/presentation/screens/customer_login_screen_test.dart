@@ -30,6 +30,7 @@ void main() {
         AppRoutes.staffLogin: (_) => const Scaffold(body: Text('Staff Login Shell')),
         AppRoutes.riderLogin: (_) => const Scaffold(body: Text('Rider Login Shell')),
         AppRoutes.adminMagicLink: (_) => const Scaffold(body: Text('Admin Magic Link Shell')),
+        AppRoutes.devCustomerPreview: (_) => const Scaffold(body: Text('Dev Customer Preview Shell')),
       },
       home: AuthScope(
         repository: effectiveRepo,
@@ -51,6 +52,7 @@ void main() {
       expect(find.text('Store Staff'), findsOneWidget);
       expect(find.text('Delivery Rider'), findsOneWidget);
       expect(find.text('Admin'), findsOneWidget);
+      expect(find.byKey(const Key('dev_customer_preview_button')), findsOneWidget);
     });
 
     testWidgets('shows validation errors when submitting empty form', (tester) async {
@@ -150,6 +152,19 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Signup Screen Placeholder'), findsOneWidget);
+    });
+
+    testWidgets('navigates to devCustomerPreview when tapping Developer Preview button in debug mode', (tester) async {
+      await tester.pumpWidget(buildTestWidget());
+
+      final buttonFinder = find.byKey(const Key('dev_customer_preview_button'));
+      await tester.ensureVisible(buttonFinder);
+      await tester.pumpAndSettle();
+
+      await tester.tap(buttonFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Dev Customer Preview Shell'), findsOneWidget);
     });
   });
 }

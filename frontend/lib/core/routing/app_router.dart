@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../presentation/screens/role_home_placeholder.dart';
@@ -10,6 +11,7 @@ import '../../features/auth/presentation/screens/customer_signup_screen.dart';
 import '../../features/auth/presentation/screens/rider_login_screen.dart';
 import '../../features/auth/presentation/screens/session_bootstrap_screen.dart';
 import '../../features/auth/presentation/screens/staff_login_screen.dart';
+import '../../features/customer/presentation/screens/customer_shell.dart';
 import 'app_routes.dart';
 
 /// Centralized route generator.
@@ -17,6 +19,14 @@ abstract final class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     final uri = Uri.parse(settings.name ?? '');
     final path = uri.path;
+
+    // Development-only preview route (strictly unreachable in release mode)
+    if (kDebugMode && path == AppRoutes.devCustomerPreview) {
+      return MaterialPageRoute<void>(
+        settings: settings,
+        builder: (_) => const CustomerShell(),
+      );
+    }
 
     switch (path) {
       case AppRoutes.initial:
@@ -71,14 +81,11 @@ abstract final class AppRouter {
           builder: (_) => AdminVerifyScreen(token: token),
         );
 
-      // Temporary role shells
+      // Customer authenticated shell
       case AppRoutes.customerHome:
         return MaterialPageRoute<void>(
           settings: settings,
-          builder: (_) => const RoleHomePlaceholderScreen(
-            title: 'Customer Home',
-            role: UserRole.customer,
-          ),
+          builder: (_) => const CustomerShell(),
         );
 
       case AppRoutes.storeHome:

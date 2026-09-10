@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/error/failures.dart';
@@ -231,6 +232,20 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
             ),
           ],
         ),
+        if (kDebugMode) ...[
+          const SizedBox(height: AppDimensions.spacingMd),
+          OutlinedButton.icon(
+            key: const Key('dev_customer_preview_button'),
+            onPressed: () => Navigator.of(context).pushNamed(AppRoutes.devCustomerPreview),
+            icon: const Icon(Icons.preview_rounded, size: 18),
+            label: const Text('Developer Preview: Customer Shell'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primaryDark,
+              side: const BorderSide(color: AppColors.primary, width: 1),
+              backgroundColor: AppColors.primaryLight.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
       ],
     );
   }
