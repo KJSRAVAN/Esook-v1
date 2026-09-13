@@ -11,7 +11,6 @@ const SAFE_USER_SELECT = {
 
 export type SafeUser = Prisma.UserGetPayload<{ select: typeof SAFE_USER_SELECT }>;
 
-// Cache key shared with jwt.strategy.ts — invalidated on deactivation / role change
 const userCacheKey = (id: string) => `user:jwt:${id}`;
 
 @Injectable()
@@ -21,32 +20,22 @@ export class AuthRepository {
     private readonly redis: RedisService,
   ) {}
 
-  /**
-   * findByPhone — returns row WITHOUT passwordHash (use findByEmailWithPassword for login)
-   */
   findByPhone(phone: string) {
-    return this.prisma.user.findUnique({
-      where: { phone },
-      select: SAFE_USER_SELECT,
-    });
+    return this.prisma.user.findUnique({ where: { phone }, select: SAFE_USER_SELECT });
   }
 
-  /**
-   * findByEmail — returns row WITHOUT passwordHash.
-   */
   findByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: { email },
-      select: SAFE_USER_SELECT,
-    });
+    return this.prisma.user.findUnique({ where: { email }, select: SAFE_USER_SELECT });
   }
 
-  /**
-   * findByEmailWithPassword — returns the full user row INCLUDING passwordHash.
-   * Only call this from staffLogin where argon2 verification is needed.
-   */
+  /** Returns full row including passwordHash — only for login flows that need argon2 verify */
   findByEmailWithPassword(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
+  }
+
+  /** Returns full row including passwordHash — driver/staff login via phone */
+  findByPhoneWithPassword(phone: string) {
+    return this.prisma.user.findUnique({ where: { phone } });
   }
 
   findById(id: string): Promise<SafeUser | null> {
@@ -57,12 +46,7 @@ export class AuthRepository {
     return this.prisma.user.upsert({
       where: { phone },
       update: { isPhoneVerified: true },
-      create: {
-        phone,
-        name: name ?? 'Customer',
-        role: 'CUSTOMER',
-        isPhoneVerified: true,
-      },
+      create: { phone, name: name ?? 'Customer', role: 'CUSTOMER', isPhoneVerified: true },
       select: SAFE_USER_SELECT,
     });
   }
@@ -75,16 +59,15 @@ export class AuthRepository {
     });
   }
 
-  /**
-   * Invalidate the JWT user cache after any mutation (deactivation, role change, store reassignment).
-   * Best-effort — Redis failure does not throw.
-   */
+  createDriver(data: { name: string; phone: string; passwordHash: string }): Promise<SafeUser> {
+    return this.prisma.user.create({
+      data: { ...data, role: 'DRIVER', isPhoneVerified: true },
+      select: SAFE_USER_SELECT,
+    });
+  }
+
   async invalidateUserCache(userId: string): Promise<void> {
-    try {
-      await this.redis.del(userCacheKey(userId));
-    } catch {
-      // Cache invalidation is best-effort
-    }
+    try { await this.redis.del(userCacheKey(userId)); } catch { /* best-effort */ }
   }
 
   writeAuditLog(data: {
@@ -93,12 +76,8 @@ export class AuthRepository {
   }) {
     return this.prisma.auditLog.create({
       data: {
-        entity: data.entity,
-        entityId: data.entityId,
-        action: data.action,
-        actorId: data.actorId,
-        orderId: data.orderId,
-        metadata: data.metadata ?? {},
+        entity: data.entity, entityId: data.entityId, action: data.action,
+        actorId: data.actorId, orderId: data.orderId, metadata: data.metadata ?? {},
       },
     });
   }

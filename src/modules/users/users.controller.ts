@@ -1,5 +1,5 @@
 import { Controller, Get, Patch, Body, Query, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody, ApiQuery } from '@nestjs/swagger';
 import { Request } from 'express';
 import { UsersService } from './users.service';
 import { updateProfileSchema, userQuerySchema, UpdateProfileDto, UserQueryDto } from './users.schemas';
@@ -24,6 +24,15 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Update my profile' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name:  { type: 'string', example: 'Ahmed Ali' },
+        email: { type: 'string', example: 'ahmed@example.com' },
+      },
+    },
+  })
   @Patch('me')
   updateProfile(
     @Req() req: AuthReq,
@@ -33,6 +42,9 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'List all users with pagination (SUPER_ADMIN)' })
+  @ApiQuery({ name: 'page',  required: false, type: Number, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, type: Number, example: 50 })
+  @ApiQuery({ name: 'role',  required: false, enum: ['CUSTOMER', 'STAFF', 'MANAGER', 'SUPER_ADMIN'] })
   @UseGuards(RolesGuard)
   @Roles('SUPER_ADMIN')
   @Get()

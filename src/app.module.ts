@@ -15,6 +15,7 @@ import { CartModule } from '@modules/cart/cart.module';
 import { OrdersModule } from '@modules/orders/orders.module';
 import { CouponsModule } from '@modules/coupons/coupons.module';
 import { UsersModule } from '@modules/users/users.module';
+import { DriversModule } from '@modules/drivers/drivers.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { UsersModule } from '@modules/users/users.module';
     OrdersModule,
     CouponsModule,
     UsersModule,
+    DriversModule,
   ],
 })
 export class AppModule {

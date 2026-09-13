@@ -18,9 +18,20 @@ export const verifyOtpSchema = z.object({
     .regex(/^\d{6}$/, 'OTP must be numeric'),
 });
 
+// Staff login accepts either email OR phone — drivers use phone, staff use email
 export const staffLoginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().optional(),
+  phone: z.string().regex(/^\+?[1-9]\d{7,14}$/).optional(),
   password: z.string().min(8),
+}).refine(
+  (d) => !!d.email || !!d.phone,
+  { message: 'Either email or phone is required', path: ['email'] },
+);
+
+export const registerDriverSchema = z.object({
+  name: z.string().min(2).max(100),
+  phone: z.string().regex(/^\+?[1-9]\d{7,14}$/, 'Invalid phone number format'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 export const refreshTokenSchema = z.object({
@@ -34,5 +45,6 @@ export const logoutSchema = z.object({
 export type SendOtpDto = z.infer<typeof sendOtpSchema>;
 export type VerifyOtpDto = z.infer<typeof verifyOtpSchema>;
 export type StaffLoginDto = z.infer<typeof staffLoginSchema>;
+export type RegisterDriverDto = z.infer<typeof registerDriverSchema>;
 export type RefreshTokenDto = z.infer<typeof refreshTokenSchema>;
 export type LogoutDto = z.infer<typeof logoutSchema>;

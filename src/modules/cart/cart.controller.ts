@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { Request } from 'express';
 import { CartService } from './cart.service';
 import { addToCartSchema, updateCartItemSchema } from './cart.schemas';
@@ -15,13 +15,22 @@ type AuthReq = Request & { user: { id: string } };
 export class CartController {
   constructor(private readonly cart: CartService) {}
 
-  @ApiOperation({ summary: 'Get current cart' })
+  @ApiOperation({ summary: 'Get current cart (returns empty cart if Redis is down)' })
   @Get()
   get(@Req() req: AuthReq) {
     return this.cart.getCart(req.user.id);
   }
 
-  @ApiOperation({ summary: 'Add item to cart' })
+  @ApiOperation({ summary: 'Add item to cart — enforces single-store rule' })
+  @ApiBody({
+    schema: {
+      type: 'object', required: ['itemId', 'quantity'],
+      properties: {
+        itemId:   { type: 'string', example: 'clx...' },
+        quantity: { type: 'integer', example: 2, minimum: 1, maximum: 99 },
+      },
+    },
+  })
   @Post('items')
   add(
     @Body(new ZodValidationPipe(addToCartSchema)) body: { itemId: string; quantity: number },
@@ -30,7 +39,15 @@ export class CartController {
     return this.cart.addItem(req.user.id, body.itemId, body.quantity);
   }
 
-  @ApiOperation({ summary: 'Update item quantity (0 = remove)' })
+  @ApiOperation({ summary: 'Update item quantity. Set quantity to 0 to remove the item.' })
+  @ApiBody({
+    schema: {
+      type: 'object', required: ['quantity'],
+      properties: {
+        quantity: { type: 'integer', example: 3, minimum: 0, maximum: 99 },
+      },
+    },
+  })
   @Patch('items/:itemId')
   update(
     @Param('itemId') itemId: string,
@@ -40,7 +57,7 @@ export class CartController {
     return this.cart.updateItem(req.user.id, itemId, body.quantity);
   }
 
-  @ApiOperation({ summary: 'Clear cart' })
+  @ApiOperation({ summary: 'Clear entire cart' })
   @Delete()
   async clear(@Req() req: AuthReq) {
     await this.cart.clearCart(req.user.id);

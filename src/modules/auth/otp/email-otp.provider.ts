@@ -32,7 +32,7 @@ export class EmailOtpProvider implements OtpProvider {
     this.transporter = nodemailer.createTransport({
       host,
       port: this.config.get<number>('SMTP_PORT', 587),
-      secure: this.config.get<boolean>('SMTP_SECURE', false),
+      secure: this.config.get<string>('SMTP_SECURE') === 'true',
       auth: { user, pass },
     });
   }

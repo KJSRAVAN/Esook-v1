@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Patch, Param, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { CouponsService } from './coupons.service';
 import { createCouponSchema, updateCouponSchema, validateCouponSchema, CreateCouponDto, UpdateCouponDto, ValidateCouponDto } from './coupons.schemas';
 import { ZodValidationPipe } from '@shared/pipes/zod-validation.pipe';
@@ -12,14 +12,16 @@ import { Roles } from '../auth/guards/roles.decorator';
 export class CouponsController {
   constructor(private readonly coupons: CouponsService) {}
 
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'List all coupons (MANAGER+)' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('MANAGER', 'SUPER_ADMIN')
-  @Get()
-  getAll() { return this.coupons.getAll(); }
-
-  @ApiOperation({ summary: 'Validate coupon for cart preview (public)' })
+  @ApiOperation({ summary: 'Validate a coupon code before placing an order (public)' })
+  @ApiBody({
+    schema: {
+      type: 'object', required: ['code', 'orderTotal'],
+      properties: {
+        code:       { type: 'string', example: 'SAVE20' },
+        orderTotal: { type: 'number', example: 150.00 },
+      },
+    },
+  })
   @Post('validate')
   @HttpCode(HttpStatus.OK)
   validate(@Body(new ZodValidationPipe(validateCouponSchema)) body: ValidateCouponDto) {
@@ -27,7 +29,38 @@ export class CouponsController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create coupon (SUPER_ADMIN)' })
+  @ApiOperation({ summary: 'List all coupons (SUPER_ADMIN)' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  @Get()
+  getAll() {
+    return this.coupons.getAll();
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get coupon by code (SUPER_ADMIN)' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  @Get(':code')
+  getByCode(@Param('code') code: string) {
+    return this.coupons.getByCode(code);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a coupon (SUPER_ADMIN)' })
+  @ApiBody({
+    schema: {
+      type: 'object', required: ['code', 'discountType', 'discountValue'],
+      properties: {
+        code:          { type: 'string', example: 'SAVE20' },
+        discountType:  { type: 'string', enum: ['PERCENT', 'FLAT'], example: 'PERCENT' },
+        discountValue: { type: 'number', example: 20 },
+        minOrderValue: { type: 'number', example: 100 },
+        maxUses:       { type: 'integer', example: 500 },
+        expiresAt:     { type: 'string', format: 'date-time', example: '2026-12-31T23:59:59Z' },
+      },
+    },
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SUPER_ADMIN')
   @Post()
@@ -37,7 +70,18 @@ export class CouponsController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update coupon (SUPER_ADMIN)' })
+  @ApiOperation({ summary: 'Update a coupon (SUPER_ADMIN)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        discountValue: { type: 'number', example: 25 },
+        maxUses:       { type: 'integer', example: 1000 },
+        isActive:      { type: 'boolean', example: false },
+        expiresAt:     { type: 'string', format: 'date-time', example: '2027-06-30T23:59:59Z' },
+      },
+    },
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('SUPER_ADMIN')
   @Patch(':code')
