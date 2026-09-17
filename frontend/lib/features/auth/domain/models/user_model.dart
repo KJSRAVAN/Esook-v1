@@ -26,21 +26,22 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     DateTime? parsedCreatedAt;
-    if (json['created_at'] != null) {
-      if (json['created_at'] is String) {
-        parsedCreatedAt = DateTime.tryParse(json['created_at'] as String);
+    final rawCreatedAt = json['created_at'] ?? json['createdAt'];
+    if (rawCreatedAt != null) {
+      if (rawCreatedAt is String) {
+        parsedCreatedAt = DateTime.tryParse(rawCreatedAt);
       }
     }
 
     return UserModel(
       id: json['id'] as String? ?? '',
-      phoneNumber: json['phone_number'] as String? ?? '',
+      phoneNumber: json['phone_number'] as String? ?? json['phone'] as String? ?? '',
       email: json['email'] as String?,
-      fullName: json['full_name'] as String? ?? '',
+      fullName: json['full_name'] as String? ?? json['name'] as String? ?? '',
       role: UserRole.fromString(json['role'] as String?),
-      storeId: json['store_id'] as String?,
+      storeId: json['store_id'] as String? ?? json['storeId'] as String?,
       address: json['address'] as String?,
-      isActive: json['is_active'] as bool? ?? true,
+      isActive: json['is_active'] as bool? ?? json['isActive'] as bool? ?? true,
       createdAt: parsedCreatedAt,
     );
   }

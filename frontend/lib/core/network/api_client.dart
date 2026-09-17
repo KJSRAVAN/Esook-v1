@@ -301,6 +301,10 @@ class DefaultApiClient implements ApiClient {
     if (json is Map<String, dynamic>) {
       if (json['message'] is String) return json['message'] as String;
       if (json['error'] is String) return json['error'] as String;
+      if (json['error'] is Map<String, dynamic>) {
+        final errObj = json['error'] as Map<String, dynamic>;
+        if (errObj['message'] is String) return errObj['message'] as String;
+      }
       if (json['errors'] is List && (json['errors'] as List).isNotEmpty) {
         return (json['errors'] as List).first.toString();
       }

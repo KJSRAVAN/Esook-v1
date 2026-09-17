@@ -52,86 +52,181 @@ void main() {
       productRepository = ProductRepositoryImpl(apiClient: apiClient);
     });
 
-    test('getProductsByStore returns parsed list of ProductModel on 200', () async {
+    test('getProductsByStore calls GET /stores/:storeId/items and parses data response on 200', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
-        'products': [
+        'data': [
           {
-            'id': 'p-1',
-            'store_id': 's-100',
-            'name': 'Organic Eggs',
-            'price': '3.20',
-            'category': 'Dairy',
-            'is_available': true,
-            'loyalty_points_per_unit': 5,
+            'id': 'item-1',
+            'storeId': 'store-100',
+            'categoryId': 'cat-1',
+            'name': 'Organic Eggs 12pk',
+            'description': 'Farm fresh eggs',
+            'price': 3.20,
+            'imageUrl': 'https://example.com/eggs.jpg',
+            'isAvailable': true,
+            'sortOrder': 0,
+            'category': {
+              'id': 'cat-1',
+              'storeId': 'store-100',
+              'name': 'Dairy & Eggs',
+              'sortOrder': 0,
+            },
+            'createdAt': '2026-09-07T19:06:18.000Z',
+            'updatedAt': '2026-09-07T19:06:18.000Z',
           },
           {
-            'id': 'p-2',
-            'store_id': 's-100',
-            'name': 'Brown Bread',
-            'price': '1.00',
-            'category': 'Bakery',
-            'is_available': true,
-            'loyalty_points_per_unit': 0,
+            'id': 'item-2',
+            'storeId': 'store-100',
+            'categoryId': 'cat-2',
+            'name': 'Brown Bread 500g',
+            'description': null,
+            'price': 1.00,
+            'imageUrl': null,
+            'isAvailable': true,
+            'sortOrder': 1,
+            'category': {
+              'id': 'cat-2',
+              'storeId': 'store-100',
+              'name': 'Bakery',
+              'sortOrder': 1,
+            },
+            'createdAt': '2026-09-07T19:06:18.000Z',
+            'updatedAt': '2026-09-07T19:06:18.000Z',
           },
-        ]
+        ],
+        'total': 2,
+        'page': 1,
+        'limit': 50,
       });
 
-      final result = await productRepository.getProductsByStore('s-100');
+      final result = await productRepository.getProductsByStore(
+        'store-100',
+        categoryId: 'cat-1',
+        search: 'egg',
+        isAvailable: true,
+        page: 1,
+        limit: 20,
+      );
 
       expect(result.isSuccess, isTrue);
       final products = result.dataOrNull!;
       expect(products.length, equals(2));
-      expect(products[0].name, equals('Organic Eggs'));
+      expect(products[0].id, equals('item-1'));
+      expect(products[0].storeId, equals('store-100'));
+      expect(products[0].name, equals('Organic Eggs 12pk'));
       expect(products[0].price, equals(3.20));
-      expect(products[1].name, equals('Brown Bread'));
-      expect(mockTransport.lastUri?.path, equals('/api/products/store/s-100'));
+      expect(products[0].category, equals('Dairy & Eggs'));
+      expect(products[0].categoryId, equals('cat-1'));
+      expect(products[1].name, equals('Brown Bread 500g'));
+      expect(mockTransport.lastUri?.path, equals('/api/stores/store-100/items'));
+      expect(mockTransport.lastUri?.queryParameters['categoryId'], equals('cat-1'));
+      expect(mockTransport.lastUri?.queryParameters['search'], equals('egg'));
+      expect(mockTransport.lastUri?.queryParameters['available'], equals('true'));
+      expect(mockTransport.lastUri?.queryParameters['page'], equals('1'));
+      expect(mockTransport.lastUri?.queryParameters['limit'], equals('20'));
       expect(mockTransport.lastMethod, equals(HttpMethod.get));
     });
 
-    test('getProductById returns product on 200', () async {
+    test('getProductById calls GET /stores/:storeId/items/:itemId and returns item on 200', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
-        'product': {
-          'id': 'p-123',
-          'store_id': 's-100',
-          'name': 'Labneh 500g',
-          'price': '2.50',
-          'is_available': true,
-          'loyalty_points_per_unit': 3,
-        }
+        'id': 'item-123',
+        'storeId': 'store-100',
+        'categoryId': 'cat-1',
+        'name': 'Labneh 500g',
+        'description': 'Traditional strained yogurt',
+        'price': 2.50,
+        'imageUrl': 'https://example.com/labneh.jpg',
+        'isAvailable': true,
+        'sortOrder': 0,
+        'category': {
+          'id': 'cat-1',
+          'name': 'Dairy & Eggs',
+        },
+        'store': {
+          'id': 'store-100',
+          'name': 'Esook Central',
+        },
       });
 
-      final result = await productRepository.getProductById('p-123');
+      final result = await productRepository.getProductById('item-123', storeId: 'store-100');
 
       expect(result.isSuccess, isTrue);
       final product = result.dataOrNull!;
-      expect(product.id, equals('p-123'));
+      expect(product.id, equals('item-123'));
       expect(product.name, equals('Labneh 500g'));
       expect(product.price, equals(2.50));
-      expect(mockTransport.lastUri?.path, equals('/api/products/p-123'));
+      expect(product.category, equals('Dairy & Eggs'));
+      expect(mockTransport.lastUri?.path, equals('/api/stores/store-100/items/item-123'));
+    });
+
+    test('getCategories calls GET /stores/:storeId/categories and parses categories on 200', () async {
+      mockTransport.statusCode = 200;
+      mockTransport.responseBody = jsonEncode([
+        {
+          'id': 'cat-1',
+          'storeId': 'store-100',
+          'name': 'Dairy & Eggs',
+          'sortOrder': 0,
+          '_count': {
+            'items': 15,
+          },
+          'createdAt': '2026-09-07T19:06:18.000Z',
+          'updatedAt': '2026-09-07T19:06:18.000Z',
+        },
+        {
+          'id': 'cat-2',
+          'storeId': 'store-100',
+          'name': 'Fresh Fruits',
+          'sortOrder': 1,
+          '_count': {
+            'items': 8,
+          },
+          'createdAt': '2026-09-07T19:06:18.000Z',
+          'updatedAt': '2026-09-07T19:06:18.000Z',
+        },
+      ]);
+
+      final result = await productRepository.getCategories('store-100');
+
+      expect(result.isSuccess, isTrue);
+      final categories = result.dataOrNull!;
+      expect(categories.length, equals(2));
+      expect(categories[0].id, equals('cat-1'));
+      expect(categories[0].name, equals('Dairy & Eggs'));
+      expect(categories[0].itemCount, equals(15));
+      expect(categories[1].name, equals('Fresh Fruits'));
+      expect(mockTransport.lastUri?.path, equals('/api/stores/store-100/categories'));
+      expect(mockTransport.lastMethod, equals(HttpMethod.get));
     });
 
     test('getProductsByStore maps 404 to NotFoundFailure', () async {
       mockTransport.statusCode = 404;
       mockTransport.responseBody = jsonEncode({
-        'error': 'Store not found or unavailable',
+        'error': {
+          'code': 'NOT_FOUND',
+          'message': 'Store not found',
+        },
       });
 
       final result = await productRepository.getProductsByStore('inactive-store');
 
       expect(result.isFailure, isTrue);
       expect(result.failureOrNull, isA<NotFoundFailure>());
-      expect(result.failureOrNull?.message, equals('Store not found or unavailable'));
+      expect(result.failureOrNull?.message, equals('Store not found'));
     });
 
     test('getProductById maps 500 server error to ServerFailure', () async {
       mockTransport.statusCode = 500;
       mockTransport.responseBody = jsonEncode({
-        'error': 'Internal server error',
+        'error': {
+          'code': 'INTERNAL_ERROR',
+          'message': 'An unexpected error occurred',
+        },
       });
 
-      final result = await productRepository.getProductById('p-123');
+      final result = await productRepository.getProductById('item-123', storeId: 'store-100');
 
       expect(result.isFailure, isTrue);
       expect(result.failureOrNull, isA<ServerFailure>());

@@ -3,7 +3,41 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('StoreModel', () {
-    test('parses full JSON response correctly', () {
+    test('parses backend Prisma JSON response with nested area and _count correctly', () {
+      final json = {
+        'id': 's-123',
+        'name': 'eSOuQ Olaya',
+        'areaId': 'area-1',
+        'address': 'King Fahd Road',
+        'phone': '+966112345678',
+        'isActive': true,
+        'area': {
+          'id': 'area-1',
+          'name': 'Riyadh - Olaya',
+          'createdAt': '2026-09-07T19:06:18.000Z',
+        },
+        '_count': {
+          'items': 42,
+        },
+        'createdAt': '2026-09-10T12:00:00.000Z',
+        'updatedAt': '2026-09-10T13:00:00.000Z',
+      };
+
+      final store = StoreModel.fromJson(json);
+
+      expect(store.id, equals('s-123'));
+      expect(store.name, equals('eSOuQ Olaya'));
+      expect(store.area, equals('Riyadh - Olaya'));
+      expect(store.areaId, equals('area-1'));
+      expect(store.address, equals('King Fahd Road'));
+      expect(store.phoneNumber, equals('+966112345678'));
+      expect(store.isActive, isTrue);
+      expect(store.itemCount, equals(42));
+      expect(store.createdAt, isNotNull);
+      expect(store.updatedAt, isNotNull);
+    });
+
+    test('parses flat legacy JSON format correctly', () {
       final json = {
         'id': 's-123',
         'name': 'eSOuQ Olaya',
@@ -55,9 +89,11 @@ void main() {
         id: 's-789',
         name: 'eSOuQ Express',
         area: 'Seeb',
+        areaId: 'area-9',
         address: 'Main St',
         phoneNumber: '+96891234567',
         isActive: true,
+        itemCount: 15,
       );
 
       final json = store.toJson();
@@ -65,9 +101,11 @@ void main() {
       expect(json['id'], equals('s-789'));
       expect(json['name'], equals('eSOuQ Express'));
       expect(json['area'], equals('Seeb'));
+      expect(json['areaId'], equals('area-9'));
       expect(json['address'], equals('Main St'));
-      expect(json['phone_number'], equals('+96891234567'));
-      expect(json['is_active'], isTrue);
+      expect(json['phone'], equals('+96891234567'));
+      expect(json['isActive'], isTrue);
+      expect(json['item_count'], equals(15));
     });
   });
 }

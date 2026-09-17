@@ -9,7 +9,10 @@ void main() {
       expect(UserRole.fromString('store_staff'), equals(UserRole.storeStaff));
       expect(UserRole.fromString('store_manager'), equals(UserRole.storeManager));
       expect(UserRole.fromString('delivery_rider'), equals(UserRole.deliveryRider));
+      expect(UserRole.fromString('driver'), equals(UserRole.deliveryRider));
+      expect(UserRole.fromString('DRIVER'), equals(UserRole.deliveryRider));
       expect(UserRole.fromString('super_admin'), equals(UserRole.superAdmin));
+      expect(UserRole.fromString('CUSTOMER'), equals(UserRole.customer));
     });
 
     test('handles unknown and null role gracefully without throwing', () {
@@ -51,6 +54,31 @@ void main() {
       expect(user.role, equals(UserRole.customer));
       expect(user.storeId, equals('store-456'));
       expect(user.address, equals('Riyadh, Olaya'));
+      expect(user.isActive, isTrue);
+      expect(user.createdAt, isNotNull);
+    });
+
+    test('parses origin/Prod_Backend camelCase user JSON correctly', () {
+      final json = {
+        'id': 'user-789',
+        'phone': '+966501234567',
+        'email': null,
+        'name': 'Customer Ali',
+        'role': 'CUSTOMER',
+        'storeId': 'store-101',
+        'isPhoneVerified': true,
+        'isActive': true,
+        'createdAt': '2026-09-15T12:00:00.000Z',
+      };
+
+      final user = UserModel.fromJson(json);
+
+      expect(user.id, equals('user-789'));
+      expect(user.phoneNumber, equals('+966501234567'));
+      expect(user.email, isNull);
+      expect(user.fullName, equals('Customer Ali'));
+      expect(user.role, equals(UserRole.customer));
+      expect(user.storeId, equals('store-101'));
       expect(user.isActive, isTrue);
       expect(user.createdAt, isNotNull);
     });

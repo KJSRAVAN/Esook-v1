@@ -17,10 +17,13 @@ enum UserRole {
       case 'customer':
         return UserRole.customer;
       case 'store_staff':
+      case 'staff':
         return UserRole.storeStaff;
       case 'store_manager':
+      case 'manager':
         return UserRole.storeManager;
       case 'delivery_rider':
+      case 'driver':
         return UserRole.deliveryRider;
       case 'super_admin':
         return UserRole.superAdmin;

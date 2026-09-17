@@ -23,6 +23,31 @@ void main() {
       expect(authResponse.user.role, equals(UserRole.customer));
     });
 
+    test('parses NestJS origin/Prod_Backend auth response payload with accessToken and refreshToken', () {
+      final json = {
+        'user': {
+          'id': 'user-456',
+          'phone': '+966501234567',
+          'name': 'Customer',
+          'role': 'CUSTOMER',
+          'isPhoneVerified': true,
+          'isActive': true,
+        },
+        'accessToken': 'jwt_access_token_xyz',
+        'refreshToken': 'uuid_refresh_token_xyz',
+        'isNew': true,
+      };
+
+      final authResponse = AuthResponseModel.fromJson(json);
+
+      expect(authResponse.token, equals('jwt_access_token_xyz'));
+      expect(authResponse.refreshToken, equals('uuid_refresh_token_xyz'));
+      expect(authResponse.isNew, isTrue);
+      expect(authResponse.user.id, equals('user-456'));
+      expect(authResponse.user.phoneNumber, equals('+966501234567'));
+      expect(authResponse.user.role, equals(UserRole.customer));
+    });
+
     test('serializes to JSON correctly', () {
       final json = {
         'user': {

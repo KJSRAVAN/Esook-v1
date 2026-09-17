@@ -4,9 +4,9 @@ import 'package:esouq/core/routing/role_routing.dart';
 import 'package:esouq/core/theme/app_theme.dart';
 import 'package:esouq/features/auth/domain/models/user_role.dart';
 import 'package:esouq/features/auth/presentation/widgets/auth_scope.dart';
+import 'package:esouq/features/customer/cart/presentation/screens/cart_screen.dart';
 import 'package:esouq/features/customer/domain/models/store_model.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_account_screen.dart';
-import 'package:esouq/features/customer/presentation/screens/customer_cart_screen.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_chat_screen.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_market_screen.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_orders_screen.dart';
@@ -16,6 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../auth/mocks/mock_auth_repository.dart';
+import '../../mocks/mock_cart_repository.dart';
+import '../../mocks/mock_order_repository.dart';
 import '../../mocks/mock_product_repository.dart';
 import '../../mocks/mock_store_repository.dart';
 
@@ -23,11 +25,16 @@ void main() {
   late MockAuthRepository mockAuthRepository;
   late MockStoreRepository mockStoreRepository;
   late MockProductRepository mockProductRepository;
+  late MockCartRepository mockCartRepository;
+  late MockOrderRepository mockOrderRepository;
 
   setUp(() {
     mockAuthRepository = MockAuthRepository();
     mockStoreRepository = MockStoreRepository();
     mockProductRepository = MockProductRepository();
+    mockCartRepository = MockCartRepository();
+    mockOrderRepository = MockOrderRepository();
+    mockOrderRepository.ordersToReturn = [];
   });
 
   Widget buildCustomerShell({
@@ -42,6 +49,8 @@ void main() {
               authRepository: mockAuthRepository,
               storeRepository: mockStoreRepository,
               productRepository: mockProductRepository,
+              cartRepository: mockCartRepository,
+              orderRepository: mockOrderRepository,
               initialSelectedStore: initialStore,
             ),
       },
@@ -52,6 +61,8 @@ void main() {
           authRepository: mockAuthRepository,
           storeRepository: mockStoreRepository,
           productRepository: mockProductRepository,
+          cartRepository: mockCartRepository,
+          orderRepository: mockOrderRepository,
           initialSelectedStore: initialStore,
         ),
       ),
@@ -102,12 +113,8 @@ void main() {
       await tester.tap(find.byKey(const Key('customer_nav_cart')));
       await tester.pumpAndSettle();
 
-      expect(find.byType(CustomerCartScreen), findsOneWidget);
+      expect(find.byType(CartScreen), findsOneWidget);
       expect(find.text('Your Cart is Empty'), findsOneWidget);
-      expect(
-        find.text('Items you add from the market will appear here for checkout and delivery.'),
-        findsOneWidget,
-      );
     });
 
     testWidgets('switches to Orders tab when tapped', (tester) async {

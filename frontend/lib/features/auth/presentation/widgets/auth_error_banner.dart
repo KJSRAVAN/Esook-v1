@@ -33,13 +33,13 @@ class AuthErrorBanner extends StatelessWidget {
 
     return switch (f) {
       UnauthorizedFailure() => f.message.isNotEmpty ? f.message : 'Invalid credentials. Please check your phone number and password.',
-      ForbiddenFailure() => 'Access restricted. You do not have permission to access this portal.',
+      ForbiddenFailure() => f.message.isNotEmpty ? f.message : 'Access restricted. You do not have permission to access this portal.',
       ValidationFailure() => f.message.isNotEmpty ? f.message : 'Please correct the highlighted errors and try again.',
       ConflictFailure() => f.message.isNotEmpty ? f.message : 'An account with these details already exists.',
-      RateLimitFailure() => 'Too many attempts. Please wait a moment before trying again.',
+      RateLimitFailure() => f.message.isNotEmpty ? f.message : 'Too many attempts. Please wait a moment before trying again.',
       NetworkFailure() => 'Network connection error. Please check your internet connection and try again.',
-      ServerFailure() => 'Our servers are experiencing issues. Please try again shortly.',
-      NotFoundFailure() => 'Resource not found. Please try again.',
+      ServerFailure() => f.message.isNotEmpty ? f.message : 'Our servers are experiencing issues. Please try again shortly.',
+      NotFoundFailure() => f.message.isNotEmpty ? f.message : 'Resource not found. Please try again.',
       UnknownFailure() => f.message.isNotEmpty ? f.message : 'An unexpected error occurred. Please try again.',
     };
   }

@@ -3,9 +3,11 @@ class StoreModel {
   final String id;
   final String name;
   final String area;
+  final String? areaId;
   final String? address;
   final String? phoneNumber;
   final bool isActive;
+  final int? itemCount;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -13,9 +15,11 @@ class StoreModel {
     required this.id,
     required this.name,
     required this.area,
+    this.areaId,
     this.address,
     this.phoneNumber,
     this.isActive = true,
+    this.itemCount,
     this.createdAt,
     this.updatedAt,
   });
@@ -28,15 +32,53 @@ class StoreModel {
       return null;
     }
 
+    String parseArea(dynamic areaVal) {
+      if (areaVal is Map<String, dynamic>) {
+        return areaVal['name'] as String? ?? '';
+      }
+      if (areaVal is String) {
+        return areaVal;
+      }
+      return json['areaName'] as String? ?? json['area_name'] as String? ?? '';
+    }
+
+    String? parseAreaId(dynamic areaVal, dynamic explicitAreaId) {
+      if (explicitAreaId is String && explicitAreaId.isNotEmpty) {
+        return explicitAreaId;
+      }
+      if (areaVal is Map<String, dynamic>) {
+        return areaVal['id'] as String?;
+      }
+      return null;
+    }
+
+    int? parseItemCount(dynamic countVal, dynamic explicitCount) {
+      if (countVal is Map<String, dynamic>) {
+        final items = countVal['items'];
+        if (items is num) return items.toInt();
+        if (items is String) return int.tryParse(items);
+      }
+      if (explicitCount is num) return explicitCount.toInt();
+      if (explicitCount is String) return int.tryParse(explicitCount);
+      return null;
+    }
+
+    final areaVal = json['area'];
+    final explicitAreaId = json['areaId'] ?? json['area_id'];
+
     return StoreModel(
       id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      area: json['area'] as String? ?? '',
+      area: parseArea(areaVal),
+      areaId: parseAreaId(areaVal, explicitAreaId),
       address: json['address'] as String?,
-      phoneNumber: json['phone_number'] as String?,
-      isActive: json['is_active'] as bool? ?? true,
-      createdAt: parseDate(json['created_at']),
-      updatedAt: parseDate(json['updated_at']),
+      phoneNumber: json['phone'] as String? ??
+          json['phone_number'] as String? ??
+          json['phoneNumber'] as String?,
+      isActive: json['isActive'] as bool? ?? json['is_active'] as bool? ?? true,
+      itemCount: parseItemCount(json['_count'], json['item_count'] ?? json['itemCount']),
+      createdAt: parseDate(json['createdAt'] ?? json['created_at']),
+      updatedAt: parseDate(json['updatedAt'] ?? json['updated_at']),
     );
   }
 
@@ -45,10 +87,16 @@ class StoreModel {
       'id': id,
       'name': name,
       'area': area,
+      if (areaId != null) 'areaId': areaId,
       if (address != null) 'address': address,
+      if (phoneNumber != null) 'phone': phoneNumber,
       if (phoneNumber != null) 'phone_number': phoneNumber,
+      'isActive': isActive,
       'is_active': isActive,
+      if (itemCount != null) 'item_count': itemCount,
+      if (createdAt != null) 'createdAt': createdAt?.toIso8601String(),
       if (createdAt != null) 'created_at': createdAt?.toIso8601String(),
+      if (updatedAt != null) 'updatedAt': updatedAt?.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt?.toIso8601String(),
     };
   }
@@ -61,6 +109,7 @@ class StoreModel {
           id == other.id &&
           name == other.name &&
           area == other.area &&
+          areaId == other.areaId &&
           address == other.address &&
           phoneNumber == other.phoneNumber &&
           isActive == other.isActive;
@@ -70,6 +119,7 @@ class StoreModel {
       id.hashCode ^
       name.hashCode ^
       area.hashCode ^
+      areaId.hashCode ^
       address.hashCode ^
       phoneNumber.hashCode ^
       isActive.hashCode;

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../cart/application/cart_notifier.dart';
+import '../../cart/presentation/widgets/cart_nav_icon.dart';
 
 /// Navigation item definition for the customer bottom navigation bar.
 class CustomerNavItem {
@@ -20,16 +22,10 @@ class CustomerNavItem {
 }
 
 /// Centralized bottom navigation bar for the customer application shell.
-///
-/// Features:
-/// - Five standard eSOuQ customer destinations (Market, Chat, Cart, Orders, Account)
-/// - Clean white surface with subtle top border
-/// - Active brand green state with smooth transitions
-/// - Safe area compliance to avoid gesture navigation overlaps
-/// - Responsive constraint to look polished on both mobile and wide screens
 class CustomerBottomNavigation extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final CartNotifier? cartNotifier;
 
   static const List<CustomerNavItem> items = [
     CustomerNavItem(
@@ -68,6 +64,7 @@ class CustomerBottomNavigation extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.cartNotifier,
   });
 
   @override
@@ -95,6 +92,8 @@ class CustomerBottomNavigation extends StatelessWidget {
                 child: _NavBarItemWidget(
                   item: item,
                   isSelected: isSelected,
+                  isCart: index == 2,
+                  cartNotifier: cartNotifier,
                   onTap: () => onTap(index),
                 ),
               );
@@ -109,11 +108,15 @@ class CustomerBottomNavigation extends StatelessWidget {
 class _NavBarItemWidget extends StatelessWidget {
   final CustomerNavItem item;
   final bool isSelected;
+  final bool isCart;
+  final CartNotifier? cartNotifier;
   final VoidCallback onTap;
 
   const _NavBarItemWidget({
     required this.item,
     required this.isSelected,
+    this.isCart = false,
+    this.cartNotifier,
     required this.onTap,
   });
 
@@ -134,11 +137,17 @@ class _NavBarItemWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isSelected ? item.activeIcon : item.icon,
-              color: color,
-              size: 24.0,
-            ),
+            if (isCart && cartNotifier != null)
+              CartNavIcon(
+                cartNotifier: cartNotifier!,
+                isSelected: isSelected,
+              )
+            else
+              Icon(
+                isSelected ? item.activeIcon : item.icon,
+                color: color,
+                size: 24.0,
+              ),
             const SizedBox(height: AppDimensions.spacing2xs),
             Text(
               item.label,

@@ -71,6 +71,105 @@ void main() {
       'is_active': true,
     };
 
+    test('sendOtp calls POST /auth/otp/send and returns response message', () async {
+      mockTransport.statusCode = 200;
+      mockTransport.responseBody = jsonEncode({
+        'channel': 'whatsapp',
+        'message': 'Verification code sent via whatsapp',
+      });
+
+      final result = await authRepository.sendOtp(
+        phone: '+966501234567',
+        email: 'user@example.com',
+        name: 'Ahmed',
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, equals('Verification code sent via whatsapp'));
+      expect(mockTransport.lastUri?.path, equals('/api/auth/otp/send'));
+      expect(mockTransport.lastMethod, equals(HttpMethod.post));
+      expect(mockTransport.lastBody, contains('+966501234567'));
+      expect(mockTransport.lastBody, contains('user@example.com'));
+      expect(mockTransport.lastBody, contains('Ahmed'));
+    });
+
+    test('sendOtp maps 429 rate limit error to RateLimitFailure', () async {
+      mockTransport.statusCode = 429;
+      mockTransport.responseBody = jsonEncode({
+        'code': 'OTP_RATE_LIMIT',
+        'message': 'Too many OTP requests. Please wait before requesting another code.',
+      });
+
+      final result = await authRepository.sendOtp(phone: '+966501234567');
+
+      expect(result.isFailure, isTrue);
+      expect(result.failureOrNull, isA<RateLimitFailure>());
+      expect(result.failureOrNull?.message, contains('Too many OTP requests'));
+    });
+
+    test('verifyOtp calls POST /auth/otp/verify, persists tokens, and sets currentUser', () async {
+      mockTransport.statusCode = 200;
+      mockTransport.responseBody = jsonEncode({
+        'accessToken': 'jwt_access_token_123',
+        'refreshToken': 'uuid_refresh_token_456',
+        'user': {
+          'id': 'user-customer-99',
+          'phone': '+966501234567',
+          'name': 'Customer Ali',
+          'role': 'CUSTOMER',
+          'isPhoneVerified': true,
+          'isActive': true,
+        },
+        'isNew': false,
+      });
+
+      final result = await authRepository.verifyOtp(
+        phone: '+966501234567',
+        code: '123456',
+      );
+
+      expect(result.isSuccess, isTrue);
+      final authResponse = result.dataOrNull!;
+      expect(authResponse.token, equals('jwt_access_token_123'));
+      expect(authResponse.refreshToken, equals('uuid_refresh_token_456'));
+      expect(authResponse.user.id, equals('user-customer-99'));
+      expect(authResponse.user.role, equals(UserRole.customer));
+      expect(authRepository.currentUser?.id, equals('user-customer-99'));
+
+      expect(mockTransport.lastUri?.path, equals('/api/auth/otp/verify'));
+      expect(mockTransport.lastMethod, equals(HttpMethod.post));
+      expect(mockTransport.lastBody, contains('+966501234567'));
+      expect(mockTransport.lastBody, contains('123456'));
+
+      // Check persistent secure storage
+      final storedAuthToken = await mockStorage.read(key: StorageKeys.authToken);
+      final storedRefreshToken = await mockStorage.read(key: StorageKeys.refreshToken);
+      final storedUserId = await mockStorage.read(key: StorageKeys.userId);
+      final storedUserRole = await mockStorage.read(key: StorageKeys.userRole);
+
+      expect(storedAuthToken, equals('jwt_access_token_123'));
+      expect(storedRefreshToken, equals('uuid_refresh_token_456'));
+      expect(storedUserId, equals('user-customer-99'));
+      expect(storedUserRole, equals('customer'));
+    });
+
+    test('verifyOtp maps 422 invalid OTP to ValidationFailure', () async {
+      mockTransport.statusCode = 422;
+      mockTransport.responseBody = jsonEncode({
+        'code': 'OTP_INVALID',
+        'message': 'Invalid code. 4 attempts remaining.',
+      });
+
+      final result = await authRepository.verifyOtp(
+        phone: '+966501234567',
+        code: '000000',
+      );
+
+      expect(result.isFailure, isTrue);
+      expect(result.failureOrNull, isA<ValidationFailure>());
+      expect(result.failureOrNull?.message, contains('Invalid code. 4 attempts remaining.'));
+    });
+
     test('signupCustomer calls /auth/signup, persists token, and returns AuthResponse', () async {
       mockTransport.statusCode = 201;
       mockTransport.responseBody = jsonEncode({
@@ -97,7 +196,7 @@ void main() {
       expect(storedToken, equals('jwt_signup_token_123'));
     });
 
-    test('login calls /auth/login, persists token, and sets currentUser', () async {
+    test('login calls /auth/staff/login, persists tokens, and sets currentUser', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'user': {
@@ -105,7 +204,8 @@ void main() {
           'role': 'store_staff',
           'store_id': 'store-999',
         },
-        'token': 'jwt_login_token_456',
+        'accessToken': 'jwt_login_token_456',
+        'refreshToken': 'uuid_login_refresh_token',
       });
 
       final result = await authRepository.login(
@@ -116,12 +216,35 @@ void main() {
       expect(result.isSuccess, isTrue);
       final authResponse = result.dataOrNull!;
       expect(authResponse.token, equals('jwt_login_token_456'));
+      expect(authResponse.refreshToken, equals('uuid_login_refresh_token'));
       expect(authResponse.user.role, equals(UserRole.storeStaff));
       expect(authRepository.currentUser?.role, equals(UserRole.storeStaff));
 
-      expect(mockTransport.lastUri?.path, equals('/api/auth/login'));
+      expect(mockTransport.lastUri?.path, equals('/api/auth/staff/login'));
       final storedToken = await mockStorage.read(key: StorageKeys.authToken);
+      final storedRefreshToken = await mockStorage.read(key: StorageKeys.refreshToken);
       expect(storedToken, equals('jwt_login_token_456'));
+      expect(storedRefreshToken, equals('uuid_login_refresh_token'));
+    });
+
+    test('refreshToken calls /auth/refresh and updates stored tokens', () async {
+      await mockStorage.write(key: StorageKeys.refreshToken, value: 'old_refresh_token');
+
+      mockTransport.statusCode = 200;
+      mockTransport.responseBody = jsonEncode({
+        'accessToken': 'new_access_token_888',
+        'refreshToken': 'new_refresh_token_999',
+      });
+
+      final result = await authRepository.refreshToken();
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull?.token, equals('new_access_token_888'));
+      expect(result.dataOrNull?.refreshToken, equals('new_refresh_token_999'));
+
+      expect(mockTransport.lastUri?.path, equals('/api/auth/refresh'));
+      expect(await mockStorage.read(key: StorageKeys.authToken), equals('new_access_token_888'));
+      expect(await mockStorage.read(key: StorageKeys.refreshToken), equals('new_refresh_token_999'));
     });
 
     test('requestAdminMagicLink calls /auth/admin/request-magic-link', () async {
@@ -171,13 +294,24 @@ void main() {
       expect(mockTransport.lastHeaders?['Authorization'], equals('Bearer active_token_555'));
     });
 
-    test('logout deletes token from secure storage and clears currentUser', () async {
+    test('logout notifies /auth/logout, deletes tokens and user keys from secure storage, and clears currentUser', () async {
       await mockStorage.write(key: StorageKeys.authToken, value: 'active_token_555');
+      await mockStorage.write(key: StorageKeys.refreshToken, value: 'refresh_token_555');
+      await mockStorage.write(key: StorageKeys.userId, value: 'user_555');
+      await mockStorage.write(key: StorageKeys.userRole, value: 'customer');
+
+      mockTransport.statusCode = 204;
+      mockTransport.responseBody = '';
 
       await authRepository.logout();
 
-      final storedToken = await mockStorage.read(key: StorageKeys.authToken);
-      expect(storedToken, isNull);
+      expect(mockTransport.lastUri?.path, equals('/api/auth/logout'));
+      expect(mockTransport.lastBody, contains('refresh_token_555'));
+
+      expect(await mockStorage.read(key: StorageKeys.authToken), isNull);
+      expect(await mockStorage.read(key: StorageKeys.refreshToken), isNull);
+      expect(await mockStorage.read(key: StorageKeys.userId), isNull);
+      expect(await mockStorage.read(key: StorageKeys.userRole), isNull);
       expect(authRepository.currentUser, isNull);
     });
 

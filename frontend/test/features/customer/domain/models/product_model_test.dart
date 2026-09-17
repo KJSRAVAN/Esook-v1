@@ -3,7 +3,47 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ProductModel', () {
-    test('parses full JSON response with string numeric price correctly', () {
+    test('parses backend Prisma Item response with nested category object correctly', () {
+      final json = {
+        'id': 'item-101',
+        'storeId': 'store-1',
+        'categoryId': 'cat-1',
+        'name': 'Mango Juice 1L',
+        'description': 'Fresh mango juice, chilled',
+        'price': 12.5,
+        'imageUrl': 'https://cdn.example.com/mango.jpg',
+        'isAvailable': true,
+        'sortOrder': 3,
+        'category': {
+          'id': 'cat-1',
+          'storeId': 'store-1',
+          'name': 'Beverages',
+          'sortOrder': 0,
+          'createdAt': '2026-09-07T19:06:18.000Z',
+          'updatedAt': '2026-09-07T19:06:18.000Z',
+        },
+        'createdAt': '2026-09-07T19:06:18.000Z',
+        'updatedAt': '2026-09-07T19:06:18.000Z',
+      };
+
+      final product = ProductModel.fromJson(json);
+
+      expect(product.id, equals('item-101'));
+      expect(product.storeId, equals('store-1'));
+      expect(product.categoryId, equals('cat-1'));
+      expect(product.name, equals('Mango Juice 1L'));
+      expect(product.description, equals('Fresh mango juice, chilled'));
+      expect(product.price, equals(12.5));
+      expect(product.category, equals('Beverages'));
+      expect(product.imageUrl, equals('https://cdn.example.com/mango.jpg'));
+      expect(product.isAvailable, isTrue);
+      expect(product.sortOrder, equals(3));
+      expect(product.loyaltyPointsPerUnit, equals(0));
+      expect(product.createdAt, isNotNull);
+      expect(product.updatedAt, isNotNull);
+    });
+
+    test('parses full legacy JSON response with string numeric price correctly', () {
       final json = {
         'id': 'p-1',
         'store_id': 's-1',
@@ -82,18 +122,23 @@ void main() {
       const product = ProductModel(
         id: 'p-5',
         storeId: 's-1',
+        categoryId: 'cat-5',
         name: 'Eggs 30pk',
         price: 3.50,
         category: 'Dairy & Eggs',
+        sortOrder: 2,
         loyaltyPointsPerUnit: 10,
       );
 
       final json = product.toJson();
 
       expect(json['id'], equals('p-5'));
+      expect(json['storeId'], equals('s-1'));
+      expect(json['categoryId'], equals('cat-5'));
       expect(json['name'], equals('Eggs 30pk'));
       expect(json['price'], equals('3.50'));
       expect(json['category'], equals('Dairy & Eggs'));
+      expect(json['sortOrder'], equals(2));
       expect(json['loyalty_points_per_unit'], equals(10));
     });
   });
