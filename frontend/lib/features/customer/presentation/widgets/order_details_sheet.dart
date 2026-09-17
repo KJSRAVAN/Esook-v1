@@ -6,6 +6,7 @@ import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/models/order_model.dart';
 import '../../domain/repositories/order_repository.dart';
+import '../screens/customer_order_tracking_screen.dart';
 
 /// Modal bottom sheet displaying granular order details and tracking status.
 class OrderDetailsSheet extends StatefulWidget {
@@ -426,7 +427,8 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                             const SizedBox(height: AppDimensions.spacingSm),
                             Row(
                               children: [
-                                const Icon(Icons.stars_rounded, size: 16.0, color: AppColors.warning),
+                                const Icon(Icons.stars_rounded,
+                                    size: 16.0, color: AppColors.warning),
                                 const SizedBox(width: 4.0),
                                 Text(
                                   '+${_order.pointsEarned} loyalty points earned',
@@ -442,6 +444,56 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                       ),
                     ),
                   ],
+                ),
+              ),
+            if (!_isLoading &&
+                _errorMessage == null &&
+                widget.orderRepository != null)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.spacingLg,
+                  vertical: AppDimensions.spacingSm,
+                ),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: AppColors.borderSubtle),
+                  ),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: AppDimensions.buttonHeight,
+                  child: ElevatedButton.icon(
+                    key: const Key('order_details_track_order_button'),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => CustomerOrderTrackingScreen(
+                            orderId: _order.id,
+                            initialOrder: _order,
+                            orderRepository: widget.orderRepository!,
+                            currency: widget.currency,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.timeline_rounded, size: 20),
+                    label: const Text(
+                      'Track Order',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusSm),
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
                 ),
               ),
           ],
