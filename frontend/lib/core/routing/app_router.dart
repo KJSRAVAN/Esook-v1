@@ -1,9 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../presentation/screens/role_home_placeholder.dart';
 import '../../features/admin/presentation/screens/admin_shell.dart';
-import '../../features/auth/domain/models/user_role.dart';
 import '../../features/auth/presentation/screens/admin_magic_link_pending_screen.dart';
 import '../../features/auth/presentation/screens/admin_magic_link_request_screen.dart';
 import '../../features/auth/presentation/screens/admin_verify_screen.dart';
@@ -13,6 +11,7 @@ import '../../features/auth/presentation/screens/rider_login_screen.dart';
 import '../../features/auth/presentation/screens/session_bootstrap_screen.dart';
 import '../../features/auth/presentation/screens/staff_login_screen.dart';
 import '../../features/customer/presentation/screens/customer_shell.dart';
+import '../../features/rider/presentation/screens/rider_shell.dart';
 import '../../features/store/presentation/screens/store_shell.dart';
 import 'app_routes.dart';
 
@@ -99,10 +98,7 @@ abstract final class AppRouter {
       case AppRoutes.riderHome:
         return MaterialPageRoute<void>(
           settings: settings,
-          builder: (_) => const RoleHomePlaceholderScreen(
-            title: 'Rider Portal',
-            role: UserRole.deliveryRider,
-          ),
+          builder: (_) => const RiderShell(),
         );
 
       case AppRoutes.adminHome:
