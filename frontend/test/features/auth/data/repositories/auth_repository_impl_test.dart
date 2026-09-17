@@ -397,5 +397,99 @@ void main() {
       expect(result.failureOrNull, isA<RateLimitFailure>());
       expect(result.failureOrNull?.message, contains('Too many authentication attempts'));
     });
+
+    group('updateProfile', () {
+      test('calls PATCH /users/me with only supplied name and email', () async {
+        await mockStorage.write(key: StorageKeys.authToken, value: 'test_token');
+        mockTransport.statusCode = 200;
+        mockTransport.responseBody = jsonEncode({
+          'id': 'usr_123',
+          'name': 'Updated Ahmed',
+          'email': 'ahmed@example.com',
+          'phone': '+966501234567',
+          'role': 'CUSTOMER',
+          'is_active': true,
+        });
+
+        final result = await authRepository.updateProfile(
+          name: 'Updated Ahmed',
+          email: 'ahmed@example.com',
+        );
+
+        expect(result.isSuccess, isTrue);
+        expect(mockTransport.lastMethod, equals(HttpMethod.patch));
+        expect(mockTransport.lastUri?.path, equals('/api/users/me'));
+
+        final sentBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+        expect(sentBody['name'], equals('Updated Ahmed'));
+        expect(sentBody['email'], equals('ahmed@example.com'));
+        expect(sentBody.containsKey('phone'), isFalse);
+        expect(sentBody.containsKey('phone_number'), isFalse);
+        expect(sentBody.containsKey('role'), isFalse);
+        expect(sentBody.containsKey('id'), isFalse);
+        expect(sentBody.containsKey('isActive'), isFalse);
+        expect(sentBody.containsKey('is_active'), isFalse);
+
+        final user = result.dataOrNull!;
+        expect(user.fullName, equals('Updated Ahmed'));
+        expect(user.email, equals('ahmed@example.com'));
+        expect(user.phoneNumber, equals('+966501234567'));
+        expect(user.role, equals(UserRole.customer));
+        expect(authRepository.currentUser, equals(user));
+      });
+
+      test('calls PATCH /users/me with only name when email is omitted', () async {
+        await mockStorage.write(key: StorageKeys.authToken, value: 'test_token');
+        mockTransport.statusCode = 200;
+        mockTransport.responseBody = jsonEncode({
+          'id': 'usr_123',
+          'name': 'Only Name Update',
+          'phone': '+966501234567',
+          'role': 'CUSTOMER',
+        });
+
+        final result = await authRepository.updateProfile(name: 'Only Name Update');
+
+        expect(result.isSuccess, isTrue);
+        final sentBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+        expect(sentBody['name'], equals('Only Name Update'));
+        expect(sentBody.containsKey('email'), isFalse);
+        expect(sentBody.containsKey('phone'), isFalse);
+      });
+
+      test('returns ValidationFailure on 400 validation error', () async {
+        await mockStorage.write(key: StorageKeys.authToken, value: 'test_token');
+        mockTransport.statusCode = 400;
+        mockTransport.responseBody = jsonEncode({
+          'message': 'Name must be at least 2 characters',
+        });
+
+        final result = await authRepository.updateProfile(name: 'A');
+
+        expect(result.isFailure, isTrue);
+        expect(result.failureOrNull, isA<ValidationFailure>());
+        expect(result.failureOrNull?.message, contains('Name must be at least 2 characters'));
+      });
+
+      test('returns UnauthorizedFailure on 401 unauthorized', () async {
+        mockTransport.statusCode = 401;
+        mockTransport.responseBody = jsonEncode({'message': 'Unauthorized'});
+
+        final result = await authRepository.updateProfile(name: 'New Name');
+
+        expect(result.isFailure, isTrue);
+        expect(result.failureOrNull, isA<UnauthorizedFailure>());
+      });
+
+      test('returns ServerFailure on 500 server error', () async {
+        mockTransport.statusCode = 500;
+        mockTransport.responseBody = jsonEncode({'message': 'Internal server error'});
+
+        final result = await authRepository.updateProfile(name: 'New Name');
+
+        expect(result.isFailure, isTrue);
+        expect(result.failureOrNull, isA<ServerFailure>());
+      });
+    });
   });
 }

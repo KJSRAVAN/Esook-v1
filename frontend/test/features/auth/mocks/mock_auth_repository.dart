@@ -192,6 +192,49 @@ class MockAuthRepository implements AuthRepository {
     ));
   }
 
+  Result<UserModel>? updateProfileResult;
+  int updateProfileCallCount = 0;
+  String? lastUpdateName;
+  String? lastUpdateEmail;
+
+  @override
+  Future<Result<UserModel>> updateProfile({
+    String? name,
+    String? email,
+  }) async {
+    updateProfileCallCount++;
+    lastUpdateName = name;
+    lastUpdateEmail = email;
+
+    if (updateProfileResult != null) return updateProfileResult!;
+
+    if (currentUser != null) {
+      final updated = UserModel(
+        id: currentUser!.id,
+        phoneNumber: currentUser!.phoneNumber,
+        fullName: name ?? currentUser!.fullName,
+        email: email ?? currentUser!.email,
+        role: currentUser!.role,
+        isActive: currentUser!.isActive,
+        storeId: currentUser!.storeId,
+        address: currentUser!.address,
+        createdAt: currentUser!.createdAt,
+      );
+      currentUser = updated;
+      return Result.success(updated);
+    }
+
+    final fallback = UserModel(
+      id: 'cust_updated',
+      phoneNumber: '+966501234567',
+      fullName: name ?? 'Updated Name',
+      email: email,
+      role: UserRole.customer,
+    );
+    currentUser = fallback;
+    return Result.success(fallback);
+  }
+
   @override
   Future<void> logout() async {
     logoutCallCount++;

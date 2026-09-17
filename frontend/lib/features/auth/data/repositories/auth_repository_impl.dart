@@ -274,6 +274,34 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Result<UserModel>> updateProfile({
+    String? name,
+    String? email,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        if (name != null) 'name': name,
+        if (email != null) 'email': email,
+      };
+
+      final response = await _apiClient.patch<Map<String, dynamic>>(
+        '/users/me',
+        body: body,
+      );
+
+      final userJson = response.data['user'] as Map<String, dynamic>? ?? response.data;
+      final updatedUser = UserModel.fromJson(userJson);
+      _currentUser = updatedUser;
+
+      return Result.success(updatedUser);
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(UnknownFailure(message: 'Failed to update profile: $e'));
+    }
+  }
+
+  @override
   Future<void> logout() async {
     try {
       final refreshToken = await _secureStorage.read(key: StorageKeys.refreshToken);

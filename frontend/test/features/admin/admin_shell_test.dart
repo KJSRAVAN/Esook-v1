@@ -46,6 +46,9 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<Result<AuthResponseModel>> verifyOtp({required String phone, required String code}) async =>
       Result.failure(const UnknownFailure(message: 'Not implemented in fake'));
+  @override
+  Future<Result<UserModel>> updateProfile({String? name, String? email}) async =>
+      Result.failure(const UnknownFailure(message: 'Not implemented in fake'));
 }
 
 class FakeAdminUsersRepository implements AdminUsersRepository {

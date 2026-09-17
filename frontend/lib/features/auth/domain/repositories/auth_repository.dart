@@ -52,6 +52,14 @@ abstract interface class AuthRepository {
   /// Rotate and refresh JWT access token using stored refresh token (POST /auth/refresh).
   Future<Result<AuthResponseModel>> refreshToken();
 
+  /// Update authenticated user's profile details (PATCH /users/me).
+  ///
+  /// Only [name] and [email] are accepted by the backend.
+  Future<Result<UserModel>> updateProfile({
+    String? name,
+    String? email,
+  });
+
   /// Clear stored credentials and session state.
   Future<void> logout();
 }
