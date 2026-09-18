@@ -41,6 +41,7 @@ class EditStoreDialog extends StatefulWidget {
 class _EditStoreDialogState extends State<EditStoreDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
+  late final TextEditingController _areaController;
   late final TextEditingController _addressController;
   late final TextEditingController _phoneController;
   late bool _isActive;
@@ -52,6 +53,7 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.store.name);
+    _areaController = TextEditingController(text: widget.store.area);
     _addressController = TextEditingController(text: widget.store.address ?? '');
     _phoneController = TextEditingController(text: widget.store.phone ?? '');
     _isActive = widget.store.isActive;
@@ -60,6 +62,7 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
   @override
   void dispose() {
     _nameController.dispose();
+    _areaController.dispose();
     _addressController.dispose();
     _phoneController.dispose();
     super.dispose();
@@ -73,12 +76,14 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
     setState(() => _isSubmitting = true);
 
     final name = _nameController.text.trim();
+    final area = _areaController.text.trim();
     final address = _addressController.text.trim();
     final phone = _phoneController.text.trim();
 
     final result = await widget.storesRepository.updateStore(
       storeId: widget.store.id,
       name: name,
+      area: area.isNotEmpty ? area : null,
       address: address.isNotEmpty ? address : null,
       phone: phone.isNotEmpty ? phone : null,
       isActive: _isActive,
@@ -172,6 +177,20 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                     enabled: !_isSubmitting,
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) return 'Please enter store name';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppDimensions.spacingSm),
+
+                  // Delivery Area
+                  AuthTextField(
+                    key: const Key('edit_store_area_field'),
+                    controller: _areaController,
+                    label: 'Delivery Area',
+                    prefixIcon: Icons.location_on_outlined,
+                    enabled: !_isSubmitting,
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) return 'Please enter delivery area';
                       return null;
                     },
                   ),

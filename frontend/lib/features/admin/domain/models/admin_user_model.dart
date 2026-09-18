@@ -30,21 +30,25 @@ class AdminUserModel {
     final rawRoleString = json['role'] as String?;
     final role = UserRole.fromString(rawRoleString);
 
+    final rawCreatedAt = json['created_at'] ?? json['createdAt'];
     DateTime? parsedCreatedAt;
-    if (json['createdAt'] is String) {
-      parsedCreatedAt = DateTime.tryParse(json['createdAt'] as String);
+    if (rawCreatedAt is String) {
+      parsedCreatedAt = DateTime.tryParse(rawCreatedAt);
     }
+
+    final rawIsActive = json['is_active'] ?? json['isActive'];
+    final bool isActive = rawIsActive is bool ? rawIsActive : true;
 
     return AdminUserModel(
       id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? json['full_name'] as String? ?? 'User',
+      name: json['full_name'] as String? ?? json['name'] as String? ?? 'User',
       email: json['email'] as String?,
-      phone: json['phone'] as String? ?? json['phone_number'] as String?,
+      phone: json['phone_number'] as String? ?? json['phone'] as String?,
       role: role,
       rawRole: rawRoleString,
-      storeId: json['storeId'] as String? ?? json['store_id'] as String?,
-      isPhoneVerified: json['isPhoneVerified'] as bool? ?? false,
-      isActive: json['isActive'] as bool? ?? true,
+      storeId: json['store_id'] as String? ?? json['storeId'] as String?,
+      isPhoneVerified: json['is_phone_verified'] as bool? ?? json['isPhoneVerified'] as bool? ?? false,
+      isActive: isActive,
       createdAt: parsedCreatedAt,
     );
   }
@@ -54,12 +58,12 @@ class AdminUserModel {
       'id': id,
       'name': name,
       if (email != null) 'email': email,
-      if (phone != null) 'phone': phone,
+      if (phone != null) 'phone_number': phone,
       'role': rawRole ?? role.value,
-      if (storeId != null) 'storeId': storeId,
-      'isPhoneVerified': isPhoneVerified,
-      'isActive': isActive,
-      if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+      if (storeId != null) 'store_id': storeId,
+      'is_phone_verified': isPhoneVerified,
+      'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
     };
   }
 }

@@ -281,6 +281,25 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: (user.isActive ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                          border: Border.all(
+                            color: (user.isActive ? AppColors.success : AppColors.error).withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Text(
+                          user.isActive ? 'Active' : 'Inactive',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: user.isActive ? AppColors.success : AppColors.error,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),

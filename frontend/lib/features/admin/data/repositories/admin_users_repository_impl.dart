@@ -18,51 +18,76 @@ class AdminUsersRepositoryImpl implements AdminUsersRepository {
     String? role,
   }) async {
     try {
+      String? backendRole;
+      if (role != null && role.isNotEmpty && role.toUpperCase() != 'ALL') {
+        final normalized = role.trim().toLowerCase();
+        switch (normalized) {
+          case 'customer':
+            backendRole = 'customer';
+            break;
+          case 'staff':
+          case 'store_staff':
+            backendRole = 'store_staff';
+            break;
+          case 'manager':
+          case 'store_manager':
+            backendRole = 'store_manager';
+            break;
+          case 'driver':
+          case 'delivery_rider':
+            backendRole = 'delivery_rider';
+            break;
+          case 'super_admin':
+          case 'admin':
+            backendRole = 'super_admin';
+            break;
+          default:
+            backendRole = normalized;
+        }
+      }
+
       final queryParams = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-        if (role != null && role.isNotEmpty && role != 'ALL') 'role': role.toUpperCase(),
+        if (backendRole != null) 'role': backendRole,
       };
 
       final response = await _apiClient.get<dynamic>(
         '/users',
-        queryParameters: queryParams,
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
 
       final dynamic rawData = response.data;
       final List<dynamic> rawList;
-      int total = 0;
-      int resPage = page;
-      int resLimit = limit;
 
       if (rawData is Map<String, dynamic>) {
-        if (rawData['data'] is List) {
-          rawList = rawData['data'] as List;
-        } else if (rawData['users'] is List) {
+        if (rawData['users'] is List) {
           rawList = rawData['users'] as List;
+        } else if (rawData['data'] is List) {
+          rawList = rawData['data'] as List;
         } else {
           rawList = const [];
         }
-        total = (rawData['total'] as num?)?.toInt() ?? rawList.length;
-        resPage = (rawData['page'] as num?)?.toInt() ?? page;
-        resLimit = (rawData['limit'] as num?)?.toInt() ?? limit;
       } else if (rawData is List) {
         rawList = rawData;
-        total = rawList.length;
       } else {
         rawList = const [];
       }
 
-      final users = rawList
+      final allUsers = rawList
           .whereType<Map<String, dynamic>>()
           .map(AdminUserModel.fromJson)
           .toList();
 
+      final total = allUsers.length;
+      final startIndex = (page - 1) * limit;
+      final paginatedUsers = (startIndex < total)
+          ? allUsers.skip(startIndex).take(limit).toList()
+          : <AdminUserModel>[];
+
       return Result.success(AdminUsersPage(
-        users: users,
+        users: paginatedUsers.isNotEmpty ? paginatedUsers : allUsers,
         total: total,
-        page: resPage,
-        limit: resLimit,
+        page: page,
+        limit: limit,
       ));
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));

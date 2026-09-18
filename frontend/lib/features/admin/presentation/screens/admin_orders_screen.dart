@@ -90,14 +90,14 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Store-Scoped Order Contract',
+                              'Orders Oversight Architecture',
                               style: AppTextStyles.titleMedium.copyWith(
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'The production backend provides order querying scoped to individual stores (`GET /orders/store/:storeId`). Unconstrained global order aggregation across all stores is not currently exposed.',
+                              'The production backend provides order querying via `GET /orders`, supporting both platform-wide order oversight and store-specific scoping (`GET /orders?store_id=:storeId`). Store staff and riders manage operational order fulfillment directly in their designated portals.',
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: AppColors.textSecondary,
                               ),

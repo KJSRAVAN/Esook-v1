@@ -5,7 +5,6 @@ import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/widgets/auth_primary_button.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
-import '../../domain/models/admin_area_model.dart';
 import '../../domain/models/admin_store_model.dart';
 import '../../domain/repositories/admin_stores_repository.dart';
 
@@ -36,74 +35,37 @@ class CreateStoreDialog extends StatefulWidget {
 class _CreateStoreDialogState extends State<CreateStoreDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _areaController = TextEditingController();
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
 
-  bool _isLoadingAreas = true;
   bool _isSubmitting = false;
   String? _errorMessage;
-  List<AdminAreaModel> _areas = const [];
-  String? _selectedAreaId;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadAreas();
-  }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _areaController.dispose();
     _addressController.dispose();
     _phoneController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadAreas() async {
-    setState(() {
-      _isLoadingAreas = true;
-      _errorMessage = null;
-    });
-
-    final result = await widget.storesRepository.getAreas();
-
-    if (!mounted) return;
-
-    if (result.isSuccess) {
-      final areas = result.dataOrNull ?? [];
-      setState(() {
-        _areas = areas;
-        _isLoadingAreas = false;
-        if (areas.isNotEmpty) {
-          _selectedAreaId = areas.first.id;
-        }
-      });
-    } else {
-      setState(() {
-        _isLoadingAreas = false;
-        _errorMessage = 'Could not load delivery areas. Please retry.';
-      });
-    }
   }
 
   Future<void> _handleSubmit() async {
     setState(() => _errorMessage = null);
 
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedAreaId == null || _selectedAreaId!.isEmpty) {
-      setState(() => _errorMessage = 'Please select a delivery area');
-      return;
-    }
 
     setState(() => _isSubmitting = true);
 
     final name = _nameController.text.trim();
+    final area = _areaController.text.trim();
     final address = _addressController.text.trim();
     final phone = _phoneController.text.trim();
 
     final result = await widget.storesRepository.createStore(
       name: name,
-      areaId: _selectedAreaId!,
+      area: area,
       address: address.isNotEmpty ? address : null,
       phone: phone.isNotEmpty ? phone : null,
     );
@@ -203,50 +165,19 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
                   ),
                   const SizedBox(height: AppDimensions.spacingSm),
 
-                  // Delivery Area Dropdown
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Delivery Area',
-                        style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXs),
-                      if (_isLoadingAreas)
-                        const LinearProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                        )
-                      else if (_areas.isEmpty)
-                        Text(
-                          'No areas configured in database',
-                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
-                        )
-                      else
-                        DropdownButtonFormField<String>(
-                          key: const Key('store_area_dropdown'),
-                          value: _selectedAreaId,
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.location_on_outlined, size: 20),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: AppDimensions.spacingMd,
-                              vertical: AppDimensions.spacingSm,
-                            ),
-                          ),
-                          items: _areas.map((area) {
-                            return DropdownMenuItem<String>(
-                              value: area.id,
-                              child: Text(area.name),
-                            );
-                          }).toList(),
-                          onChanged: _isSubmitting
-                              ? null
-                              : (val) => setState(() => _selectedAreaId = val),
-                          validator: (val) {
-                            if (val == null || val.isEmpty) return 'Please select an area';
-                            return null;
-                          },
-                        ),
-                    ],
+                  // Delivery Area
+                  AuthTextField(
+                    key: const Key('store_area_field'),
+                    controller: _areaController,
+                    label: 'Delivery Area',
+                    hintText: 'e.g. Riyadh-North, Downtown, Olaya',
+                    prefixIcon: Icons.location_on_outlined,
+                    enabled: !_isSubmitting,
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) return 'Please enter delivery area';
+                      if (val.trim().length < 2) return 'Area must be at least 2 characters';
+                      return null;
+                    },
                   ),
                   const SizedBox(height: AppDimensions.spacingSm),
 

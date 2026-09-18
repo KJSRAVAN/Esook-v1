@@ -6,7 +6,7 @@ import '../../../auth/domain/models/user_role.dart';
 import '../../domain/models/admin_user_model.dart';
 import '../../domain/repositories/admin_drivers_repository.dart';
 
-/// Concrete [AdminDriversRepository] communicating with `POST /auth/register/driver` and `GET /users`.
+/// Concrete [AdminDriversRepository] communicating with `POST /users` and `GET /users?role=delivery_rider`.
 class AdminDriversRepositoryImpl implements AdminDriversRepository {
   final ApiClient _apiClient;
 
@@ -17,14 +17,17 @@ class AdminDriversRepositoryImpl implements AdminDriversRepository {
     required String name,
     required String phone,
     required String password,
+    String? storeId,
   }) async {
     try {
       final response = await _apiClient.post<dynamic>(
-        '/auth/register/driver',
+        '/users',
         body: {
-          'name': name.trim(),
-          'phone': phone.trim(),
+          'phone_number': phone.trim(),
+          'full_name': name.trim(),
+          'role': 'delivery_rider',
           'password': password,
+          if (storeId != null && storeId.trim().isNotEmpty) 'store_id': storeId.trim(),
         },
       );
 
@@ -57,13 +60,10 @@ class AdminDriversRepositoryImpl implements AdminDriversRepository {
     int limit = 50,
   }) async {
     try {
-      // First try querying users with role filter
       final response = await _apiClient.get<dynamic>(
         '/users',
         queryParameters: {
-          'page': page,
-          'limit': limit,
-          'role': 'DRIVER',
+          'role': 'delivery_rider',
         },
       );
 
@@ -71,10 +71,10 @@ class AdminDriversRepositoryImpl implements AdminDriversRepository {
       final List<dynamic> rawList;
 
       if (rawData is Map<String, dynamic>) {
-        if (rawData['data'] is List) {
-          rawList = rawData['data'] as List;
-        } else if (rawData['users'] is List) {
+        if (rawData['users'] is List) {
           rawList = rawData['users'] as List;
+        } else if (rawData['data'] is List) {
+          rawList = rawData['data'] as List;
         } else {
           rawList = const [];
         }
@@ -84,24 +84,14 @@ class AdminDriversRepositoryImpl implements AdminDriversRepository {
         rawList = const [];
       }
 
-      var drivers = rawList
+      final drivers = rawList
           .whereType<Map<String, dynamic>>()
           .map(AdminUserModel.fromJson)
-          .where((u) => u.role == UserRole.deliveryRider || u.rawRole?.toUpperCase() == 'DRIVER')
+          .where((u) => u.role == UserRole.deliveryRider)
           .toList();
-
-      if (drivers.isEmpty && rawList.isNotEmpty) {
-        drivers = rawList
-            .whereType<Map<String, dynamic>>()
-            .map(AdminUserModel.fromJson)
-            .where((u) => u.role == UserRole.deliveryRider || u.rawRole?.toUpperCase() == 'DRIVER')
-            .toList();
-      }
 
       return Result.success(drivers);
     } on AppException catch (e) {
-      return Result.failure(AppFailure.fromException(e));
-    } catch (e) {
       return Result.failure(UnknownFailure(message: 'Failed to fetch drivers: $e'));
     }
   }

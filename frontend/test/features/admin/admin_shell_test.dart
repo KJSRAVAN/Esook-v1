@@ -80,7 +80,12 @@ class FakeAdminDriversRepository implements AdminDriversRepository {
   }
 
   @override
-  Future<Result<AdminUserModel>> registerDriver({required String name, required String phone, required String password}) async {
+  Future<Result<AdminUserModel>> registerDriver({
+    required String name,
+    required String phone,
+    required String password,
+    String? storeId,
+  }) async {
     return Result.success(
       AdminUserModel(id: 'd-2', name: name, role: UserRole.deliveryRider, phone: phone),
     );
@@ -92,7 +97,7 @@ class FakeAdminStoresRepository implements AdminStoresRepository {
   Future<Result<List<AdminStoreModel>>> getStores() async {
     return Result.success(
       const [
-        AdminStoreModel(id: 'store-1', name: 'Fresh Mart Riyadh', areaId: 'area-1', areaName: 'Riyadh'),
+        AdminStoreModel(id: 'store-1', name: 'Fresh Mart Riyadh', areaId: 'area-1', area: 'Riyadh', areaName: 'Riyadh'),
       ],
     );
   }
@@ -107,16 +112,32 @@ class FakeAdminStoresRepository implements AdminStoresRepository {
   }
 
   @override
-  Future<Result<AdminStoreModel>> createStore({required String name, required String areaId, String? address, String? phone}) async {
+  Future<Result<AdminStoreModel>> createStore({
+    required String name,
+    String? areaId,
+    String? area,
+    String? address,
+    String? phone,
+    String? phoneNumber,
+    bool? isActive,
+  }) async {
     return Result.success(
-      AdminStoreModel(id: 'store-2', name: name, areaId: areaId, address: address, phone: phone),
+      AdminStoreModel(id: 'store-2', name: name, areaId: areaId ?? 'area-1', area: area ?? 'Riyadh', address: address, phone: phone),
     );
   }
 
   @override
-  Future<Result<AdminStoreModel>> updateStore({required String storeId, String? name, String? address, String? phone, bool? isActive}) async {
+  Future<Result<AdminStoreModel>> updateStore({
+    required String storeId,
+    String? name,
+    String? area,
+    String? address,
+    String? phone,
+    String? phoneNumber,
+    bool? isActive,
+  }) async {
     return Result.success(
-      AdminStoreModel(id: storeId, name: name ?? 'Store', areaId: 'area-1', isActive: isActive ?? true),
+      AdminStoreModel(id: storeId, name: name ?? 'Store', areaId: 'area-1', area: area ?? 'Riyadh', isActive: isActive ?? true),
     );
   }
 }
@@ -187,7 +208,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.receipt_long_outlined));
       await tester.pumpAndSettle();
       expect(find.text('Orders Oversight'), findsOneWidget);
-      expect(find.text('Store-Scoped Order Contract'), findsOneWidget);
+      expect(find.text('Orders Oversight Architecture'), findsOneWidget);
     });
 
     testWidgets('logout button invokes logout on AuthRepository', (tester) async {

@@ -2,7 +2,7 @@
 class AdminStoreModel {
   final String id;
   final String name;
-  final String areaId;
+  final String area;
   final String? areaName;
   final String? address;
   final String? phone;
@@ -10,17 +10,21 @@ class AdminStoreModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
+  /// Backwards compatibility alias for [area].
+  String get areaId => area;
+
   const AdminStoreModel({
     required this.id,
     required this.name,
-    required this.areaId,
+    String? area,
+    String? areaId,
     this.areaName,
     this.address,
     this.phone,
     this.isActive = true,
     this.createdAt,
     this.updatedAt,
-  });
+  }) : area = area ?? areaId ?? '';
 
   factory AdminStoreModel.fromJson(Map<String, dynamic> json) {
     String? resolvedAreaName;
@@ -30,16 +34,29 @@ class AdminStoreModel {
       resolvedAreaName = json['area'] as String;
     }
 
+    final resolvedArea = resolvedAreaName ??
+        json['area'] as String? ??
+        json['areaId'] as String? ??
+        json['area_id'] as String? ??
+        '';
+
+    final rawPhone = json['phone_number'] as String? ?? json['phone'] as String?;
+    final rawIsActive = json['is_active'] ?? json['isActive'];
+    final bool isActive = rawIsActive is bool ? rawIsActive : true;
+
+    final rawCreatedAt = json['created_at'] ?? json['createdAt'];
+    final rawUpdatedAt = json['updated_at'] ?? json['updatedAt'];
+
     return AdminStoreModel(
       id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      areaId: json['areaId'] as String? ?? json['area_id'] as String? ?? '',
-      areaName: resolvedAreaName,
+      area: resolvedArea,
+      areaName: resolvedAreaName ?? resolvedArea,
       address: json['address'] as String?,
-      phone: json['phone'] as String?,
-      isActive: json['isActive'] as bool? ?? json['is_active'] as bool? ?? true,
-      createdAt: json['createdAt'] is String ? DateTime.tryParse(json['createdAt'] as String) : null,
-      updatedAt: json['updatedAt'] is String ? DateTime.tryParse(json['updatedAt'] as String) : null,
+      phone: rawPhone,
+      isActive: isActive,
+      createdAt: rawCreatedAt is String ? DateTime.tryParse(rawCreatedAt) : null,
+      updatedAt: rawUpdatedAt is String ? DateTime.tryParse(rawUpdatedAt) : null,
     );
   }
 
@@ -47,10 +64,10 @@ class AdminStoreModel {
     return {
       'id': id,
       'name': name,
-      'areaId': areaId,
+      'area': area,
       if (address != null) 'address': address,
-      if (phone != null) 'phone': phone,
-      'isActive': isActive,
+      if (phone != null) 'phone_number': phone,
+      'is_active': isActive,
     };
   }
 }

@@ -48,19 +48,20 @@ void main() {
       storesRepository = AdminStoresRepositoryImpl(apiClient: apiClient);
     });
 
-    test('getStores parses store list from GET /stores', () async {
+    test('getStores parses store list from GET /stores with area, phone_number, is_active', () async {
       mockTransport.statusCode = 200;
-      mockTransport.responseBody = jsonEncode([
-        {
-          'id': 'store-1',
-          'name': 'Fresh Mart Riyadh',
-          'areaId': 'area-1',
-          'area': {'id': 'area-1', 'name': 'Riyadh'},
-          'address': 'King Fahd Road',
-          'phone': '+966112345678',
-          'isActive': true,
-        }
-      ]);
+      mockTransport.responseBody = jsonEncode({
+        'stores': [
+          {
+            'id': 'store-1',
+            'name': 'Fresh Mart Riyadh',
+            'area': 'Riyadh-North',
+            'address': 'King Fahd Road',
+            'phone_number': '+966112345678',
+            'is_active': true,
+          }
+        ]
+      });
 
       final result = await storesRepository.getStores();
 
@@ -69,65 +70,73 @@ void main() {
       expect(stores.length, 1);
       expect(stores.first.id, 'store-1');
       expect(stores.first.name, 'Fresh Mart Riyadh');
-      expect(stores.first.areaName, 'Riyadh');
+      expect(stores.first.area, 'Riyadh-North');
+      expect(stores.first.phone, '+966112345678');
+      expect(stores.first.isActive, isTrue);
       expect(mockTransport.lastUri?.path, '/stores');
     });
 
-    test('getAreas parses delivery areas from GET /stores/areas', () async {
-      mockTransport.statusCode = 200;
-      mockTransport.responseBody = jsonEncode([
-        {'id': 'area-1', 'name': 'Riyadh'},
-        {'id': 'area-2', 'name': 'Jeddah'}
-      ]);
-
+    test('getAreas makes no HTTP request to /stores/areas', () async {
       final result = await storesRepository.getAreas();
 
       expect(result.isSuccess, isTrue);
-      final areas = result.dataOrNull!;
-      expect(areas.length, 2);
-      expect(areas[0].name, 'Riyadh');
-      expect(areas[1].name, 'Jeddah');
-      expect(mockTransport.lastUri?.path, '/stores/areas');
+      expect(mockTransport.lastUri, isNull);
     });
 
-    test('createStore sends POST /stores and returns new store', () async {
+    test('createStore sends POST /stores with area, phone_number, is_active', () async {
       mockTransport.statusCode = 201;
       mockTransport.responseBody = jsonEncode({
-        'id': 'store-2',
-        'name': 'Green Basket Jeddah',
-        'areaId': 'area-2',
-        'address': 'Tahlia Street',
-        'phone': '+966122345678',
-        'isActive': true,
+        'store': {
+          'id': 'store-2',
+          'name': 'Green Basket Jeddah',
+          'area': 'Jeddah-Corniche',
+          'address': 'Tahlia Street',
+          'phone_number': '+966122345678',
+          'is_active': true,
+        }
       });
 
       final result = await storesRepository.createStore(
         name: 'Green Basket Jeddah',
-        areaId: 'area-2',
+        area: 'Jeddah-Corniche',
         address: 'Tahlia Street',
         phone: '+966122345678',
+        isActive: true,
       );
 
       expect(result.isSuccess, isTrue);
       final store = result.dataOrNull!;
       expect(store.id, 'store-2');
       expect(store.name, 'Green Basket Jeddah');
+      expect(store.area, 'Jeddah-Corniche');
       expect(mockTransport.lastUri?.path, '/stores');
       expect(mockTransport.lastMethod, HttpMethod.post);
+
+      final sentBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+      expect(sentBody['area'], 'Jeddah-Corniche');
+      expect(sentBody['phone_number'], '+966122345678');
+      expect(sentBody['is_active'], isTrue);
+      expect(sentBody.containsKey('areaId'), isFalse);
+      expect(sentBody.containsKey('phone'), isFalse);
+      expect(sentBody.containsKey('isActive'), isFalse);
     });
 
-    test('updateStore sends PATCH /stores/:storeId and returns updated store', () async {
+    test('updateStore sends PATCH /stores/:storeId with phone_number, is_active', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
-        'id': 'store-2',
-        'name': 'Green Basket Jeddah Updated',
-        'areaId': 'area-2',
-        'isActive': false,
+        'store': {
+          'id': 'store-2',
+          'name': 'Green Basket Jeddah Updated',
+          'area': 'Jeddah-Corniche',
+          'phone_number': '+966129999999',
+          'is_active': false,
+        }
       });
 
       final result = await storesRepository.updateStore(
         storeId: 'store-2',
         name: 'Green Basket Jeddah Updated',
+        phone: '+966129999999',
         isActive: false,
       );
 
@@ -137,6 +146,12 @@ void main() {
       expect(store.isActive, isFalse);
       expect(mockTransport.lastUri?.path, '/stores/store-2');
       expect(mockTransport.lastMethod, HttpMethod.patch);
+
+      final sentBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+      expect(sentBody['phone_number'], '+966129999999');
+      expect(sentBody['is_active'], isFalse);
+      expect(sentBody.containsKey('phone'), isFalse);
+      expect(sentBody.containsKey('isActive'), isFalse);
     });
   });
 }
