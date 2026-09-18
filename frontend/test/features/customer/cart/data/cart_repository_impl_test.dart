@@ -52,7 +52,7 @@ void main() {
       cartRepository = CartRepositoryImpl(apiClient: apiClient);
     });
 
-    test('getCart sends GET /cart and parses backend Cart response on 200', () async {
+    test('getCart sends GET /cart with store_id query and parses backend Cart response on 200', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'userId': 'usr-1',
@@ -70,7 +70,7 @@ void main() {
         'updatedAt': '2026-09-10T12:00:00.000Z',
       });
 
-      final result = await cartRepository.getCart();
+      final result = await cartRepository.getCart(storeId: 'store-100');
 
       expect(result.isSuccess, isTrue);
       final cart = result.dataOrNull!;
@@ -83,10 +83,11 @@ void main() {
       expect(cart.items.first.quantity, equals(2));
       expect(cart.subtotal, equals(3.00));
       expect(mockTransport.lastUri?.path, equals('/api/cart'));
+      expect(mockTransport.lastUri?.queryParameters['store_id'], equals('store-100'));
       expect(mockTransport.lastMethod, equals(HttpMethod.get));
     });
 
-    test('addItem sends POST /cart/items with itemId and quantity payload', () async {
+    test('addItem sends POST /cart/items with store_id, product_id, and quantity payload', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'userId': 'usr-1',
@@ -105,6 +106,7 @@ void main() {
 
       final result = await cartRepository.addItem(
         itemId: 'item-1',
+        storeId: 'store-100',
         quantity: 3,
       );
 
@@ -115,11 +117,12 @@ void main() {
       expect(mockTransport.lastUri?.path, equals('/api/cart/items'));
       expect(mockTransport.lastMethod, equals(HttpMethod.post));
       final sentBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
-      expect(sentBody['itemId'], equals('item-1'));
+      expect(sentBody['store_id'], equals('store-100'));
+      expect(sentBody['product_id'], equals('item-1'));
       expect(sentBody['quantity'], equals(3));
     });
 
-    test('setItemQuantity sends PATCH /cart/items/:itemId with quantity payload', () async {
+    test('setItemQuantity sends PATCH /cart/items/:productId with store_id and quantity payload', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'userId': 'usr-1',
@@ -138,6 +141,7 @@ void main() {
 
       final result = await cartRepository.setItemQuantity(
         itemId: 'item-1',
+        storeId: 'store-100',
         quantity: 5,
       );
 
@@ -147,40 +151,44 @@ void main() {
       expect(mockTransport.lastUri?.path, equals('/api/cart/items/item-1'));
       expect(mockTransport.lastMethod, equals(HttpMethod.patch));
       final sentBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+      expect(sentBody['store_id'], equals('store-100'));
       expect(sentBody['quantity'], equals(5));
     });
 
-    test('removeItem sends PATCH /cart/items/:itemId with quantity 0', () async {
+    test('removeItem sends DELETE /cart/items/:productId with store_id query', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'userId': 'usr-1',
-        'storeId': null,
+        'storeId': 'store-100',
         'items': [],
         'subtotal': 0.0,
         'updatedAt': '2026-09-10T12:00:00.000Z',
       });
 
-      final result = await cartRepository.removeItem(itemId: 'item-1');
+      final result = await cartRepository.removeItem(
+        itemId: 'item-1',
+        storeId: 'store-100',
+      );
 
       expect(result.isSuccess, isTrue);
       expect(result.dataOrNull?.isEmpty, isTrue);
       expect(mockTransport.lastUri?.path, equals('/api/cart/items/item-1'));
-      expect(mockTransport.lastMethod, equals(HttpMethod.patch));
-      final sentBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
-      expect(sentBody['quantity'], equals(0));
+      expect(mockTransport.lastUri?.queryParameters['store_id'], equals('store-100'));
+      expect(mockTransport.lastMethod, equals(HttpMethod.delete));
     });
 
-    test('clearCart sends DELETE /cart and returns empty CartModel', () async {
+    test('clearCart sends DELETE /cart with store_id query and returns empty CartModel', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'message': 'Cart cleared',
       });
 
-      final result = await cartRepository.clearCart();
+      final result = await cartRepository.clearCart(storeId: 'store-100');
 
       expect(result.isSuccess, isTrue);
       expect(result.dataOrNull?.isEmpty, isTrue);
       expect(mockTransport.lastUri?.path, equals('/api/cart'));
+      expect(mockTransport.lastUri?.queryParameters['store_id'], equals('store-100'));
       expect(mockTransport.lastMethod, equals(HttpMethod.delete));
     });
 

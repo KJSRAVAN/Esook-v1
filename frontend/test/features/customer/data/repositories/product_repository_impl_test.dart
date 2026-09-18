@@ -119,7 +119,7 @@ void main() {
       expect(products[0].category, equals('Dairy & Eggs'));
       expect(products[0].categoryId, equals('cat-1'));
       expect(products[1].name, equals('Brown Bread 500g'));
-      expect(mockTransport.lastUri?.path, equals('/api/stores/store-100/items'));
+      expect(mockTransport.lastUri?.path, equals('/api/products/store/store-100'));
       expect(mockTransport.lastUri?.queryParameters['categoryId'], equals('cat-1'));
       expect(mockTransport.lastUri?.queryParameters['search'], equals('egg'));
       expect(mockTransport.lastUri?.queryParameters['available'], equals('true'));
@@ -128,7 +128,7 @@ void main() {
       expect(mockTransport.lastMethod, equals(HttpMethod.get));
     });
 
-    test('getProductById calls GET /stores/:storeId/items/:itemId and returns item on 200', () async {
+    test('getProductById calls GET /products/:id and returns item on 200', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'id': 'item-123',
@@ -158,46 +158,39 @@ void main() {
       expect(product.name, equals('Labneh 500g'));
       expect(product.price, equals(2.50));
       expect(product.category, equals('Dairy & Eggs'));
-      expect(mockTransport.lastUri?.path, equals('/api/stores/store-100/items/item-123'));
+      expect(mockTransport.lastUri?.path, equals('/api/products/item-123'));
     });
 
-    test('getCategories calls GET /stores/:storeId/categories and parses categories on 200', () async {
+    test('getCategories derives unique categories from store products on 200', () async {
       mockTransport.statusCode = 200;
-      mockTransport.responseBody = jsonEncode([
-        {
-          'id': 'cat-1',
-          'storeId': 'store-100',
-          'name': 'Dairy & Eggs',
-          'sortOrder': 0,
-          '_count': {
-            'items': 15,
+      mockTransport.responseBody = jsonEncode({
+        'products': [
+          {
+            'id': 'item-1',
+            'store_id': 'store-100',
+            'name': 'Organic Eggs 12pk',
+            'price': '3.20',
+            'category': 'Dairy & Eggs',
+            'is_available': true,
           },
-          'createdAt': '2026-09-07T19:06:18.000Z',
-          'updatedAt': '2026-09-07T19:06:18.000Z',
-        },
-        {
-          'id': 'cat-2',
-          'storeId': 'store-100',
-          'name': 'Fresh Fruits',
-          'sortOrder': 1,
-          '_count': {
-            'items': 8,
+          {
+            'id': 'item-2',
+            'store_id': 'store-100',
+            'name': 'Brown Bread 500g',
+            'price': '1.00',
+            'category': 'Bakery',
+            'is_available': true,
           },
-          'createdAt': '2026-09-07T19:06:18.000Z',
-          'updatedAt': '2026-09-07T19:06:18.000Z',
-        },
-      ]);
+        ],
+      });
 
       final result = await productRepository.getCategories('store-100');
 
       expect(result.isSuccess, isTrue);
       final categories = result.dataOrNull!;
       expect(categories.length, equals(2));
-      expect(categories[0].id, equals('cat-1'));
-      expect(categories[0].name, equals('Dairy & Eggs'));
-      expect(categories[0].itemCount, equals(15));
-      expect(categories[1].name, equals('Fresh Fruits'));
-      expect(mockTransport.lastUri?.path, equals('/api/stores/store-100/categories'));
+      expect(categories.map((c) => c.name).toSet(), equals({'Dairy & Eggs', 'Bakery'}));
+      expect(mockTransport.lastUri?.path, equals('/api/products/store/store-100'));
       expect(mockTransport.lastMethod, equals(HttpMethod.get));
     });
 

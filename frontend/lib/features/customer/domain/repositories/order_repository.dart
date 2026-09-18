@@ -15,7 +15,7 @@ abstract class OrderRepository {
     String? idempotencyKey,
   });
 
-  /// Retrieves the authenticated customer's orders matching GET /orders/my.
+  /// Retrieves the authenticated customer's orders matching GET /orders.
   Future<Result<List<OrderModel>>> getMyOrders({
     int? page,
     int? limit,

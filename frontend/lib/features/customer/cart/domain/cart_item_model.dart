@@ -1,6 +1,7 @@
 /// Immutable model representing a single item in the customer cart matching backend CartItem schema.
 class CartItemModel {
   final String itemId;
+  final String productId;
   final String name;
   final double price;
   final int quantity;
@@ -21,11 +22,9 @@ class CartItemModel {
     this.loyaltyPointsPerUnit = 0,
     double? itemSubtotal,
   })  : itemId = itemId ?? productId ?? '',
+        productId = productId ?? itemId ?? '',
         name = name ?? productName ?? '',
         price = price ?? unitPrice ?? 0.0;
-
-  /// Alias for itemId for backwards compatibility with UI components.
-  String get productId => itemId;
 
   /// Alias for name for backwards compatibility with UI components.
   String get productName => name;
@@ -52,12 +51,14 @@ class CartItemModel {
       return int.tryParse(value.toString()) ?? 1;
     }
 
+    final rawItemId = json['item_id'] as String? ?? json['itemId'] as String?;
+    final rawProdId = json['product_id'] as String? ?? json['productId'] as String?;
+    final resolvedProdId = rawProdId ?? rawItemId ?? '';
+    final resolvedItemId = rawItemId ?? rawProdId ?? '';
+
     return CartItemModel(
-      itemId: json['itemId'] as String? ??
-          json['item_id'] as String? ??
-          json['productId'] as String? ??
-          json['product_id'] as String? ??
-          '',
+      itemId: resolvedItemId,
+      productId: resolvedProdId,
       name: json['name'] as String? ??
           json['productName'] as String? ??
           json['product_name'] as String? ??
@@ -76,6 +77,8 @@ class CartItemModel {
     return {
       'itemId': itemId,
       'item_id': itemId,
+      'productId': productId,
+      'product_id': productId,
       'name': name,
       'product_name': name,
       'price': price,
@@ -104,7 +107,8 @@ class CartItemModel {
     double? itemSubtotal,
   }) {
     return CartItemModel(
-      itemId: itemId ?? productId ?? this.itemId,
+      itemId: itemId ?? this.itemId,
+      productId: productId ?? this.productId,
       name: name ?? productName ?? this.name,
       price: price ?? unitPrice ?? this.price,
       quantity: quantity ?? this.quantity,
@@ -120,6 +124,7 @@ class CartItemModel {
       other is CartItemModel &&
           runtimeType == other.runtimeType &&
           itemId == other.itemId &&
+          productId == other.productId &&
           name == other.name &&
           price == other.price &&
           quantity == other.quantity &&
@@ -130,6 +135,7 @@ class CartItemModel {
   @override
   int get hashCode =>
       itemId.hashCode ^
+      productId.hashCode ^
       name.hashCode ^
       price.hashCode ^
       quantity.hashCode ^
@@ -139,5 +145,5 @@ class CartItemModel {
 
   @override
   String toString() =>
-      'CartItemModel(itemId: $itemId, name: $name, price: $price, quantity: $quantity)';
+      'CartItemModel(itemId: $itemId, productId: $productId, name: $name, price: $price, quantity: $quantity)';
 }

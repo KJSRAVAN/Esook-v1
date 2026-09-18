@@ -43,7 +43,7 @@ void main() {
       final item = CartItemModel.fromJson(json);
 
       expect(item.itemId, equals('item-101'));
-      expect(item.productId, equals('item-101'));
+      expect(item.productId, equals('prod-202'));
       expect(item.productName, equals('Fresh Milk 1L'));
       expect(item.unitPrice, equals(1.25));
       expect(item.imageUrl, equals('https://example.com/milk.jpg'));

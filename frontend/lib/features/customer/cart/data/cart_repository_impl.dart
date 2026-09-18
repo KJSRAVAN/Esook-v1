@@ -13,7 +13,13 @@ class CartRepositoryImpl implements CartRepository {
   @override
   Future<Result<CartModel>> getCart({String? storeId}) async {
     try {
-      final response = await _apiClient.get<dynamic>('/cart');
+      final queryParams = <String, dynamic>{
+        if (storeId != null && storeId.isNotEmpty) 'store_id': storeId,
+      };
+      final response = await _apiClient.get<dynamic>(
+        '/cart',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
       final dynamic rawData = response.data;
       final Map<String, dynamic> rawCart;
       if (rawData is Map<String, dynamic>) {
@@ -45,13 +51,17 @@ class CartRepositoryImpl implements CartRepository {
     String? productId,
   }) async {
     try {
-      final resolvedItemId = itemId.isNotEmpty ? itemId : (productId ?? '');
+      final resolvedProductId = (productId != null && productId.isNotEmpty)
+          ? productId
+          : itemId;
+      final body = <String, dynamic>{
+        if (storeId != null && storeId.isNotEmpty) 'store_id': storeId,
+        'product_id': resolvedProductId,
+        'quantity': quantity,
+      };
       final response = await _apiClient.post<dynamic>(
         '/cart/items',
-        body: {
-          'itemId': resolvedItemId,
-          'quantity': quantity,
-        },
+        body: body,
       );
       final dynamic rawData = response.data;
       final Map<String, dynamic> rawCart;
@@ -84,12 +94,23 @@ class CartRepositoryImpl implements CartRepository {
     String? productId,
   }) async {
     try {
-      final resolvedItemId = itemId.isNotEmpty ? itemId : (productId ?? '');
+      final resolvedProductId = (productId != null && productId.isNotEmpty)
+          ? productId
+          : itemId;
+      if (quantity <= 0) {
+        return removeItem(
+          itemId: resolvedProductId,
+          storeId: storeId,
+          productId: resolvedProductId,
+        );
+      }
+      final body = <String, dynamic>{
+        if (storeId != null && storeId.isNotEmpty) 'store_id': storeId,
+        'quantity': quantity,
+      };
       final response = await _apiClient.patch<dynamic>(
-        '/cart/items/$resolvedItemId',
-        body: {
-          'quantity': quantity,
-        },
+        '/cart/items/$resolvedProductId',
+        body: body,
       );
       final dynamic rawData = response.data;
       final Map<String, dynamic> rawCart;
@@ -120,18 +141,50 @@ class CartRepositoryImpl implements CartRepository {
     String? storeId,
     String? productId,
   }) async {
-    return setItemQuantity(
-      itemId: itemId,
-      quantity: 0,
-      storeId: storeId,
-      productId: productId,
-    );
+    try {
+      final resolvedProductId = (productId != null && productId.isNotEmpty)
+          ? productId
+          : itemId;
+      final queryParams = <String, dynamic>{
+        if (storeId != null && storeId.isNotEmpty) 'store_id': storeId,
+      };
+      final response = await _apiClient.delete<dynamic>(
+        '/cart/items/$resolvedProductId',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+      final dynamic rawData = response.data;
+      final Map<String, dynamic> rawCart;
+      if (rawData is Map<String, dynamic>) {
+        if (rawData['cart'] is Map<String, dynamic>) {
+          rawCart = rawData['cart'] as Map<String, dynamic>;
+        } else if (rawData['data'] is Map<String, dynamic>) {
+          rawCart = rawData['data'] as Map<String, dynamic>;
+        } else {
+          rawCart = rawData;
+        }
+      } else {
+        rawCart = {};
+      }
+
+      final cart = CartModel.fromJson(rawCart);
+      return Result.success(cart);
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(UnknownFailure(message: 'Failed to remove item from cart: $e'));
+    }
   }
 
   @override
   Future<Result<CartModel>> clearCart({String? storeId}) async {
     try {
-      await _apiClient.delete<dynamic>('/cart');
+      final queryParams = <String, dynamic>{
+        if (storeId != null && storeId.isNotEmpty) 'store_id': storeId,
+      };
+      await _apiClient.delete<dynamic>(
+        '/cart',
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
       return Result.success(CartModel.empty(storeId: storeId));
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));

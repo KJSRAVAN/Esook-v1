@@ -112,19 +112,19 @@ void main() {
       );
 
       final decodedBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
-      expect(decodedBody['storeId'], equals('store-1'));
-      expect(decodedBody['fulfillment'], equals('DELIVERY'));
-      expect(decodedBody['deliveryAddress'], equals('Building 4B, Riyadh'));
-      expect(decodedBody['couponCode'], equals('SAVE5'));
+      expect(decodedBody['store_id'], equals('store-1'));
+      expect(decodedBody['fulfillment_type'], equals('delivery'));
+      expect(decodedBody['delivery_address'], equals('Building 4B, Riyadh'));
+      expect(decodedBody['coupon_code'], equals('SAVE5'));
       expect(decodedBody['notes'], equals('Doorbell broken'));
-      expect((decodedBody['items'] as List).length, equals(1));
-      expect((decodedBody['items'] as List).first, equals({
-        'itemId': 'prod-1',
-        'quantity': 4,
-      }));
+      expect(decodedBody.containsKey('storeId'), isFalse);
+      expect(decodedBody.containsKey('fulfillment'), isFalse);
+      expect(decodedBody.containsKey('items'), isFalse);
+      expect(decodedBody.containsKey('deliveryAddress'), isFalse);
+      expect(decodedBody.containsKey('couponCode'), isFalse);
     });
 
-    test('createOrder without delivery address on PICKUP fulfillment omits deliveryAddress', () async {
+    test('createOrder without delivery address on PICKUP fulfillment omits delivery_address', () async {
       mockTransport.statusCode = 201;
       mockTransport.responseBody = jsonEncode({
         'order': {
@@ -146,8 +146,13 @@ void main() {
 
       expect(result.isSuccess, isTrue);
       final decodedBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
-      expect(decodedBody['fulfillment'], equals('PICKUP'));
+      expect(decodedBody['store_id'], equals('store-1'));
+      expect(decodedBody['fulfillment_type'], equals('pickup'));
+      expect(decodedBody.containsKey('delivery_address'), isFalse);
       expect(decodedBody.containsKey('deliveryAddress'), isFalse);
+      expect(decodedBody.containsKey('storeId'), isFalse);
+      expect(decodedBody.containsKey('fulfillment'), isFalse);
+      expect(decodedBody.containsKey('items'), isFalse);
     });
 
     test('createOrder maps 400 validation error to ValidationFailure', () async {
@@ -166,7 +171,7 @@ void main() {
       expect(result.failureOrNull, isA<ValidationFailure>());
     });
 
-    test('getMyOrders returns parsed list from GET /orders/my with query parameters', () async {
+    test('getMyOrders returns parsed list from GET /orders with query parameters', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'orders': [
@@ -217,7 +222,7 @@ void main() {
       expect(orders[1].id, equals('ord-2'));
       expect(orders[1].status, equals(OrderStatus.pending));
 
-      expect(mockTransport.lastUri?.path, equals('/api/orders/my'));
+      expect(mockTransport.lastUri?.path, equals('/api/orders'));
       expect(mockTransport.lastUri?.queryParameters['page'], equals('1'));
       expect(mockTransport.lastUri?.queryParameters['limit'], equals('10'));
       expect(mockTransport.lastUri?.queryParameters['status'], equals('DELIVERED'));

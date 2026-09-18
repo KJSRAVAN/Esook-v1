@@ -29,21 +29,16 @@ class OrderRepositoryImpl implements OrderRepository {
       };
 
       final body = <String, dynamic>{
-        'storeId': storeId,
         'store_id': storeId,
-        'fulfillment': fulfillment.toBackendString(),
         'fulfillment_type': fulfillment == FulfillmentType.pickup ? 'pickup' : 'delivery',
-        if (deliveryAddress != null && deliveryAddress.trim().isNotEmpty) ...{
-          'deliveryAddress': deliveryAddress.trim(),
+        if (fulfillment == FulfillmentType.delivery &&
+            deliveryAddress != null &&
+            deliveryAddress.trim().isNotEmpty)
           'delivery_address': deliveryAddress.trim(),
-        },
-        if (couponCode != null && couponCode.trim().isNotEmpty) ...{
-          'couponCode': couponCode.trim(),
+        if (couponCode != null && couponCode.trim().isNotEmpty)
           'coupon_code': couponCode.trim(),
-        },
         if (notes != null && notes.trim().isNotEmpty)
           'notes': notes.trim(),
-        'items': items.map((item) => item.toJson()).toList(),
       };
 
       final response = await _apiClient.post<dynamic>(
@@ -89,7 +84,7 @@ class OrderRepositoryImpl implements OrderRepository {
       };
 
       final response = await _apiClient.get<dynamic>(
-        '/orders/my',
+        '/orders',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
 

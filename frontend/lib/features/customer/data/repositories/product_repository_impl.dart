@@ -30,7 +30,7 @@ class ProductRepositoryImpl implements ProductRepository {
       };
 
       final response = await _apiClient.get<dynamic>(
-        '/stores/$storeId/items',
+        '/products/store/$storeId',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
 
@@ -65,8 +65,7 @@ class ProductRepositoryImpl implements ProductRepository {
     String? storeId,
   }) async {
     try {
-      final resolvedStoreId = (storeId != null && storeId.isNotEmpty) ? storeId : '_';
-      final response = await _apiClient.get<dynamic>('/stores/$resolvedStoreId/items/$id');
+      final response = await _apiClient.get<dynamic>('/products/$id');
       final dynamic rawData = response.data;
       final Map<String, dynamic> rawProduct;
       if (rawData is Map<String, dynamic>) {
@@ -95,21 +94,30 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Result<List<CategoryModel>>> getCategories(String storeId) async {
     try {
-      final response = await _apiClient.get<dynamic>('/stores/$storeId/categories');
-      final dynamic rawData = response.data;
-      final List<dynamic> rawList;
-      if (rawData is List) {
-        rawList = rawData;
-      } else if (rawData is Map<String, dynamic>) {
-        rawList = (rawData['categories'] ?? rawData['data']) as List<dynamic>? ?? [];
-      } else {
-        rawList = [];
+      final productsResult = await getProductsByStore(storeId);
+      if (productsResult.isFailure) {
+        return Result.failure(productsResult.failureOrNull!);
       }
 
-      final categories = rawList
-          .whereType<Map<String, dynamic>>()
-          .map((item) => CategoryModel.fromJson(item))
-          .toList();
+      final products = productsResult.dataOrNull ?? [];
+      final categoryCounts = <String, int>{};
+
+      for (final product in products) {
+        if (product.category != null && product.category!.trim().isNotEmpty) {
+          final catName = product.category!.trim();
+          categoryCounts[catName] = (categoryCounts[catName] ?? 0) + 1;
+        }
+      }
+
+      final categories = categoryCounts.entries.map((entry) {
+        return CategoryModel(
+          id: entry.key,
+          storeId: storeId,
+          name: entry.key,
+          itemCount: entry.value,
+        );
+      }).toList();
+
       return Result.success(categories);
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));

@@ -78,12 +78,11 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
         title: const Text('Orders'),
         centerTitle: false,
         actions: [
-          if (_orders.isNotEmpty || _errorMessage != null)
-            IconButton(
-              key: const Key('orders_refresh_button'),
-              icon: const Icon(Icons.refresh),
-              onPressed: _isLoading ? null : _loadOrders,
-            ),
+          IconButton(
+            key: const Key('orders_refresh_button'),
+            icon: const Icon(Icons.refresh),
+            onPressed: _isLoading ? null : _loadOrders,
+          ),
         ],
       ),
       body: SafeArea(
