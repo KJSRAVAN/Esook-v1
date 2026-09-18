@@ -1,5 +1,4 @@
-import 'dart:convert';
-
+import 'package:esouq/core/error/failures.dart';
 import 'package:esouq/core/network/api_client.dart';
 import 'package:esouq/core/network/http_method.dart';
 import 'package:esouq/core/network/http_transport.dart';
@@ -48,62 +47,33 @@ void main() {
       categoriesRepository = StoreCategoriesRepositoryImpl(apiClient: apiClient);
     });
 
-    test('getCategories queries GET /stores/:storeId/categories', () async {
-      mockTransport.statusCode = 200;
-      mockTransport.responseBody = jsonEncode({
-        'categories': [
-          {
-            'id': 'cat-1',
-            'store_id': 'store-1',
-            'name': 'Dairy & Eggs',
-            'sort_order': 1,
-            'product_count': 12,
-          },
-          {
-            'id': 'cat-2',
-            'store_id': 'store-1',
-            'name': 'Fresh Bakery',
-            'sort_order': 2,
-            'product_count': 8,
-          },
-        ]
-      });
-
+    test('getCategories makes no network call and returns safe empty list', () async {
       final result = await categoriesRepository.getCategories('store-1');
 
       expect(result.isSuccess, isTrue);
       final categories = result.dataOrNull!;
-      expect(categories.length, 2);
-      expect(categories[0].name, 'Dairy & Eggs');
-      expect(categories[0].productCount, 12);
-      expect(categories[1].name, 'Fresh Bakery');
-      expect(mockTransport.lastUri?.path, '/stores/store-1/categories');
+      expect(categories, isEmpty);
+      // Confirms no network call made to non-existent /stores/:storeId/categories
+      expect(mockTransport.lastUri, isNull);
     });
 
-    test('createCategory sends POST /stores/:storeId/categories', () async {
-      mockTransport.statusCode = 201;
-      mockTransport.responseBody = jsonEncode({
-        'category': {
-          'id': 'cat-3',
-          'store_id': 'store-1',
-          'name': 'Beverages',
-          'sort_order': 3,
-        }
-      });
-
+    test('createCategory does not make network request and returns ValidationFailure', () async {
       final result = await categoriesRepository.createCategory(
         storeId: 'store-1',
         name: 'Beverages',
         sortOrder: 3,
       );
 
-      expect(result.isSuccess, isTrue);
-      final category = result.dataOrNull!;
-      expect(category.id, 'cat-3');
-      expect(category.name, 'Beverages');
-      expect(mockTransport.lastUri?.path, '/stores/store-1/categories');
-      expect(mockTransport.lastMethod, HttpMethod.post);
-      expect(mockTransport.lastBody, contains('Beverages'));
+      // Does not fake success
+      expect(result.isFailure, isTrue);
+      expect(result.failureOrNull, isA<ValidationFailure>());
+      expect(
+        result.failureOrNull?.message,
+        contains('Category creation is not supported by the backend API'),
+      );
+      // Confirms no network call made
+      expect(mockTransport.lastUri, isNull);
+      expect(mockTransport.lastMethod, isNull);
     });
   });
 }

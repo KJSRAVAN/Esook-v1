@@ -6,7 +6,7 @@ abstract interface class StoreProductsRepository {
   /// List items for a given store (`GET /stores/:storeId/items`).
   Future<Result<List<ProductModel>>> getStoreProducts(String storeId);
 
-  /// Create a new item for a store (`POST /stores/:storeId/items`).
+  /// Create a new item for a store (`POST /products`).
   /// Permitted for Store Manager and Super Admin.
   Future<Result<ProductModel>> createProduct({
     required String storeId,
@@ -14,11 +14,12 @@ abstract interface class StoreProductsRepository {
     String? description,
     required double price,
     String? categoryId,
+    String? category,
     String? imageUrl,
     int? sortOrder,
   });
 
-  /// Update an existing item (`PATCH /stores/:storeId/items/:itemId`).
+  /// Update an existing item (`PATCH /products/:id`).
   /// Permitted for Store Manager and Super Admin.
   Future<Result<ProductModel>> updateProduct({
     required String storeId,
@@ -27,6 +28,7 @@ abstract interface class StoreProductsRepository {
     String? description,
     double? price,
     String? categoryId,
+    String? category,
     String? imageUrl,
     int? sortOrder,
     bool? isAvailable,

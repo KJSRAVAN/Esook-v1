@@ -5,7 +5,7 @@ import '../../../../core/utils/result.dart';
 import '../../../customer/domain/models/order_model.dart';
 import '../../domain/repositories/store_orders_repository.dart';
 
-/// Concrete implementation of [StoreOrdersRepository] interacting with `/orders/store/:storeId` and `/orders/:orderId/status`.
+/// Concrete implementation of [StoreOrdersRepository] interacting with `/orders` and `/orders/:orderId/status`.
 class StoreOrdersRepositoryImpl implements StoreOrdersRepository {
   final ApiClient _apiClient;
 
@@ -19,17 +19,7 @@ class StoreOrdersRepositoryImpl implements StoreOrdersRepository {
     int limit = 50,
   }) async {
     try {
-      final queryParams = <String, dynamic>{
-        'page': page,
-        'limit': limit,
-        if (status != null && status.isNotEmpty && status.toUpperCase() != 'ALL')
-          'status': status.toUpperCase(),
-      };
-
-      final response = await _apiClient.get<dynamic>(
-        '/orders/store/$storeId',
-        queryParameters: queryParams,
-      );
+      final response = await _apiClient.get<dynamic>('/orders');
 
       final dynamic rawData = response.data;
       final List<dynamic> rawList;
@@ -48,10 +38,15 @@ class StoreOrdersRepositoryImpl implements StoreOrdersRepository {
         rawList = const [];
       }
 
-      final orders = rawList
+      var orders = rawList
           .whereType<Map<String, dynamic>>()
           .map(OrderModel.fromJson)
           .toList();
+
+      if (status != null && status.isNotEmpty && status.toUpperCase() != 'ALL') {
+        final targetStatus = OrderStatus.fromString(status);
+        orders = orders.where((o) => o.status == targetStatus).toList();
+      }
 
       return Result.success(orders);
     } on AppException catch (e) {
@@ -96,12 +91,34 @@ class StoreOrdersRepositoryImpl implements StoreOrdersRepository {
     String? rejectedReason,
   }) async {
     try {
+      final String backendStatus;
+      switch (status) {
+        case OrderStatus.pending:
+          backendStatus = 'pending';
+          break;
+        case OrderStatus.accepted:
+          backendStatus = 'accepted';
+          break;
+        case OrderStatus.preparing:
+          backendStatus = 'preparing';
+          break;
+        case OrderStatus.outForDelivery:
+          backendStatus = 'out_for_delivery';
+          break;
+        case OrderStatus.delivered:
+        case OrderStatus.ready:
+          backendStatus = 'completed';
+          break;
+        case OrderStatus.cancelled:
+          backendStatus = 'cancelled';
+          break;
+        case OrderStatus.rejected:
+          backendStatus = 'rejected';
+          break;
+      }
+
       final body = <String, dynamic>{
-        'status': status.toBackendString(),
-        if (rejectedReason != null && rejectedReason.isNotEmpty) ...{
-          'rejectedReason': rejectedReason.trim(),
-          'rejected_reason': rejectedReason.trim(),
-        },
+        'status': backendStatus,
       };
 
       final response = await _apiClient.patch<dynamic>(

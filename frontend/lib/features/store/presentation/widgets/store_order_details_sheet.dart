@@ -420,29 +420,32 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
           ],
         );
       case OrderStatus.preparing:
+        final isPickup = _currentOrder.fulfillment == FulfillmentType.pickup;
         return Row(
           children: [
-            Expanded(
-              child: ElevatedButton(
-                key: const Key('details_ready_btn'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7E22CE),
-                  foregroundColor: Colors.white,
+            if (!isPickup) ...[
+              Expanded(
+                child: ElevatedButton(
+                  key: const Key('details_out_for_delivery_btn'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEA580C),
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => _updateStatus(OrderStatus.outForDelivery),
+                  child: const Text('Out for Delivery'),
                 ),
-                onPressed: () => _updateStatus(OrderStatus.ready),
-                child: const Text('Mark as Ready'),
               ),
-            ),
-            const SizedBox(width: AppDimensions.spacingSm),
+              const SizedBox(width: AppDimensions.spacingSm),
+            ],
             Expanded(
               child: ElevatedButton(
-                key: const Key('details_out_for_delivery_btn'),
+                key: const Key('details_complete_btn'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEA580C),
+                  backgroundColor: AppColors.success,
                   foregroundColor: Colors.white,
                 ),
-                onPressed: () => _updateStatus(OrderStatus.outForDelivery),
-                child: const Text('Out for Delivery'),
+                onPressed: () => _updateStatus(OrderStatus.delivered),
+                child: const Text('Complete Order'),
               ),
             ),
           ],
@@ -459,7 +462,7 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
                   foregroundColor: Colors.white,
                 ),
                 onPressed: () => _updateStatus(OrderStatus.delivered),
-                child: const Text('Mark as Completed / Delivered'),
+                child: const Text('Complete Order'),
               ),
             ),
           ],

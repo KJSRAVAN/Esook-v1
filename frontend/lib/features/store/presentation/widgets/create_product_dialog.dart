@@ -76,14 +76,21 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
   StoreProductsRepository get _productsRepo =>
       widget.productsRepository ?? StoreScope.productsRepositoryOf(context);
 
-  StoreCategoriesRepository get _categoriesRepo =>
-      widget.categoriesRepository ?? StoreScope.categoriesRepositoryOf(context);
-
   Future<void> _loadCategories() async {
-    final result = await _categoriesRepo.getCategories(widget.storeId);
+    final result = await _productsRepo.getStoreProducts(widget.storeId);
     if (mounted) {
+      final prods = result.dataOrNull ?? [];
+      final uniqueCats = prods
+          .map((p) => p.category?.trim())
+          .where((c) => c != null && c.isNotEmpty)
+          .cast<String>()
+          .toSet()
+          .map((c) => StoreCategoryModel(id: c, name: c, storeId: widget.storeId))
+          .toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
+
       setState(() {
-        _categories = result.dataOrNull ?? [];
+        _categories = uniqueCats;
         _isLoadingCategories = false;
       });
     }
@@ -98,8 +105,6 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
       return;
     }
 
-    final sortOrder = int.tryParse(_sortOrderController.text.trim()) ?? 0;
-
     setState(() {
       _isSubmitting = true;
       _errorMessage = null;
@@ -110,9 +115,8 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
       name: _nameController.text.trim(),
       description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
       price: price,
-      categoryId: _selectedCategoryId,
+      category: _selectedCategoryId,
       imageUrl: _imageUrlController.text.trim().isEmpty ? null : _imageUrlController.text.trim(),
-      sortOrder: sortOrder,
     );
 
     if (!mounted) return;

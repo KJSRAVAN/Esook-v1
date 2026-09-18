@@ -182,6 +182,7 @@ class _StoreShellState extends State<StoreShell> {
           StoreCategoriesScreen(
             storeId: _currentUser?.storeId,
             categoriesRepository: _categoriesRepository,
+            productsRepository: _productsRepository,
           ),
           StoreAccountScreen(
             authRepository: _authRepository,
@@ -326,6 +327,7 @@ class _StoreShellState extends State<StoreShell> {
                 StoreCategoriesScreen(
                   storeId: _currentUser?.storeId,
                   categoriesRepository: _categoriesRepository,
+                  productsRepository: _productsRepository,
                 ),
                 StoreAccountScreen(
                   authRepository: _authRepository,

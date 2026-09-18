@@ -196,7 +196,7 @@ void main() {
       expect(storedToken, equals('jwt_signup_token_123'));
     });
 
-    test('login calls /auth/staff/login, persists tokens, and sets currentUser', () async {
+    test('login calls /auth/login, persists tokens, and sets currentUser', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'user': {
@@ -220,7 +220,9 @@ void main() {
       expect(authResponse.user.role, equals(UserRole.storeStaff));
       expect(authRepository.currentUser?.role, equals(UserRole.storeStaff));
 
-      expect(mockTransport.lastUri?.path, equals('/api/auth/staff/login'));
+      expect(mockTransport.lastUri?.path, equals('/api/auth/login'));
+      expect(mockTransport.lastBody, contains('phone_number'));
+      expect(mockTransport.lastBody, contains('password'));
       final storedToken = await mockStorage.read(key: StorageKeys.authToken);
       final storedRefreshToken = await mockStorage.read(key: StorageKeys.refreshToken);
       expect(storedToken, equals('jwt_login_token_456'));

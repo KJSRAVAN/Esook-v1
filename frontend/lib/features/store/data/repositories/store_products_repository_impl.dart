@@ -5,7 +5,7 @@ import '../../../../core/utils/result.dart';
 import '../../../customer/domain/models/product_model.dart';
 import '../../domain/repositories/store_products_repository.dart';
 
-/// Concrete implementation of [StoreProductsRepository] interacting with `/stores/:storeId/items`.
+/// Concrete implementation of [StoreProductsRepository] interacting with `/products/store/:storeId` and `/products/:id`.
 class StoreProductsRepositoryImpl implements StoreProductsRepository {
   final ApiClient _apiClient;
 
@@ -14,16 +14,16 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
   @override
   Future<Result<List<ProductModel>>> getStoreProducts(String storeId) async {
     try {
-      final response = await _apiClient.get<dynamic>('/stores/$storeId/items');
+      final response = await _apiClient.get<dynamic>('/products/store/$storeId');
 
       final dynamic rawData = response.data;
       final List<dynamic> rawList;
 
       if (rawData is Map<String, dynamic>) {
-        if (rawData['items'] is List) {
-          rawList = rawData['items'] as List;
-        } else if (rawData['products'] is List) {
+        if (rawData['products'] is List) {
           rawList = rawData['products'] as List;
+        } else if (rawData['items'] is List) {
+          rawList = rawData['items'] as List;
         } else if (rawData['data'] is List) {
           rawList = rawData['data'] as List;
         } else {
@@ -55,31 +55,27 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     String? description,
     required double price,
     String? categoryId,
+    String? category,
     String? imageUrl,
     int? sortOrder,
   }) async {
     try {
+      final catString = category ?? categoryId;
       final body = <String, dynamic>{
+        'store_id': storeId,
         'name': name.trim(),
         'price': price,
         if (description != null && description.trim().isNotEmpty)
           'description': description.trim(),
-        if (categoryId != null && categoryId.trim().isNotEmpty) ...{
-          'categoryId': categoryId.trim(),
-          'category_id': categoryId.trim(),
-        },
-        if (imageUrl != null && imageUrl.trim().isNotEmpty) ...{
-          'imageUrl': imageUrl.trim(),
+        if (catString != null && catString.trim().isNotEmpty)
+          'category': catString.trim(),
+        if (imageUrl != null && imageUrl.trim().isNotEmpty)
           'image_url': imageUrl.trim(),
-        },
-        if (sortOrder != null) ...{
-          'sortOrder': sortOrder,
-          'sort_order': sortOrder,
-        },
+        'is_available': true,
       };
 
       final response = await _apiClient.post<dynamic>(
-        '/stores/$storeId/items',
+        '/products',
         body: body,
       );
 
@@ -87,10 +83,10 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
       final Map<String, dynamic> rawItem;
 
       if (rawData is Map<String, dynamic>) {
-        if (rawData['item'] is Map<String, dynamic>) {
-          rawItem = rawData['item'] as Map<String, dynamic>;
-        } else if (rawData['product'] is Map<String, dynamic>) {
+        if (rawData['product'] is Map<String, dynamic>) {
           rawItem = rawData['product'] as Map<String, dynamic>;
+        } else if (rawData['item'] is Map<String, dynamic>) {
+          rawItem = rawData['item'] as Map<String, dynamic>;
         } else if (rawData['data'] is Map<String, dynamic>) {
           rawItem = rawData['data'] as Map<String, dynamic>;
         } else {
@@ -117,35 +113,27 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     String? description,
     double? price,
     String? categoryId,
+    String? category,
     String? imageUrl,
     int? sortOrder,
     bool? isAvailable,
   }) async {
     try {
+      final catString = category ?? categoryId;
       final body = <String, dynamic>{
         if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
         if (description != null) 'description': description.trim(),
         if (price != null) 'price': price,
-        if (categoryId != null) ...{
-          'categoryId': categoryId.trim(),
-          'category_id': categoryId.trim(),
-        },
-        if (imageUrl != null) ...{
-          'imageUrl': imageUrl.trim(),
+        if (catString != null && catString.trim().isNotEmpty)
+          'category': catString.trim(),
+        if (imageUrl != null)
           'image_url': imageUrl.trim(),
-        },
-        if (sortOrder != null) ...{
-          'sortOrder': sortOrder,
-          'sort_order': sortOrder,
-        },
-        if (isAvailable != null) ...{
-          'isAvailable': isAvailable,
+        if (isAvailable != null)
           'is_available': isAvailable,
-        },
       };
 
       final response = await _apiClient.patch<dynamic>(
-        '/stores/$storeId/items/$productId',
+        '/products/$productId',
         body: body,
       );
 
@@ -153,10 +141,10 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
       final Map<String, dynamic> rawItem;
 
       if (rawData is Map<String, dynamic>) {
-        if (rawData['item'] is Map<String, dynamic>) {
-          rawItem = rawData['item'] as Map<String, dynamic>;
-        } else if (rawData['product'] is Map<String, dynamic>) {
+        if (rawData['product'] is Map<String, dynamic>) {
           rawItem = rawData['product'] as Map<String, dynamic>;
+        } else if (rawData['item'] is Map<String, dynamic>) {
+          rawItem = rawData['item'] as Map<String, dynamic>;
         } else if (rawData['data'] is Map<String, dynamic>) {
           rawItem = rawData['data'] as Map<String, dynamic>;
         } else {
@@ -194,7 +182,7 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     required String productId,
   }) async {
     try {
-      await _apiClient.delete<dynamic>('/stores/$storeId/items/$productId');
+      await _apiClient.delete<dynamic>('/products/$productId');
       return Result.success(null);
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));

@@ -197,6 +197,7 @@ class StoreOrderCard extends StatelessWidget {
     return status == OrderStatus.pending ||
         status == OrderStatus.accepted ||
         status == OrderStatus.preparing ||
+        status == OrderStatus.outForDelivery ||
         status == OrderStatus.ready;
   }
 
@@ -245,18 +246,40 @@ class StoreOrderCard extends StatelessWidget {
           child: const Text('Start Preparing'),
         );
       case OrderStatus.preparing:
-        return ElevatedButton(
-          key: Key('order_ready_btn_${order.id}'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF7E22CE),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          onPressed: () => onQuickStatusChange?.call(OrderStatus.ready),
-          child: const Text('Mark Ready'),
+        final isPickup = order.fulfillment == FulfillmentType.pickup;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isPickup) ...[
+              ElevatedButton(
+                key: Key('order_out_for_delivery_btn_${order.id}'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFEA580C),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                onPressed: () => onQuickStatusChange?.call(OrderStatus.outForDelivery),
+                child: const Text('Out for Delivery'),
+              ),
+              const SizedBox(width: 8),
+            ],
+            ElevatedButton(
+              key: Key('order_complete_btn_${order.id}'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              onPressed: () => onQuickStatusChange?.call(OrderStatus.delivered),
+              child: const Text('Complete Order'),
+            ),
+          ],
         );
+      case OrderStatus.outForDelivery:
       case OrderStatus.ready:
         return ElevatedButton(
           key: Key('order_deliver_btn_${order.id}'),
@@ -268,7 +291,7 @@ class StoreOrderCard extends StatelessWidget {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           onPressed: () => onQuickStatusChange?.call(OrderStatus.delivered),
-          child: const Text('Complete'),
+          child: const Text('Complete Order'),
         );
       default:
         return const SizedBox.shrink();

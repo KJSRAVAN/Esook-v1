@@ -66,19 +66,24 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
       _errorMessage = null;
     });
 
-    final productsFuture = _productsRepo.getStoreProducts(storeId);
-    final categoriesFuture = _categoriesRepo.getCategories(storeId);
-
-    final results = await Future.wait([productsFuture, categoriesFuture]);
-    final productsRes = results[0] as dynamic;
-    final categoriesRes = results[1] as dynamic;
+    final productsRes = await _productsRepo.getStoreProducts(storeId);
 
     if (!mounted) return;
 
     if (productsRes.isSuccess) {
+      final prods = productsRes.dataOrNull ?? [];
+      final derivedCategories = prods
+          .map((p) => p.category?.trim())
+          .where((c) => c != null && c.isNotEmpty)
+          .cast<String>()
+          .toSet()
+          .map((c) => StoreCategoryModel(id: c, name: c, storeId: storeId))
+          .toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
+
       setState(() {
-        _products = productsRes.dataOrNull ?? [];
-        _categories = categoriesRes.isSuccess ? (categoriesRes.dataOrNull ?? []) : [];
+        _products = prods;
+        _categories = derivedCategories;
         _isLoading = false;
       });
     } else {

@@ -49,7 +49,7 @@ void main() {
       ordersRepository = StoreOrdersRepositoryImpl(apiClient: apiClient);
     });
 
-    test('getStoreOrders queries /orders/store/:storeId with query parameters', () async {
+    test('getStoreOrders queries /orders and maps scoped orders', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'orders': [
@@ -90,10 +90,8 @@ void main() {
       expect(orders.first.orderNumber, 'ESK-101');
       expect(orders.first.status, OrderStatus.pending);
       expect(orders.first.total, 85.50);
-      expect(mockTransport.lastUri?.path, '/orders/store/store-1');
-      expect(mockTransport.lastUri?.queryParameters['status'], 'PENDING');
-      expect(mockTransport.lastUri?.queryParameters['page'], '1');
-      expect(mockTransport.lastUri?.queryParameters['limit'], '20');
+      expect(mockTransport.lastUri?.path, '/orders');
+      expect(mockTransport.lastUri?.path, isNot(contains('store-1')));
     });
 
     test('getOrderById retrieves single order from /orders/:id', () async {
@@ -120,7 +118,7 @@ void main() {
       expect(mockTransport.lastUri?.path, '/orders/ord-101');
     });
 
-    test('updateOrderStatus sends PATCH /orders/:id/status with valid status', () async {
+    test('updateOrderStatus sends PATCH /orders/:id/status with lowercase backend status', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'order': {
@@ -145,10 +143,35 @@ void main() {
       expect(order.status, OrderStatus.preparing);
       expect(mockTransport.lastUri?.path, '/orders/ord-101/status');
       expect(mockTransport.lastMethod, HttpMethod.patch);
-      expect(mockTransport.lastBody, contains('"status":"PREPARING"'));
+      expect(mockTransport.lastBody, contains('"status":"preparing"'));
+      expect(mockTransport.lastBody, isNot(contains('"status":"PREPARING"')));
     });
 
-    test('updateOrderStatus handles rejection with rejectedReason', () async {
+    test('updateOrderStatus maps terminal success state to completed', () async {
+      mockTransport.statusCode = 200;
+      mockTransport.responseBody = jsonEncode({
+        'order': {
+          'id': 'ord-101',
+          'order_number': 'ESK-101',
+          'user_id': 'cust-1',
+          'store_id': 'store-1',
+          'status': 'completed',
+          'fulfillment_type': 'delivery',
+          'total_amount': '85.50',
+          'items': [],
+        }
+      });
+
+      final result = await ordersRepository.updateOrderStatus(
+        orderId: 'ord-101',
+        status: OrderStatus.delivered,
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(mockTransport.lastBody, contains('"status":"completed"'));
+    });
+
+    test('updateOrderStatus handles rejection without sending unsupported rejectedReason to backend', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
         'order': {
@@ -159,7 +182,6 @@ void main() {
           'status': 'rejected',
           'fulfillment_type': 'delivery',
           'total_amount': '85.50',
-          'rejected_reason': 'Store closed for maintenance',
           'items': [],
         }
       });
@@ -173,7 +195,10 @@ void main() {
       expect(result.isSuccess, isTrue);
       final order = result.dataOrNull!;
       expect(order.status, OrderStatus.rejected);
-      expect(mockTransport.lastBody, contains('Store closed for maintenance'));
+      expect(mockTransport.lastBody, contains('"status":"rejected"'));
+      expect(mockTransport.lastBody, isNot(contains('rejectedReason')));
+      expect(mockTransport.lastBody, isNot(contains('rejected_reason')));
+      expect(mockTransport.lastBody, isNot(contains('Store closed for maintenance')));
     });
   });
 }

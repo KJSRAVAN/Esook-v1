@@ -48,10 +48,10 @@ void main() {
       productsRepository = StoreProductsRepositoryImpl(apiClient: apiClient);
     });
 
-    test('getStoreProducts queries GET /stores/:storeId/items', () async {
+    test('getStoreProducts queries GET /products/store/:storeId', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
-        'items': [
+        'products': [
           {
             'id': 'prod-1',
             'store_id': 'store-1',
@@ -71,19 +71,19 @@ void main() {
       expect(products.first.name, 'Fresh Apples 1kg');
       expect(products.first.price, 8.50);
       expect(products.first.isAvailable, isTrue);
-      expect(mockTransport.lastUri?.path, '/stores/store-1/items');
+      expect(mockTransport.lastUri?.path, '/products/store/store-1');
       expect(mockTransport.lastMethod, HttpMethod.get);
     });
 
-    test('createProduct sends POST /stores/:storeId/items', () async {
+    test('createProduct sends POST /products with backend body', () async {
       mockTransport.statusCode = 201;
       mockTransport.responseBody = jsonEncode({
-        'item': {
+        'product': {
           'id': 'prod-2',
           'store_id': 'store-1',
           'name': 'Organic Bananas 1kg',
           'price': '6.00',
-          'category_id': 'cat-1',
+          'category': 'Fresh Fruits',
           'is_available': true,
         }
       });
@@ -92,22 +92,26 @@ void main() {
         storeId: 'store-1',
         name: 'Organic Bananas 1kg',
         price: 6.00,
-        categoryId: 'cat-1',
+        category: 'Fresh Fruits',
       );
 
       expect(result.isSuccess, isTrue);
       final product = result.dataOrNull!;
       expect(product.id, 'prod-2');
       expect(product.name, 'Organic Bananas 1kg');
-      expect(mockTransport.lastUri?.path, '/stores/store-1/items');
+      expect(mockTransport.lastUri?.path, '/products');
       expect(mockTransport.lastMethod, HttpMethod.post);
-      expect(mockTransport.lastBody, contains('Organic Bananas 1kg'));
+      expect(mockTransport.lastBody, contains('"store_id":"store-1"'));
+      expect(mockTransport.lastBody, contains('"name":"Organic Bananas 1kg"'));
+      expect(mockTransport.lastBody, contains('"category":"Fresh Fruits"'));
+      expect(mockTransport.lastBody, isNot(contains('category_id')));
+      expect(mockTransport.lastBody, isNot(contains('sort_order')));
     });
 
-    test('updateProduct sends PATCH /stores/:storeId/items/:itemId', () async {
+    test('updateProduct sends PATCH /products/:id with backend body', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
-        'item': {
+        'product': {
           'id': 'prod-2',
           'store_id': 'store-1',
           'name': 'Organic Bananas 1kg (Sale)',
@@ -126,14 +130,16 @@ void main() {
       expect(result.isSuccess, isTrue);
       final product = result.dataOrNull!;
       expect(product.price, 5.50);
-      expect(mockTransport.lastUri?.path, '/stores/store-1/items/prod-2');
+      expect(mockTransport.lastUri?.path, '/products/prod-2');
       expect(mockTransport.lastMethod, HttpMethod.patch);
+      expect(mockTransport.lastBody, isNot(contains('category_id')));
+      expect(mockTransport.lastBody, isNot(contains('sort_order')));
     });
 
-    test('toggleAvailability updates isAvailable via PATCH', () async {
+    test('toggleAvailability updates is_available via PATCH /products/:id', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
-        'item': {
+        'product': {
           'id': 'prod-2',
           'store_id': 'store-1',
           'name': 'Organic Bananas 1kg',
@@ -151,12 +157,13 @@ void main() {
       expect(result.isSuccess, isTrue);
       final product = result.dataOrNull!;
       expect(product.isAvailable, isFalse);
-      expect(mockTransport.lastBody, contains('"isAvailable":false'));
+      expect(mockTransport.lastUri?.path, '/products/prod-2');
+      expect(mockTransport.lastBody, contains('"is_available":false'));
     });
 
-    test('deleteProduct sends DELETE /stores/:storeId/items/:itemId', () async {
+    test('deleteProduct sends DELETE /products/:id', () async {
       mockTransport.statusCode = 200;
-      mockTransport.responseBody = jsonEncode({'message': 'Deleted'});
+      mockTransport.responseBody = jsonEncode({'message': 'Product deleted successfully'});
 
       final result = await productsRepository.deleteProduct(
         storeId: 'store-1',
@@ -164,7 +171,7 @@ void main() {
       );
 
       expect(result.isSuccess, isTrue);
-      expect(mockTransport.lastUri?.path, '/stores/store-1/items/prod-2');
+      expect(mockTransport.lastUri?.path, '/products/prod-2');
       expect(mockTransport.lastMethod, HttpMethod.delete);
     });
   });

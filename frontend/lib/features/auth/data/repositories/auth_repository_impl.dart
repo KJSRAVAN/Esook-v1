@@ -119,9 +119,9 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     try {
       final response = await _apiClient.post<Map<String, dynamic>>(
-        '/auth/staff/login',
+        '/auth/login',
         body: {
-          'phone': phoneNumber,
+          'phone_number': phoneNumber,
           'password': password,
         },
       );

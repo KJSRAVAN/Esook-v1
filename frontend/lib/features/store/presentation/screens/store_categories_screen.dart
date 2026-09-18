@@ -5,17 +5,23 @@ import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../domain/models/store_category_model.dart';
 import '../../domain/repositories/store_categories_repository.dart';
+import '../../domain/repositories/store_products_repository.dart';
 import '../widgets/store_scope.dart';
 
 /// Categories management screen for Store Staff and Managers.
+///
+/// NOTE: The backend does not have a standalone categories entity or endpoint.
+/// Categories are derived in-memory from products in the store's catalog.
 class StoreCategoriesScreen extends StatefulWidget {
   final String? storeId;
   final StoreCategoriesRepository? categoriesRepository;
+  final StoreProductsRepository? productsRepository;
 
   const StoreCategoriesScreen({
     super.key,
     this.storeId,
     this.categoriesRepository,
+    this.productsRepository,
   });
 
   @override
@@ -30,8 +36,8 @@ class _StoreCategoriesScreenState extends State<StoreCategoriesScreen> {
   String? get _effectiveStoreId =>
       widget.storeId ?? StoreScope.storeIdOf(context);
 
-  StoreCategoriesRepository get _categoriesRepo =>
-      widget.categoriesRepository ?? StoreScope.categoriesRepositoryOf(context);
+  StoreProductsRepository get _productsRepo =>
+      widget.productsRepository ?? StoreScope.productsRepositoryOf(context);
 
   @override
   void didChangeDependencies() {
@@ -54,13 +60,32 @@ class _StoreCategoriesScreenState extends State<StoreCategoriesScreen> {
       _errorMessage = null;
     });
 
-    final result = await _categoriesRepo.getCategories(storeId);
+    final result = await _productsRepo.getStoreProducts(storeId);
 
     if (!mounted) return;
 
     if (result.isSuccess) {
+      final products = result.dataOrNull ?? [];
+      final categoryMap = <String, int>{};
+      for (final p in products) {
+        final cat = p.category?.trim();
+        if (cat != null && cat.isNotEmpty) {
+          categoryMap[cat] = (categoryMap[cat] ?? 0) + 1;
+        }
+      }
+
+      final derivedCategories = categoryMap.entries.map((entry) {
+        return StoreCategoryModel(
+          id: entry.key,
+          name: entry.key,
+          storeId: storeId,
+          productCount: entry.value,
+        );
+      }).toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
+
       setState(() {
-        _categories = result.dataOrNull ?? [];
+        _categories = derivedCategories;
         _isLoading = false;
       });
     } else {
@@ -72,107 +97,26 @@ class _StoreCategoriesScreenState extends State<StoreCategoriesScreen> {
   }
 
   void _showAddCategoryDialog() {
-    final storeId = _effectiveStoreId;
-    if (storeId == null) return;
-
-    final nameController = TextEditingController();
-    final sortController = TextEditingController(text: '0');
-    final formKey = GlobalKey<FormState>();
-    bool isSubmitting = false;
-    String? dialogError;
-
-    showDialog<StoreCategoryModel>(
+    showDialog<void>(
       context: context,
       builder: (dialogCtx) {
-        return StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            return AlertDialog(
-              title: const Text('Add Category'),
-              content: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (dialogError != null) ...[
-                      Text(dialogError!, style: const TextStyle(color: AppColors.error, fontSize: 12)),
-                      const SizedBox(height: 8),
-                    ],
-                    TextFormField(
-                      key: const Key('category_name_input'),
-                      controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Category Name *',
-                        hintText: 'e.g. Fresh Bakery & Breads',
-                      ),
-                      validator: (val) => val == null || val.trim().isEmpty ? 'Name is required' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      key: const Key('category_sort_input'),
-                      controller: sortController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Sort Order',
-                        hintText: '0',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isSubmitting ? null : () => Navigator.of(dialogCtx).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  key: const Key('category_create_btn'),
-                  onPressed: isSubmitting
-                      ? null
-                      : () async {
-                          if (!formKey.currentState!.validate()) return;
-                          setDialogState(() {
-                            isSubmitting = true;
-                            dialogError = null;
-                          });
-
-                          final sortOrder = int.tryParse(sortController.text.trim()) ?? 0;
-                          final res = await _categoriesRepo.createCategory(
-                            storeId: storeId,
-                            name: nameController.text.trim(),
-                            sortOrder: sortOrder,
-                          );
-
-                          if (!ctx.mounted) return;
-
-                          if (res.isSuccess) {
-                            Navigator.of(dialogCtx).pop(res.dataOrNull);
-                          } else {
-                            setDialogState(() {
-                              isSubmitting = false;
-                              dialogError = res.failureOrNull?.message ?? 'Failed to create category';
-                            });
-                          }
-                        },
-                  child: isSubmitting
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('Create'),
-                ),
-              ],
-            );
-          },
+        return AlertDialog(
+          title: const Text('Add Category'),
+          content: const Text(
+            'Direct category creation is not supported by the backend API.\n\n'
+            'Categories are dynamically derived from your product catalog. '
+            'To add a new category, specify it in the Category field when creating or updating a product.',
+          ),
+          actions: [
+            TextButton(
+              key: const Key('category_gap_dismiss_btn'),
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: const Text('Understood'),
+            ),
+          ],
         );
       },
-    ).then((created) {
-      if (created != null && mounted) {
-        setState(() => _categories = [..._categories, created]);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Category "${created.name}" created successfully'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      }
-    });
+    );
   }
 
   @override
