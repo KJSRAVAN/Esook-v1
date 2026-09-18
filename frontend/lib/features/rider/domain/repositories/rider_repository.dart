@@ -3,36 +3,25 @@ import '../models/rider_order_model.dart';
 
 /// Domain contract for rider delivery operations.
 ///
-/// Maps exactly to the 4 driver endpoints on origin/Prod_Backend:
-/// - GET  /drivers/orders/available
-/// - GET  /drivers/orders/active
-/// - POST /drivers/orders/:orderId/accept
-/// - PATCH /drivers/orders/:orderId/status
+/// Communicates with production backend order endpoints:
+/// - GET   /orders (scoped to authenticated rider's store)
+/// - PATCH /orders/:id/status
 abstract interface class RiderRepository {
-  /// Fetch all READY DELIVERY orders with no driver assigned.
-  /// Platform-wide, not store-scoped.
+  /// Fetch all DELIVERY orders in `preparing` status ready for delivery
+  /// for the authenticated rider's store.
   Future<Result<List<RiderOrderModel>>> getAvailableOrders();
 
-  /// Fetch the driver's single active in-progress order (if any).
+  /// Fetch the driver's active in-progress delivery order (`out_for_delivery`).
   /// Returns null data when no active delivery exists.
   Future<Result<RiderOrderModel?>> getActiveOrder();
 
-  /// Self-assign an available READY DELIVERY order.
-  /// Atomically claims the order and sets status to OUT_FOR_DELIVERY.
+  /// Start delivery for an order (transitions from `preparing` -> `out_for_delivery`).
   ///
-  /// Backend errors:
-  /// - 409 DRIVER_BUSY: driver already has an active delivery
-  /// - 409 ORDER_UNAVAILABLE: order was claimed by another driver
-  /// - 404: order not found
-  /// - 400 NOT_DELIVERY: order is a PICKUP order
+  /// Sends PATCH /orders/:id/status with `{ "status": "out_for_delivery" }`.
   Future<Result<RiderOrderModel>> acceptOrder(String orderId);
 
-  /// Mark an active delivery as DELIVERED.
-  /// Only valid transition: OUT_FOR_DELIVERY → DELIVERED.
+  /// Mark an active delivery as completed (transitions from `out_for_delivery` -> `completed`).
   ///
-  /// Backend errors:
-  /// - 403: order is assigned to a different driver
-  /// - 404: order not found
-  /// - 400 INVALID_TRANSITION: order is not in OUT_FOR_DELIVERY status
+  /// Sends PATCH /orders/:id/status with `{ "status": "completed" }`.
   Future<Result<RiderOrderModel>> markDelivered(String orderId);
 }

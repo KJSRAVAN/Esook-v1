@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:esouq/core/error/failures.dart';
 import 'package:esouq/core/network/api_client.dart';
 import 'package:esouq/core/network/http_method.dart';
 import 'package:esouq/core/network/http_transport.dart';
@@ -34,27 +35,36 @@ class MockHttpTransport implements HttpTransport {
   }
 }
 
-final _sampleOrder = {
+final _backendOrderPreparing = {
   'id': 'order-001',
-  'status': 'READY',
-  'fulfillment': 'DELIVERY',
-  'deliveryAddress': 'Villa 12, Riyadh',
-  'notes': 'Leave at gate',
-  'driverId': null,
-  'createdAt': '2026-09-17T12:00:00Z',
-  'store': {
-    'id': 's1',
-    'name': 'Store A',
-    'address': 'Al Olaya, Riyadh',
-    'phone': '+9661',
+  'order_number': 'ESK-ORDER-001',
+  'status': 'preparing',
+  'fulfillment_type': 'delivery',
+  'delivery_address': 'Villa 12, Riyadh',
+  'store_id': 's1',
+  'store_name': 'Store A',
+  'customer_id': 'c1',
+  'customer': {
+    'full_name': 'Ahmed Customer',
+    'phone_number': '+966501234567',
   },
-  'customer': {'phone': '+966501234567'},
+  'total_amount': '85.50',
+  'created_at': '2026-09-17T12:00:00Z',
 };
 
-final _activeOrder = {
-  ..._sampleOrder,
-  'status': 'OUT_FOR_DELIVERY',
-  'driverId': 'driver-001',
+final _backendOrderOutForDelivery = {
+  ..._backendOrderPreparing,
+  'id': 'order-002',
+  'order_number': 'ESK-ORDER-002',
+  'status': 'out_for_delivery',
+};
+
+final _backendOrderPickup = {
+  ..._backendOrderPreparing,
+  'id': 'order-003',
+  'order_number': 'ESK-ORDER-003',
+  'fulfillment_type': 'pickup',
+  'status': 'preparing',
 };
 
 void main() {
@@ -73,13 +83,19 @@ void main() {
     });
 
     // -----------------------------------------------------------------------
-    // GET /drivers/orders/available
+    // GET /orders (Available Orders)
     // -----------------------------------------------------------------------
     group('getAvailableOrders', () {
-      test('calls GET /drivers/orders/available and parses order list',
+      test('calls GET /orders and filters delivery orders in preparing status',
           () async {
         mockTransport.statusCode = 200;
-        mockTransport.responseBody = jsonEncode([_sampleOrder]);
+        mockTransport.responseBody = jsonEncode({
+          'orders': [
+            _backendOrderPreparing,
+            _backendOrderPickup, // Should be filtered out (pickup)
+            _backendOrderOutForDelivery, // Should be filtered out (already active)
+          ],
+        });
 
         final result = await repository.getAvailableOrders();
 
@@ -87,21 +103,25 @@ void main() {
         final orders = result.dataOrNull!;
         expect(orders, hasLength(1));
         expect(orders.first.id, 'order-001');
+        expect(orders.first.orderNumber, 'ESK-ORDER-001');
         expect(orders.first.status, RiderOrderStatus.ready);
         expect(orders.first.store.name, 'Store A');
         expect(orders.first.customer.phone, '+966501234567');
-        expect(mockTransport.lastUri?.path, '/drivers/orders/available');
+        expect(orders.first.customer.name, 'Ahmed Customer');
+        expect(orders.first.deliveryAddress, 'Villa 12, Riyadh');
+        expect(mockTransport.lastUri?.path, '/orders');
         expect(mockTransport.lastMethod, HttpMethod.get);
       });
 
       test('returns empty list when no orders available', () async {
         mockTransport.statusCode = 200;
-        mockTransport.responseBody = jsonEncode([]);
+        mockTransport.responseBody = jsonEncode({'orders': []});
 
         final result = await repository.getAvailableOrders();
 
         expect(result.isSuccess, isTrue);
         expect(result.dataOrNull, isEmpty);
+        expect(mockTransport.lastUri?.path, '/orders');
       });
 
       test('returns failure on 401 unauthorized', () async {
@@ -127,29 +147,35 @@ void main() {
     });
 
     // -----------------------------------------------------------------------
-    // GET /drivers/orders/active
+    // GET /orders (Active Order)
     // -----------------------------------------------------------------------
     group('getActiveOrder', () {
-      test('calls GET /drivers/orders/active and parses active order',
+      test('calls GET /orders and extracts active delivery order (out_for_delivery)',
           () async {
         mockTransport.statusCode = 200;
-        mockTransport.responseBody = jsonEncode(_activeOrder);
+        mockTransport.responseBody = jsonEncode({
+          'orders': [
+            _backendOrderPreparing,
+            _backendOrderOutForDelivery,
+          ],
+        });
 
         final result = await repository.getActiveOrder();
 
         expect(result.isSuccess, isTrue);
         final order = result.dataOrNull;
         expect(order, isNotNull);
-        expect(order!.id, 'order-001');
+        expect(order!.id, 'order-002');
         expect(order.status, RiderOrderStatus.outForDelivery);
-        expect(order.driverId, 'driver-001');
-        expect(mockTransport.lastUri?.path, '/drivers/orders/active');
+        expect(mockTransport.lastUri?.path, '/orders');
         expect(mockTransport.lastMethod, HttpMethod.get);
       });
 
-      test('returns null when no active order (null response)', () async {
+      test('returns null when no active delivery order', () async {
         mockTransport.statusCode = 200;
-        mockTransport.responseBody = 'null';
+        mockTransport.responseBody = jsonEncode({
+          'orders': [_backendOrderPreparing],
+        });
 
         final result = await repository.getActiveOrder();
 
@@ -157,9 +183,9 @@ void main() {
         expect(result.dataOrNull, isNull);
       });
 
-      test('returns null when no active order (empty string)', () async {
+      test('returns null when response orders list is empty', () async {
         mockTransport.statusCode = 200;
-        mockTransport.responseBody = '';
+        mockTransport.responseBody = jsonEncode({'orders': []});
 
         final result = await repository.getActiveOrder();
 
@@ -170,7 +196,7 @@ void main() {
       test('returns failure on 403 forbidden', () async {
         mockTransport.statusCode = 403;
         mockTransport.responseBody =
-            jsonEncode({'message': 'Not authorized'});
+            jsonEncode({'error': 'Forbidden: Delivery rider is not assigned to a store'});
 
         final result = await repository.getActiveOrder();
 
@@ -180,153 +206,110 @@ void main() {
     });
 
     // -----------------------------------------------------------------------
-    // POST /drivers/orders/:orderId/accept
+    // PATCH /orders/:orderId/status (Start Delivery / Accept)
     // -----------------------------------------------------------------------
     group('acceptOrder', () {
-      test('calls POST /drivers/orders/:orderId/accept and returns accepted order',
+      test('calls PATCH /orders/:orderId/status with out_for_delivery body',
           () async {
-        final accepted = {
-          ..._sampleOrder,
-          'status': 'OUT_FOR_DELIVERY',
-          'driverId': 'driver-001',
+        final updatedOrder = {
+          ..._backendOrderPreparing,
+          'status': 'out_for_delivery',
         };
 
-        mockTransport.statusCode = 201;
-        mockTransport.responseBody = jsonEncode(accepted);
+        mockTransport.statusCode = 200;
+        mockTransport.responseBody = jsonEncode({'order': updatedOrder});
 
         final result = await repository.acceptOrder('order-001');
 
         expect(result.isSuccess, isTrue);
         final order = result.dataOrNull!;
         expect(order.status, RiderOrderStatus.outForDelivery);
-        expect(order.driverId, 'driver-001');
         expect(
           mockTransport.lastUri?.path,
-          '/drivers/orders/order-001/accept',
+          '/orders/order-001/status',
         );
-        expect(mockTransport.lastMethod, HttpMethod.post);
+        expect(mockTransport.lastMethod, HttpMethod.patch);
+
+        final body = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+        expect(body['status'], 'out_for_delivery');
       });
 
-      test('returns ConflictFailure on 409 DRIVER_BUSY', () async {
+      test('returns ConflictFailure on 409 conflict', () async {
         mockTransport.statusCode = 409;
         mockTransport.responseBody = jsonEncode({
-          'code': 'DRIVER_BUSY',
-          'message':
-              'You already have an active delivery. Complete it before accepting another.',
+          'message': 'Order was already modified by another user',
         });
 
         final result = await repository.acceptOrder('order-001');
 
         expect(result.isFailure, isTrue);
-        expect(result.failureOrNull?.statusCode, 409);
-        expect(result.failureOrNull?.message, contains('active delivery'));
-      });
-
-      test('returns ConflictFailure on 409 ORDER_UNAVAILABLE', () async {
-        mockTransport.statusCode = 409;
-        mockTransport.responseBody = jsonEncode({
-          'code': 'ORDER_UNAVAILABLE',
-          'message': 'Order is no longer available for pickup',
-        });
-
-        final result = await repository.acceptOrder('order-001');
-
-        expect(result.isFailure, isTrue);
-        expect(result.failureOrNull?.statusCode, 409);
+        expect(result.failureOrNull, isA<ConflictFailure>());
       });
 
       test('returns NotFoundFailure on 404', () async {
         mockTransport.statusCode = 404;
         mockTransport.responseBody =
-            jsonEncode({'message': 'Order not found'});
+            jsonEncode({'error': 'Order not found'});
 
         final result = await repository.acceptOrder('order-999');
 
         expect(result.isFailure, isTrue);
-        expect(result.failureOrNull?.statusCode, 404);
-      });
-
-      test('returns ValidationFailure on 400 NOT_DELIVERY', () async {
-        mockTransport.statusCode = 400;
-        mockTransport.responseBody = jsonEncode({
-          'code': 'NOT_DELIVERY',
-          'message': 'This order is not a delivery order',
-        });
-
-        final result = await repository.acceptOrder('order-pickup');
-
-        expect(result.isFailure, isTrue);
-        expect(result.failureOrNull?.statusCode, 400);
+        expect(result.failureOrNull, isA<NotFoundFailure>());
       });
     });
 
     // -----------------------------------------------------------------------
-    // PATCH /drivers/orders/:orderId/status
+    // PATCH /orders/:orderId/status (Complete Delivery)
     // -----------------------------------------------------------------------
     group('markDelivered', () {
-      test('calls PATCH /drivers/orders/:orderId/status with DELIVERED body',
+      test('calls PATCH /orders/:orderId/status with lowercase completed body',
           () async {
-        final delivered = {
-          ..._sampleOrder,
-          'status': 'DELIVERED',
-          'driverId': 'driver-001',
+        final completedOrder = {
+          ..._backendOrderOutForDelivery,
+          'status': 'completed',
         };
 
         mockTransport.statusCode = 200;
-        mockTransport.responseBody = jsonEncode(delivered);
+        mockTransport.responseBody = jsonEncode({'order': completedOrder});
 
-        final result = await repository.markDelivered('order-001');
+        final result = await repository.markDelivered('order-002');
 
         expect(result.isSuccess, isTrue);
         final order = result.dataOrNull!;
         expect(order.status, RiderOrderStatus.delivered);
         expect(
           mockTransport.lastUri?.path,
-          '/drivers/orders/order-001/status',
+          '/orders/order-002/status',
         );
         expect(mockTransport.lastMethod, HttpMethod.patch);
 
-        // Verify the request body contains { "status": "DELIVERED" }
+        // Verify the request body contains { "status": "completed" } and never "DELIVERED"
         final body = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
-        expect(body['status'], 'DELIVERED');
+        expect(body['status'], 'completed');
+        expect(mockTransport.lastBody, isNot(contains('DELIVERED')));
       });
 
-      test('returns ForbiddenFailure on 403 (different driver)', () async {
+      test('returns ForbiddenFailure on 403', () async {
         mockTransport.statusCode = 403;
         mockTransport.responseBody = jsonEncode({
-          'message': 'This order is not assigned to you',
+          'error': 'Forbidden: Cannot access orders belonging to another store',
         });
 
-        final result = await repository.markDelivered('order-001');
+        final result = await repository.markDelivered('order-002');
 
         expect(result.isFailure, isTrue);
-        expect(result.failureOrNull?.statusCode, 403);
-        expect(result.failureOrNull?.message, contains('not assigned'));
+        expect(result.failureOrNull, isA<ForbiddenFailure>());
       });
 
       test('returns NotFoundFailure on 404', () async {
         mockTransport.statusCode = 404;
         mockTransport.responseBody =
-            jsonEncode({'message': 'Order not found'});
+            jsonEncode({'error': 'Order not found'});
 
         final result = await repository.markDelivered('order-999');
 
         expect(result.isFailure, isTrue);
-        expect(result.failureOrNull?.statusCode, 404);
-      });
-
-      test('returns ValidationFailure on 400 INVALID_TRANSITION', () async {
-        mockTransport.statusCode = 400;
-        mockTransport.responseBody = jsonEncode({
-          'code': 'INVALID_TRANSITION',
-          'message':
-              'Cannot transition from DELIVERED to DELIVERED',
-        });
-
-        final result = await repository.markDelivered('order-001');
-
-        expect(result.isFailure, isTrue);
-        expect(result.failureOrNull?.statusCode, 400);
+        expect(result.failureOrNull, isA<NotFoundFailure>());
       });
     });
   });
