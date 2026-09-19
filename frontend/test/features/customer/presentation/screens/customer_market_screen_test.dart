@@ -9,6 +9,8 @@ import 'package:esouq/features/customer/presentation/widgets/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:esouq/features/customer/cart/application/cart_notifier.dart';
+import '../../mocks/mock_cart_repository.dart';
 import '../../mocks/mock_product_repository.dart';
 import '../../mocks/mock_store_repository.dart';
 
@@ -27,7 +29,7 @@ void main() {
     selectedStoreNotifier.dispose();
   });
 
-  Widget buildWidget({StoreModel? initialStore}) {
+  Widget buildWidget({StoreModel? initialStore, CartNotifier? cartNotifier}) {
     if (initialStore != null) {
       selectedStoreNotifier.value = initialStore;
     }
@@ -38,6 +40,7 @@ void main() {
         storeRepository: mockStoreRepo,
         productRepository: mockProductRepo,
         selectedStoreNotifier: selectedStoreNotifier,
+        cartNotifier: cartNotifier,
       ),
     );
   }
@@ -210,5 +213,63 @@ void main() {
       expect(find.text('eSOuQ Al Malqa Fresh'), findsOneWidget);
       expect(find.text('Riyadh - Al Malqa'), findsOneWidget);
     });
+
+    testWidgets(
+      'tapping ProductCard opens ProductDetailSheet and shows details',
+      (tester) async {
+        final store = mockStoreRepo.defaultStores.first;
+        await tester.pumpWidget(buildWidget(initialStore: store));
+        await tester.pumpAndSettle();
+
+        // Tap on the first product card (Fresh Whole Milk 1L)
+        await tester.tap(find.byKey(const Key('product_card_prod-1')));
+        await tester.pumpAndSettle();
+
+        // ProductDetailSheet is displayed
+        expect(find.byKey(const Key('product_detail_sheet')), findsOneWidget);
+        expect(find.text('Fresh Whole Milk 1L'), findsNWidgets(2)); // Card + sheet
+        expect(find.text('In Stock'), findsOneWidget);
+
+        // Close the sheet
+        await tester.tap(find.byKey(const Key('detail_close_button')));
+        await tester.pumpAndSettle();
+
+        // Sheet dismissed, catalog intact
+        expect(find.byKey(const Key('product_detail_sheet')), findsNothing);
+        expect(find.byType(ProductCard), findsNWidgets(3));
+      },
+    );
+
+    testWidgets(
+      'allows adding available product to cart from opened ProductDetailSheet',
+      (tester) async {
+        final store = mockStoreRepo.defaultStores.first;
+        final mockCartRepo = MockCartRepository();
+        mockCartRepo.cartToReturn = mockCartRepo.defaultCart.copyWith(items: []);
+        final cartNotifier = CartNotifier(cartRepository: mockCartRepo);
+        await cartNotifier.loadForStore(store.id);
+
+        await tester.pumpWidget(
+          buildWidget(initialStore: store, cartNotifier: cartNotifier),
+        );
+        await tester.pumpAndSettle();
+
+        // Tap on Fresh Whole Milk card
+        await tester.tap(find.byKey(const Key('product_card_prod-1')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('product_detail_sheet')), findsOneWidget);
+        expect(
+          find.byKey(const Key('detail_add_to_cart_button')),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('detail_add_to_cart_button')));
+        await tester.pumpAndSettle();
+
+        expect(mockCartRepo.addItemCallCount, equals(1));
+        expect(mockCartRepo.lastProductIdParam, equals('prod-1'));
+      },
+    );
   });
 }

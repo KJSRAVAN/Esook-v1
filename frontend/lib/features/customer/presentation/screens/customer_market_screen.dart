@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../cart/application/cart_notifier.dart';
 import '../../domain/models/product_model.dart';
 import '../../domain/models/store_model.dart';
 import '../../domain/repositories/product_repository.dart';
@@ -10,6 +11,7 @@ import '../../domain/repositories/store_repository.dart';
 import '../widgets/category_filter_bar.dart';
 import '../widgets/customer_scope.dart';
 import '../widgets/product_card.dart';
+import '../widgets/product_detail_sheet.dart';
 import '../widgets/store_selection_view.dart';
 
 /// Customer Market Screen displaying active store catalog, search, and category filtering.
@@ -17,12 +19,14 @@ class CustomerMarketScreen extends StatefulWidget {
   final ProductRepository? productRepository;
   final StoreRepository? storeRepository;
   final ValueNotifier<StoreModel?>? selectedStoreNotifier;
+  final CartNotifier? cartNotifier;
 
   const CustomerMarketScreen({
     super.key,
     this.productRepository,
     this.storeRepository,
     this.selectedStoreNotifier,
+    this.cartNotifier,
   });
 
   @override
@@ -48,6 +52,9 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
   ValueNotifier<StoreModel?> get _storeNotifier =>
       widget.selectedStoreNotifier ??
       CustomerScope.of(context).selectedStoreNotifier;
+
+  CartNotifier? get _cartNotifier =>
+      widget.cartNotifier ?? CustomerScope.maybeOf(context)?.cartNotifier;
 
   @override
   void initState() {
@@ -498,7 +505,18 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
           itemCount: products.length,
           itemBuilder: (context, index) {
             final product = products[index];
-            return ProductCard(product: product, onTap: () {});
+            return ProductCard(
+              key: Key('product_card_${product.id}'),
+              product: product,
+              cartNotifier: _cartNotifier,
+              onTap: () {
+                ProductDetailSheet.show(
+                  context,
+                  product: product,
+                  cartNotifier: _cartNotifier,
+                );
+              },
+            );
           },
         );
       },
