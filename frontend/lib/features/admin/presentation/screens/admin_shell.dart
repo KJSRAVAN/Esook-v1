@@ -14,6 +14,8 @@ import '../../data/repositories/admin_users_repository_impl.dart';
 import '../../domain/repositories/admin_drivers_repository.dart';
 import '../../domain/repositories/admin_stores_repository.dart';
 import '../../domain/repositories/admin_users_repository.dart';
+import '../../../store/data/repositories/store_orders_repository_impl.dart';
+import '../../../store/domain/repositories/store_orders_repository.dart';
 import '../widgets/admin_scope.dart';
 import 'admin_dashboard_screen.dart';
 import 'admin_drivers_screen.dart';
@@ -28,6 +30,7 @@ class AdminShell extends StatefulWidget {
   final AdminUsersRepository? usersRepository;
   final AdminDriversRepository? driversRepository;
   final AdminStoresRepository? storesRepository;
+  final StoreOrdersRepository? ordersRepository;
 
   const AdminShell({
     super.key,
@@ -36,6 +39,7 @@ class AdminShell extends StatefulWidget {
     this.usersRepository,
     this.driversRepository,
     this.storesRepository,
+    this.ordersRepository,
   });
 
   @override
@@ -48,6 +52,7 @@ class _AdminShellState extends State<AdminShell> {
   late final AdminUsersRepository _usersRepository;
   late final AdminDriversRepository _driversRepository;
   late final AdminStoresRepository _storesRepository;
+  late final StoreOrdersRepository _ordersRepository;
 
   @override
   void initState() {
@@ -71,6 +76,9 @@ class _AdminShellState extends State<AdminShell> {
     _storesRepository =
         widget.storesRepository ??
         AdminStoresRepositoryImpl(apiClient: apiClient);
+    _ordersRepository =
+        widget.ordersRepository ??
+        StoreOrdersRepositoryImpl(apiClient: apiClient);
   }
 
   void _onTabSelected(int index) {
@@ -95,6 +103,7 @@ class _AdminShellState extends State<AdminShell> {
       usersRepository: _usersRepository,
       driversRepository: _driversRepository,
       storesRepository: _storesRepository,
+      ordersRepository: _ordersRepository,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
@@ -139,7 +148,10 @@ class _AdminShellState extends State<AdminShell> {
             AdminStoresScreen(storesRepository: _storesRepository),
             AdminUsersScreen(usersRepository: _usersRepository),
             AdminDriversScreen(driversRepository: _driversRepository),
-            AdminOrdersScreen(storesRepository: _storesRepository),
+            AdminOrdersScreen(
+              storesRepository: _storesRepository,
+              ordersRepository: _ordersRepository,
+            ),
           ],
         ),
         bottomNavigationBar: NavigationBar(

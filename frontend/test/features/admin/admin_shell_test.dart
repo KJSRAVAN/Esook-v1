@@ -10,6 +10,8 @@ import 'package:esouq/features/auth/domain/models/auth_response_model.dart';
 import 'package:esouq/features/auth/domain/models/user_model.dart';
 import 'package:esouq/features/auth/domain/models/user_role.dart';
 import 'package:esouq/features/auth/domain/repositories/auth_repository.dart';
+import 'package:esouq/features/customer/domain/models/order_model.dart';
+import 'package:esouq/features/store/domain/repositories/store_orders_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -212,18 +214,35 @@ class FakeAdminStoresRepository implements AdminStoresRepository {
   }
 }
 
+class FakeStoreOrdersRepository implements StoreOrdersRepository {
+  @override
+  Future<Result<List<OrderModel>>> getStoreOrders({
+    required String storeId,
+    String? status,
+    int page = 1,
+    int limit = 50,
+  }) async {
+    return Result.success(const []);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 void main() {
   group('AdminShell Widget & Navigation Tests', () {
     late FakeAuthRepository authRepo;
     late FakeAdminUsersRepository usersRepo;
     late FakeAdminDriversRepository driversRepo;
     late FakeAdminStoresRepository storesRepo;
+    late FakeStoreOrdersRepository ordersRepo;
 
     setUp(() {
       authRepo = FakeAuthRepository();
       usersRepo = FakeAdminUsersRepository();
       driversRepo = FakeAdminDriversRepository();
       storesRepo = FakeAdminStoresRepository();
+      ordersRepo = FakeStoreOrdersRepository();
     });
 
     Widget createTestWidget({int initialIndex = 0}) {
@@ -237,6 +256,7 @@ void main() {
           usersRepository: usersRepo,
           driversRepository: driversRepo,
           storesRepository: storesRepo,
+          ordersRepository: ordersRepo,
         ),
       );
     }
