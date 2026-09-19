@@ -12,8 +12,13 @@ import '../widgets/order_details_sheet.dart';
 /// Screen presenting the authenticated customer's order history and active order tracking.
 class CustomerOrdersScreen extends StatefulWidget {
   final OrderRepository? orderRepository;
+  final Listenable? refreshSignal;
 
-  const CustomerOrdersScreen({super.key, this.orderRepository});
+  const CustomerOrdersScreen({
+    super.key,
+    this.orderRepository,
+    this.refreshSignal,
+  });
 
   @override
   State<CustomerOrdersScreen> createState() => _CustomerOrdersScreenState();
@@ -25,6 +30,33 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
   String? _errorMessage;
   List<OrderModel> _orders = const [];
   bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.refreshSignal?.addListener(_onRefreshSignal);
+  }
+
+  @override
+  void didUpdateWidget(CustomerOrdersScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshSignal != widget.refreshSignal) {
+      oldWidget.refreshSignal?.removeListener(_onRefreshSignal);
+      widget.refreshSignal?.addListener(_onRefreshSignal);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.refreshSignal?.removeListener(_onRefreshSignal);
+    super.dispose();
+  }
+
+  void _onRefreshSignal() {
+    if (mounted) {
+      _loadOrders();
+    }
+  }
 
   @override
   void didChangeDependencies() {

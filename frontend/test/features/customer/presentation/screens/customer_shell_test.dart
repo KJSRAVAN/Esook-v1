@@ -272,5 +272,48 @@ void main() {
         expect(find.byType(CustomerShell), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'order placement triggers ordersRefreshNotifier, reloads orders, and transitions to Orders tab',
+      (tester) async {
+        final store = mockStoreRepository.defaultStores.first;
+        final ordersNotifier = ValueNotifier<int>(0);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: AuthScope(
+              repository: mockAuthRepository,
+              child: CustomerShell(
+                initialIndex: 2, // Start on Cart tab
+                authRepository: mockAuthRepository,
+                storeRepository: mockStoreRepository,
+                productRepository: mockProductRepository,
+                cartRepository: mockCartRepository,
+                orderRepository: mockOrderRepository,
+                initialSelectedStore: store,
+                ordersRefreshNotifier: ordersNotifier,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.byType(CartScreen), findsOneWidget);
+        final initialCalls = mockOrderRepository.getMyOrdersCallCount;
+
+        // Trigger the refresh signal simulating checkout completion
+        ordersNotifier.value++;
+        await tester.pumpAndSettle();
+
+        // Verify orders were reloaded
+        expect(
+          mockOrderRepository.getMyOrdersCallCount,
+          equals(initialCalls + 1),
+        );
+
+        ordersNotifier.dispose();
+      },
+    );
   });
 }

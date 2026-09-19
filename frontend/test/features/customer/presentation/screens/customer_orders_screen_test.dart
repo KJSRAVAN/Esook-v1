@@ -154,5 +154,95 @@ void main() {
         equals(initialCalls + 1),
       );
     });
+
+    testWidgets('pull-to-refresh gesture reloads orders from repository', (
+      tester,
+    ) async {
+      mockOrderRepository.ordersToReturn = [mockOrderRepository.defaultOrder];
+
+      await tester.pumpWidget(buildOrdersScreen());
+      await tester.pumpAndSettle();
+
+      final initialCalls = mockOrderRepository.getMyOrdersCallCount;
+
+      // Perform a pull-down drag on the ListView to trigger RefreshIndicator
+      await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+      await tester.pumpAndSettle();
+
+      expect(
+        mockOrderRepository.getMyOrdersCallCount,
+        equals(initialCalls + 1),
+      );
+    });
+
+    testWidgets('refreshSignal triggers reload of orders when notified', (
+      tester,
+    ) async {
+      final refreshNotifier = ValueNotifier<int>(0);
+      mockOrderRepository.ordersToReturn = [];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: CustomerOrdersScreen(
+            orderRepository: mockOrderRepository,
+            refreshSignal: refreshNotifier,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('No Orders Yet'), findsOneWidget);
+      expect(mockOrderRepository.getMyOrdersCallCount, equals(1));
+
+      // Simulate order placed notification
+      mockOrderRepository.ordersToReturn = [mockOrderRepository.defaultOrder];
+      refreshNotifier.value++;
+      await tester.pumpAndSettle();
+
+      expect(mockOrderRepository.getMyOrdersCallCount, equals(2));
+      expect(find.byType(OrderCard), findsOneWidget);
+      expect(find.text('No Orders Yet'), findsNothing);
+
+      refreshNotifier.dispose();
+    });
+
+    testWidgets(
+      'ordinary widget rebuilds do not trigger duplicate orders reloads',
+      (tester) async {
+        final refreshNotifier = ValueNotifier<int>(0);
+        mockOrderRepository.ordersToReturn = [mockOrderRepository.defaultOrder];
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: CustomerOrdersScreen(
+              orderRepository: mockOrderRepository,
+              refreshSignal: refreshNotifier,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(mockOrderRepository.getMyOrdersCallCount, equals(1));
+
+        // Rebuild the widget with same state
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: CustomerOrdersScreen(
+              orderRepository: mockOrderRepository,
+              refreshSignal: refreshNotifier,
+            ),
+          ),
+        );
+        await tester.pump();
+
+        // Must still be 1 call, not repeated/unbounded
+        expect(mockOrderRepository.getMyOrdersCallCount, equals(1));
+
+        refreshNotifier.dispose();
+      },
+    );
   });
 }

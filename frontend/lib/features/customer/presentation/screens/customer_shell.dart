@@ -35,6 +35,7 @@ class CustomerShell extends StatefulWidget {
   final CartNotifier? cartNotifier;
   final StoreModel? initialSelectedStore;
   final ValueNotifier<StoreModel?>? selectedStoreNotifier;
+  final ValueNotifier<int>? ordersRefreshNotifier;
 
   const CustomerShell({
     super.key,
@@ -47,6 +48,7 @@ class CustomerShell extends StatefulWidget {
     this.cartNotifier,
     this.initialSelectedStore,
     this.selectedStoreNotifier,
+    this.ordersRefreshNotifier,
   });
 
   @override
@@ -57,6 +59,8 @@ class _CustomerShellState extends State<CustomerShell> {
   late int _currentIndex;
   late final ValueNotifier<StoreModel?> _storeNotifier;
   late final bool _ownsNotifier;
+  late final ValueNotifier<int> _ordersRefreshNotifier;
+  late final bool _ownsOrdersNotifier;
 
   late final StoreRepository _storeRepository;
   late final ProductRepository _productRepository;
@@ -69,6 +73,14 @@ class _CustomerShellState extends State<CustomerShell> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+
+    if (widget.ordersRefreshNotifier != null) {
+      _ordersRefreshNotifier = widget.ordersRefreshNotifier!;
+      _ownsOrdersNotifier = false;
+    } else {
+      _ordersRefreshNotifier = ValueNotifier<int>(0);
+      _ownsOrdersNotifier = true;
+    }
 
     if (widget.selectedStoreNotifier != null) {
       _storeNotifier = widget.selectedStoreNotifier!;
@@ -132,6 +144,9 @@ class _CustomerShellState extends State<CustomerShell> {
     if (_ownsNotifier) {
       _storeNotifier.dispose();
     }
+    if (_ownsOrdersNotifier) {
+      _ordersRefreshNotifier.dispose();
+    }
     super.dispose();
   }
 
@@ -171,9 +186,15 @@ class _CustomerShellState extends State<CustomerShell> {
               storeName: selectedStore?.name,
               storeArea: selectedStore?.area,
               onExploreMarket: () => _onNavigationTabSelected(0),
-              onOrderPlaced: (_) => _onNavigationTabSelected(3),
+              onOrderPlaced: (_) {
+                _ordersRefreshNotifier.value++;
+                _onNavigationTabSelected(3);
+              },
             ),
-            CustomerOrdersScreen(orderRepository: _orderRepository),
+            CustomerOrdersScreen(
+              orderRepository: _orderRepository,
+              refreshSignal: _ordersRefreshNotifier,
+            ),
             CustomerAccountScreen(authRepository: widget.authRepository),
           ],
         ),
