@@ -9,7 +9,8 @@ import '../../domain/repositories/store_orders_repository.dart';
 class StoreOrdersRepositoryImpl implements StoreOrdersRepository {
   final ApiClient _apiClient;
 
-  const StoreOrdersRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
+  const StoreOrdersRepositoryImpl({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
   @override
   Future<Result<List<OrderModel>>> getStoreOrders({
@@ -19,7 +20,19 @@ class StoreOrdersRepositoryImpl implements StoreOrdersRepository {
     int limit = 50,
   }) async {
     try {
-      final response = await _apiClient.get<dynamic>('/orders');
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+        if (status != null &&
+            status.isNotEmpty &&
+            status.toUpperCase() != 'ALL')
+          'status': OrderStatus.fromString(status).toBackendString(),
+      };
+
+      final response = await _apiClient.get<dynamic>(
+        '/orders/store/$storeId',
+        queryParameters: queryParams,
+      );
 
       final dynamic rawData = response.data;
       final List<dynamic> rawList;
@@ -43,7 +56,9 @@ class StoreOrdersRepositoryImpl implements StoreOrdersRepository {
           .map(OrderModel.fromJson)
           .toList();
 
-      if (status != null && status.isNotEmpty && status.toUpperCase() != 'ALL') {
+      if (status != null &&
+          status.isNotEmpty &&
+          status.toUpperCase() != 'ALL') {
         final targetStatus = OrderStatus.fromString(status);
         orders = orders.where((o) => o.status == targetStatus).toList();
       }
@@ -52,7 +67,9 @@ class StoreOrdersRepositoryImpl implements StoreOrdersRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch store orders: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch store orders: $e'),
+      );
     }
   }
 
@@ -80,7 +97,9 @@ class StoreOrdersRepositoryImpl implements StoreOrdersRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch order: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch order: $e'),
+      );
     }
   }
 
@@ -91,34 +110,10 @@ class StoreOrdersRepositoryImpl implements StoreOrdersRepository {
     String? rejectedReason,
   }) async {
     try {
-      final String backendStatus;
-      switch (status) {
-        case OrderStatus.pending:
-          backendStatus = 'pending';
-          break;
-        case OrderStatus.accepted:
-          backendStatus = 'accepted';
-          break;
-        case OrderStatus.preparing:
-          backendStatus = 'preparing';
-          break;
-        case OrderStatus.outForDelivery:
-          backendStatus = 'out_for_delivery';
-          break;
-        case OrderStatus.delivered:
-        case OrderStatus.ready:
-          backendStatus = 'completed';
-          break;
-        case OrderStatus.cancelled:
-          backendStatus = 'cancelled';
-          break;
-        case OrderStatus.rejected:
-          backendStatus = 'rejected';
-          break;
-      }
-
       final body = <String, dynamic>{
-        'status': backendStatus,
+        'status': status.toBackendString(),
+        if (rejectedReason != null && rejectedReason.trim().isNotEmpty)
+          'rejectedReason': rejectedReason.trim(),
       };
 
       final response = await _apiClient.patch<dynamic>(
@@ -146,7 +141,9 @@ class StoreOrdersRepositoryImpl implements StoreOrdersRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to update order status: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to update order status: $e'),
+      );
     }
   }
 }

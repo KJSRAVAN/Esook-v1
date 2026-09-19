@@ -6,11 +6,12 @@ import '../../../auth/domain/models/user_role.dart';
 import '../../domain/models/admin_user_model.dart';
 import '../../domain/repositories/admin_drivers_repository.dart';
 
-/// Concrete [AdminDriversRepository] communicating with `POST /users` and `GET /users?role=delivery_rider`.
+/// Concrete [AdminDriversRepository] communicating with `POST /auth/register/driver` and `GET /users`.
 class AdminDriversRepositoryImpl implements AdminDriversRepository {
   final ApiClient _apiClient;
 
-  const AdminDriversRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
+  const AdminDriversRepositoryImpl({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
   @override
   Future<Result<AdminUserModel>> registerDriver({
@@ -21,13 +22,11 @@ class AdminDriversRepositoryImpl implements AdminDriversRepository {
   }) async {
     try {
       final response = await _apiClient.post<dynamic>(
-        '/users',
+        '/auth/register/driver',
         body: {
-          'phone_number': phone.trim(),
-          'full_name': name.trim(),
-          'role': 'delivery_rider',
+          'name': name.trim(),
+          'phone': phone.trim(),
           'password': password,
-          if (storeId != null && storeId.trim().isNotEmpty) 'store_id': storeId.trim(),
         },
       );
 
@@ -50,7 +49,9 @@ class AdminDriversRepositoryImpl implements AdminDriversRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to register driver: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to register driver: $e'),
+      );
     }
   }
 
@@ -60,12 +61,7 @@ class AdminDriversRepositoryImpl implements AdminDriversRepository {
     int limit = 50,
   }) async {
     try {
-      final response = await _apiClient.get<dynamic>(
-        '/users',
-        queryParameters: {
-          'role': 'delivery_rider',
-        },
-      );
+      final response = await _apiClient.get<dynamic>('/users');
 
       final dynamic rawData = response.data;
       final List<dynamic> rawList;
@@ -92,7 +88,9 @@ class AdminDriversRepositoryImpl implements AdminDriversRepository {
 
       return Result.success(drivers);
     } on AppException catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch drivers: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch drivers: $e'),
+      );
     }
   }
 }

@@ -16,7 +16,11 @@ class CartStoreRef {
 
   factory CartStoreRef.fromJson(Map<String, dynamic> json) {
     return CartStoreRef(
-      id: json['id'] as String? ?? json['storeId'] as String? ?? json['store_id'] as String? ?? '',
+      id:
+          json['id'] as String? ??
+          json['storeId'] as String? ??
+          json['store_id'] as String? ??
+          '',
       name: json['name'] as String? ?? '',
       area: json['area'] as String? ?? '',
       isActive: json['isActive'] as bool? ?? json['is_active'] as bool? ?? true,
@@ -44,7 +48,8 @@ class CartStoreRef {
           isActive == other.isActive;
 
   @override
-  int get hashCode => id.hashCode ^ name.hashCode ^ area.hashCode ^ isActive.hashCode;
+  int get hashCode =>
+      id.hashCode ^ name.hashCode ^ area.hashCode ^ isActive.hashCode;
 }
 
 /// Immutable model representing the customer's active cart matching backend Cart schema.
@@ -128,7 +133,11 @@ class CartModel {
         : CartStoreRef(id: storeId ?? '');
 
     return CartModel(
-      userId: json['userId'] as String? ?? json['user_id'] as String? ?? json['cart_id'] as String? ?? '',
+      userId:
+          json['userId'] as String? ??
+          json['user_id'] as String? ??
+          json['cart_id'] as String? ??
+          '',
       storeId: storeId ?? (storeRef.id.isNotEmpty ? storeRef.id : null),
       items: items,
       subtotal: parseSubtotal(json['subtotal']),

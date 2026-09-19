@@ -29,18 +29,21 @@ class AdminStoreModel {
   factory AdminStoreModel.fromJson(Map<String, dynamic> json) {
     String? resolvedAreaName;
     if (json['area'] is Map<String, dynamic>) {
-      resolvedAreaName = (json['area'] as Map<String, dynamic>)['name'] as String?;
+      resolvedAreaName =
+          (json['area'] as Map<String, dynamic>)['name'] as String?;
     } else if (json['area'] is String) {
       resolvedAreaName = json['area'] as String;
     }
 
-    final resolvedArea = resolvedAreaName ??
+    final resolvedArea =
+        resolvedAreaName ??
         json['area'] as String? ??
         json['areaId'] as String? ??
         json['area_id'] as String? ??
         '';
 
-    final rawPhone = json['phone_number'] as String? ?? json['phone'] as String?;
+    final rawPhone =
+        json['phone_number'] as String? ?? json['phone'] as String?;
     final rawIsActive = json['is_active'] ?? json['isActive'];
     final bool isActive = rawIsActive is bool ? rawIsActive : true;
 
@@ -55,8 +58,12 @@ class AdminStoreModel {
       address: json['address'] as String?,
       phone: rawPhone,
       isActive: isActive,
-      createdAt: rawCreatedAt is String ? DateTime.tryParse(rawCreatedAt) : null,
-      updatedAt: rawUpdatedAt is String ? DateTime.tryParse(rawUpdatedAt) : null,
+      createdAt: rawCreatedAt is String
+          ? DateTime.tryParse(rawCreatedAt)
+          : null,
+      updatedAt: rawUpdatedAt is String
+          ? DateTime.tryParse(rawUpdatedAt)
+          : null,
     );
   }
 

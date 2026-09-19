@@ -65,7 +65,10 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
       _errorMessage = null;
     });
 
-    final ordersFuture = _ordersRepo.getStoreOrders(storeId: storeId, limit: 100);
+    final ordersFuture = _ordersRepo.getStoreOrders(
+      storeId: storeId,
+      limit: 100,
+    );
     final productsFuture = _productsRepo.getStoreProducts(storeId);
 
     final results = await Future.wait([ordersFuture, productsFuture]);
@@ -81,7 +84,8 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
         _isLoading = false;
       });
     } else {
-      final error = ordersRes.failureOrNull?.message ??
+      final error =
+          ordersRes.failureOrNull?.message ??
           productsRes.failureOrNull?.message ??
           'Failed to load store metrics';
       setState(() {
@@ -109,9 +113,7 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: _buildBody(isManager),
-      ),
+      body: SafeArea(child: _buildBody(isManager)),
     );
   }
 
@@ -131,16 +133,24 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.error,
+                size: 48,
+              ),
               const SizedBox(height: AppDimensions.spacingSm),
               Text(
                 'Dashboard Error',
-                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppDimensions.spacingXs),
               Text(
                 _errorMessage!,
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingMd),
@@ -156,10 +166,26 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
       );
     }
 
-    final pendingCount = _orders.where((o) => o.status == OrderStatus.pending).length;
-    final preparingCount = _orders.where((o) => o.status == OrderStatus.preparing || o.status == OrderStatus.accepted).length;
-    final readyCount = _orders.where((o) => o.status == OrderStatus.ready || o.status == OrderStatus.outForDelivery).length;
-    final completedCount = _orders.where((o) => o.status == OrderStatus.delivered).length;
+    final pendingCount = _orders
+        .where((o) => o.status == OrderStatus.pending)
+        .length;
+    final preparingCount = _orders
+        .where(
+          (o) =>
+              o.status == OrderStatus.preparing ||
+              o.status == OrderStatus.accepted,
+        )
+        .length;
+    final readyCount = _orders
+        .where(
+          (o) =>
+              o.status == OrderStatus.ready ||
+              o.status == OrderStatus.outForDelivery,
+        )
+        .length;
+    final completedCount = _orders
+        .where((o) => o.status == OrderStatus.delivered)
+        .length;
     final availableProductsCount = _products.where((p) => p.isAvailable).length;
 
     return RefreshIndicator(
@@ -182,9 +208,15 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
                       height: 44,
                       decoration: BoxDecoration(
                         color: AppColors.primaryLight,
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSm,
+                        ),
                       ),
-                      child: const Icon(Icons.storefront_rounded, color: AppColors.primary, size: 24),
+                      child: const Icon(
+                        Icons.storefront_rounded,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
                     ),
                     const SizedBox(width: AppDimensions.spacingMd),
                     Expanded(
@@ -192,24 +224,36 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _orders.isNotEmpty && _orders.first.storeName != null
+                            _orders.isNotEmpty &&
+                                    _orders.first.storeName != null
                                 ? _orders.first.storeName!
                                 : 'Assigned Store',
-                            style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                            style: AppTextStyles.titleMedium.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            isManager ? 'Store Manager Console' : 'Store Staff Operations',
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                            isManager
+                                ? 'Store Manager Console'
+                                : 'Store Staff Operations',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFDCFCE7),
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusFull,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -242,7 +286,9 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
             // Operational Metrics Grid
             Text(
               'Order Pipeline',
-              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+              style: AppTextStyles.titleMedium.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: AppDimensions.spacingSm),
 
@@ -297,7 +343,9 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
             // Catalog Overview
             Text(
               'Catalog Status',
-              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+              style: AppTextStyles.titleMedium.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: AppDimensions.spacingSm),
 
@@ -309,10 +357,19 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
                     color: const Color(0xFFEFF6FF),
                     borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                   ),
-                  child: const Icon(Icons.inventory_2_outlined, color: Color(0xFF2563EB), size: 22),
+                  child: const Icon(
+                    Icons.inventory_2_outlined,
+                    color: Color(0xFF2563EB),
+                    size: 22,
+                  ),
                 ),
-                title: const Text('Store Products', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Text('$availableProductsCount of ${_products.length} items currently available'),
+                title: const Text(
+                  'Store Products',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  '$availableProductsCount of ${_products.length} items currently available',
+                ),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => widget.onNavigateTab?.call(2),
               ),
@@ -322,7 +379,9 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
             // Quick Actions
             Text(
               'Quick Actions',
-              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+              style: AppTextStyles.titleMedium.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: AppDimensions.spacingSm),
 
@@ -330,17 +389,27 @@ class _StoreDashboardScreenState extends State<StoreDashboardScreen> {
               child: Column(
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.receipt_long_outlined, color: AppColors.primary),
+                    leading: const Icon(
+                      Icons.receipt_long_outlined,
+                      color: AppColors.primary,
+                    ),
                     title: const Text('Store Orders Stream'),
-                    subtitle: const Text('View incoming customer orders and update status'),
+                    subtitle: const Text(
+                      'View incoming customer orders and update status',
+                    ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => widget.onNavigateTab?.call(1),
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: const Icon(Icons.category_outlined, color: Color(0xFF7C3AED)),
+                    leading: const Icon(
+                      Icons.category_outlined,
+                      color: Color(0xFF7C3AED),
+                    ),
                     title: const Text('Categories & Sections'),
-                    subtitle: const Text('View and manage catalog category aisles'),
+                    subtitle: const Text(
+                      'View and manage catalog category aisles',
+                    ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => widget.onNavigateTab?.call(3),
                   ),

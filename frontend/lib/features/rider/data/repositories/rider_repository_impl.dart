@@ -18,21 +18,23 @@ class RiderRepositoryImpl implements RiderRepository {
   @override
   Future<Result<List<RiderOrderModel>>> getAvailableOrders() async {
     try {
-      final response = await _apiClient.get<dynamic>('/orders');
+      final response = await _apiClient.get<dynamic>(
+        '/drivers/orders/available',
+      );
 
       final dynamic rawData = response.data;
       final List<dynamic> rawList;
 
-      if (rawData is Map<String, dynamic>) {
-        if (rawData['orders'] is List) {
-          rawList = rawData['orders'] as List;
-        } else if (rawData['data'] is List) {
+      if (rawData is List) {
+        rawList = rawData;
+      } else if (rawData is Map<String, dynamic>) {
+        if (rawData['data'] is List) {
           rawList = rawData['data'] as List;
+        } else if (rawData['orders'] is List) {
+          rawList = rawData['orders'] as List;
         } else {
           rawList = const [];
         }
-      } else if (rawData is List) {
-        rawList = rawData;
       } else {
         rawList = const [];
       }
@@ -40,13 +42,6 @@ class RiderRepositoryImpl implements RiderRepository {
       final orders = rawList
           .whereType<Map<String, dynamic>>()
           .map(RiderOrderModel.fromJson)
-          .where((o) {
-            final f = o.fulfillment.trim().toLowerCase();
-            final isDelivery = f == 'delivery';
-            // Available for rider delivery: preparing or ready
-            final isAvailable = o.status == RiderOrderStatus.ready;
-            return isDelivery && isAvailable;
-          })
           .toList();
 
       return Result.success(orders);
@@ -62,42 +57,30 @@ class RiderRepositoryImpl implements RiderRepository {
   @override
   Future<Result<RiderOrderModel?>> getActiveOrder() async {
     try {
-      final response = await _apiClient.get<dynamic>('/orders');
+      final response = await _apiClient.get<dynamic>('/drivers/orders/active');
 
       final dynamic rawData = response.data;
-      final List<dynamic> rawList;
-
-      if (rawData is Map<String, dynamic>) {
-        if (rawData['orders'] is List) {
-          rawList = rawData['orders'] as List;
-        } else if (rawData['data'] is List) {
-          rawList = rawData['data'] as List;
-        } else {
-          rawList = const [];
-        }
-      } else if (rawData is List) {
-        rawList = rawData;
-      } else {
-        rawList = const [];
-      }
-
-      final activeOrders = rawList
-          .whereType<Map<String, dynamic>>()
-          .map(RiderOrderModel.fromJson)
-          .where((o) {
-            final f = o.fulfillment.trim().toLowerCase();
-            final isDelivery = f == 'delivery';
-            // Active in-progress delivery
-            final isActive = o.status == RiderOrderStatus.outForDelivery;
-            return isDelivery && isActive;
-          })
-          .toList();
-
-      if (activeOrders.isEmpty) {
+      if (rawData == null) {
         return Result.success(null);
       }
 
-      return Result.success(activeOrders.first);
+      final Map<String, dynamic> rawOrder;
+      if (rawData is Map<String, dynamic>) {
+        if (rawData.isEmpty) {
+          return Result.success(null);
+        }
+        if (rawData['order'] is Map<String, dynamic>) {
+          rawOrder = rawData['order'] as Map<String, dynamic>;
+        } else if (rawData['data'] is Map<String, dynamic>) {
+          rawOrder = rawData['data'] as Map<String, dynamic>;
+        } else {
+          rawOrder = rawData;
+        }
+      } else {
+        return Result.success(null);
+      }
+
+      return Result.success(RiderOrderModel.fromJson(rawOrder));
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
@@ -110,9 +93,8 @@ class RiderRepositoryImpl implements RiderRepository {
   @override
   Future<Result<RiderOrderModel>> acceptOrder(String orderId) async {
     try {
-      final response = await _apiClient.patch<dynamic>(
-        '/orders/$orderId/status',
-        body: {'status': 'out_for_delivery'},
+      final response = await _apiClient.post<dynamic>(
+        '/drivers/orders/$orderId/accept',
       );
 
       final dynamic rawData = response.data;
@@ -148,8 +130,8 @@ class RiderRepositoryImpl implements RiderRepository {
   Future<Result<RiderOrderModel>> markDelivered(String orderId) async {
     try {
       final response = await _apiClient.patch<dynamic>(
-        '/orders/$orderId/status',
-        body: {'status': 'completed'},
+        '/drivers/orders/$orderId/status',
+        body: {'status': 'DELIVERED'},
       );
 
       final dynamic rawData = response.data;

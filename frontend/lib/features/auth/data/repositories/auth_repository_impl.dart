@@ -17,8 +17,8 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required ApiClient apiClient,
     required SecureStorage secureStorage,
-  })  : _apiClient = apiClient,
-        _secureStorage = secureStorage;
+  }) : _apiClient = apiClient,
+       _secureStorage = secureStorage;
 
   UserModel? get currentUser => _currentUser;
 
@@ -38,7 +38,8 @@ class AuthRepositoryImpl implements AuthRepository {
         },
       );
 
-      final message = response.data['message'] as String? ?? 'Verification code sent';
+      final message =
+          response.data['message'] as String? ?? 'Verification code sent';
       return Result.success(message);
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
@@ -55,30 +56,42 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final response = await _apiClient.post<Map<String, dynamic>>(
         '/auth/otp/verify',
-        body: {
-          'phone': phone,
-          'code': code,
-        },
+        body: {'phone': phone, 'code': code},
       );
 
       final authResponse = AuthResponseModel.fromJson(response.data);
       if (authResponse.token.isNotEmpty) {
-        await _secureStorage.write(key: StorageKeys.authToken, value: authResponse.token);
+        await _secureStorage.write(
+          key: StorageKeys.authToken,
+          value: authResponse.token,
+        );
       }
-      if (authResponse.refreshToken != null && authResponse.refreshToken!.isNotEmpty) {
-        await _secureStorage.write(key: StorageKeys.refreshToken, value: authResponse.refreshToken!);
+      if (authResponse.refreshToken != null &&
+          authResponse.refreshToken!.isNotEmpty) {
+        await _secureStorage.write(
+          key: StorageKeys.refreshToken,
+          value: authResponse.refreshToken!,
+        );
       }
       if (authResponse.user.id.isNotEmpty) {
-        await _secureStorage.write(key: StorageKeys.userId, value: authResponse.user.id);
+        await _secureStorage.write(
+          key: StorageKeys.userId,
+          value: authResponse.user.id,
+        );
       }
-      await _secureStorage.write(key: StorageKeys.userRole, value: authResponse.user.role.value);
+      await _secureStorage.write(
+        key: StorageKeys.userRole,
+        value: authResponse.user.role.value,
+      );
 
       _currentUser = authResponse.user;
       return Result.success(authResponse);
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to verify OTP: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to verify OTP: $e'),
+      );
     }
   }
 
@@ -101,7 +114,10 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       final authResponse = AuthResponseModel.fromJson(response.data);
-      await _secureStorage.write(key: StorageKeys.authToken, value: authResponse.token);
+      await _secureStorage.write(
+        key: StorageKeys.authToken,
+        value: authResponse.token,
+      );
       _currentUser = authResponse.user;
 
       return Result.success(authResponse);
@@ -114,29 +130,47 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Result<AuthResponseModel>> login({
-    required String phoneNumber,
+    String? phoneNumber,
+    String? email,
     required String password,
   }) async {
     try {
+      final body = <String, dynamic>{
+        'password': password,
+        if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
+        if (phoneNumber != null && phoneNumber.trim().isNotEmpty)
+          'phone': phoneNumber.trim(),
+      };
+
       final response = await _apiClient.post<Map<String, dynamic>>(
-        '/auth/login',
-        body: {
-          'phone_number': phoneNumber,
-          'password': password,
-        },
+        '/auth/staff/login',
+        body: body,
       );
 
       final authResponse = AuthResponseModel.fromJson(response.data);
       if (authResponse.token.isNotEmpty) {
-        await _secureStorage.write(key: StorageKeys.authToken, value: authResponse.token);
+        await _secureStorage.write(
+          key: StorageKeys.authToken,
+          value: authResponse.token,
+        );
       }
-      if (authResponse.refreshToken != null && authResponse.refreshToken!.isNotEmpty) {
-        await _secureStorage.write(key: StorageKeys.refreshToken, value: authResponse.refreshToken!);
+      if (authResponse.refreshToken != null &&
+          authResponse.refreshToken!.isNotEmpty) {
+        await _secureStorage.write(
+          key: StorageKeys.refreshToken,
+          value: authResponse.refreshToken!,
+        );
       }
       if (authResponse.user.id.isNotEmpty) {
-        await _secureStorage.write(key: StorageKeys.userId, value: authResponse.user.id);
+        await _secureStorage.write(
+          key: StorageKeys.userId,
+          value: authResponse.user.id,
+        );
       }
-      await _secureStorage.write(key: StorageKeys.userRole, value: authResponse.user.role.value);
+      await _secureStorage.write(
+        key: StorageKeys.userRole,
+        value: authResponse.user.role.value,
+      );
 
       _currentUser = authResponse.user;
       return Result.success(authResponse);
@@ -150,9 +184,13 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<AuthResponseModel>> refreshToken() async {
     try {
-      final storedRefreshToken = await _secureStorage.read(key: StorageKeys.refreshToken);
+      final storedRefreshToken = await _secureStorage.read(
+        key: StorageKeys.refreshToken,
+      );
       if (storedRefreshToken == null || storedRefreshToken.isEmpty) {
-        return Result.failure(const UnauthorizedFailure(message: 'No refresh token stored'));
+        return Result.failure(
+          const UnauthorizedFailure(message: 'No refresh token stored'),
+        );
       }
 
       final response = await _apiClient.post<Map<String, dynamic>>(
@@ -160,22 +198,34 @@ class AuthRepositoryImpl implements AuthRepository {
         body: {'refreshToken': storedRefreshToken},
       );
 
-      final newAccessToken = response.data['accessToken'] as String? ?? response.data['token'] as String? ?? '';
-      final newRefreshToken = response.data['refreshToken'] as String? ?? storedRefreshToken;
+      final newAccessToken =
+          response.data['accessToken'] as String? ??
+          response.data['token'] as String? ??
+          '';
+      final newRefreshToken =
+          response.data['refreshToken'] as String? ?? storedRefreshToken;
 
       if (newAccessToken.isNotEmpty) {
-        await _secureStorage.write(key: StorageKeys.authToken, value: newAccessToken);
+        await _secureStorage.write(
+          key: StorageKeys.authToken,
+          value: newAccessToken,
+        );
       }
       if (newRefreshToken.isNotEmpty) {
-        await _secureStorage.write(key: StorageKeys.refreshToken, value: newRefreshToken);
+        await _secureStorage.write(
+          key: StorageKeys.refreshToken,
+          value: newRefreshToken,
+        );
       }
 
-      final user = _currentUser ?? const UserModel(
-        id: '',
-        phoneNumber: '',
-        fullName: '',
-        role: UserRole.customer,
-      );
+      final user =
+          _currentUser ??
+          const UserModel(
+            id: '',
+            phoneNumber: '',
+            fullName: '',
+            role: UserRole.customer,
+          );
 
       final authResponse = AuthResponseModel(
         user: user,
@@ -186,56 +236,40 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to refresh token: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to refresh token: $e'),
+      );
     }
   }
 
   @override
-  Future<Result<String>> requestAdminMagicLink({
-    required String email,
-  }) async {
-    try {
-      final response = await _apiClient.post<Map<String, dynamic>>(
-        '/auth/admin/request-magic-link',
-        body: {'email': email},
-      );
-
-      final message = response.data['message'] as String? ?? 'Login link requested';
-      return Result.success(message);
-    } on AppException catch (e) {
-      return Result.failure(AppFailure.fromException(e));
-    } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Magic link request failed: $e'));
-    }
+  Future<Result<String>> requestAdminMagicLink({required String email}) async {
+    return Result.failure(
+      const ValidationFailure(
+        message:
+            'Magic link authentication is no longer supported. Please use staff/admin login.',
+      ),
+    );
   }
 
   @override
   Future<Result<AuthResponseModel>> verifyAdminMagicLink({
     required String token,
   }) async {
-    try {
-      final response = await _apiClient.post<Map<String, dynamic>>(
-        '/auth/admin/verify-magic-link',
-        body: {'token': token},
-      );
-
-      final authResponse = AuthResponseModel.fromJson(response.data);
-      await _secureStorage.write(key: StorageKeys.authToken, value: authResponse.token);
-      _currentUser = authResponse.user;
-
-      return Result.success(authResponse);
-    } on AppException catch (e) {
-      return Result.failure(AppFailure.fromException(e));
-    } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Magic link verification failed: $e'));
-    }
+    return Result.failure(
+      const ValidationFailure(
+        message:
+            'Magic link authentication is no longer supported. Please use staff/admin login.',
+      ),
+    );
   }
 
   @override
   Future<Result<UserModel>> getCurrentUser() async {
     try {
       final response = await _apiClient.get<Map<String, dynamic>>('/auth/me');
-      final userJson = response.data['user'] as Map<String, dynamic>? ?? response.data;
+      final userJson =
+          response.data['user'] as Map<String, dynamic>? ?? response.data;
       final user = UserModel.fromJson(userJson);
       _currentUser = user;
 
@@ -243,7 +277,9 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch user profile: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch user profile: $e'),
+      );
     }
   }
 
@@ -267,17 +303,18 @@ class AuthRepositoryImpl implements AuthRepository {
         return Result.success(null);
       }
 
-      return Result.failure(failure ?? const UnknownFailure(message: 'Session verification failed'));
+      return Result.failure(
+        failure ?? const UnknownFailure(message: 'Session verification failed'),
+      );
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Session check failed: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Session check failed: $e'),
+      );
     }
   }
 
   @override
-  Future<Result<UserModel>> updateProfile({
-    String? name,
-    String? email,
-  }) async {
+  Future<Result<UserModel>> updateProfile({String? name, String? email}) async {
     try {
       final body = <String, dynamic>{
         if (name != null) 'name': name,
@@ -289,7 +326,8 @@ class AuthRepositoryImpl implements AuthRepository {
         body: body,
       );
 
-      final userJson = response.data['user'] as Map<String, dynamic>? ?? response.data;
+      final userJson =
+          response.data['user'] as Map<String, dynamic>? ?? response.data;
       final updatedUser = UserModel.fromJson(userJson);
       _currentUser = updatedUser;
 
@@ -297,14 +335,18 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to update profile: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to update profile: $e'),
+      );
     }
   }
 
   @override
   Future<void> logout() async {
     try {
-      final refreshToken = await _secureStorage.read(key: StorageKeys.refreshToken);
+      final refreshToken = await _secureStorage.read(
+        key: StorageKeys.refreshToken,
+      );
       if (refreshToken != null && refreshToken.isNotEmpty) {
         await _apiClient.post<dynamic>(
           '/auth/logout',

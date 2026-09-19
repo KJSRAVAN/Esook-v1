@@ -17,7 +17,9 @@ class CartNavIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.primary : AppColors.textTertiary;
-    final iconData = isSelected ? Icons.shopping_cart_rounded : Icons.shopping_cart_outlined;
+    final iconData = isSelected
+        ? Icons.shopping_cart_rounded
+        : Icons.shopping_cart_outlined;
 
     return ListenableBuilder(
       listenable: cartNotifier,
@@ -35,11 +37,7 @@ class CartNavIcon extends StatelessWidget {
             ),
           ),
           backgroundColor: AppColors.primary,
-          child: Icon(
-            iconData,
-            color: color,
-            size: 24.0,
-          ),
+          child: Icon(iconData, color: color, size: 24.0),
         );
       },
     );

@@ -3,7 +3,7 @@ import '../models/admin_user_model.dart';
 
 /// Contract for Admin Driver/Rider repository.
 abstract interface class AdminDriversRepository {
-  /// Provision a new delivery rider account via `POST /users` with role `delivery_rider`.
+  /// Provision a new delivery driver account via `POST /auth/register/driver`.
   Future<Result<AdminUserModel>> registerDriver({
     required String name,
     required String phone,
@@ -11,7 +11,7 @@ abstract interface class AdminDriversRepository {
     String? storeId,
   });
 
-  /// List registered delivery riders using `GET /users?role=delivery_rider`.
+  /// List registered delivery drivers using `GET /users`.
   Future<Result<List<AdminUserModel>>> getDrivers({
     int page = 1,
     int limit = 50,

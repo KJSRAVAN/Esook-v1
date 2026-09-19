@@ -3,10 +3,7 @@ class AdminAreaModel {
   final String id;
   final String name;
 
-  const AdminAreaModel({
-    required this.id,
-    required this.name,
-  });
+  const AdminAreaModel({required this.id, required this.name});
 
   factory AdminAreaModel.fromJson(Map<String, dynamic> json) {
     return AdminAreaModel(
@@ -16,9 +13,6 @@ class AdminAreaModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-    };
+    return {'id': id, 'name': name};
   }
 }

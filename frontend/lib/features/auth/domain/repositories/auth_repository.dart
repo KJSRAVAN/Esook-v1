@@ -26,16 +26,15 @@ abstract interface class AuthRepository {
     String? address,
   });
 
-  /// Password login for Customer, Store Staff, Store Manager, Delivery Rider.
+  /// Password login for Customer, Store Staff, Store Manager, Delivery Rider, and Super Admin (POST /auth/staff/login).
   Future<Result<AuthResponseModel>> login({
-    required String phoneNumber,
+    String? phoneNumber,
+    String? email,
     required String password,
   });
 
   /// Request super admin single-use magic link via email (Step 1).
-  Future<Result<String>> requestAdminMagicLink({
-    required String email,
-  });
+  Future<Result<String>> requestAdminMagicLink({required String email});
 
   /// Redeem super admin single-use magic link token (Step 2).
   Future<Result<AuthResponseModel>> verifyAdminMagicLink({
@@ -55,10 +54,7 @@ abstract interface class AuthRepository {
   /// Update authenticated user's profile details (PATCH /users/me).
   ///
   /// Only [name] and [email] are accepted by the backend.
-  Future<Result<UserModel>> updateProfile({
-    String? name,
-    String? email,
-  });
+  Future<Result<UserModel>> updateProfile({String? name, String? email});
 
   /// Clear stored credentials and session state.
   Future<void> logout();

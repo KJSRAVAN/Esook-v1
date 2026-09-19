@@ -93,8 +93,12 @@ class OrderCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusSm,
+                      ),
+                      border: Border.all(
+                        color: statusColor.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Text(
                       order.status.displayName,

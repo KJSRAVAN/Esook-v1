@@ -6,11 +6,7 @@ import '../../domain/repositories/auth_repository.dart';
 class AuthScope extends InheritedWidget {
   final AuthRepository repository;
 
-  const AuthScope({
-    super.key,
-    required this.repository,
-    required super.child,
-  });
+  const AuthScope({super.key, required this.repository, required super.child});
 
   /// Retrieves the [AuthRepository] from the nearest ancestor [AuthScope].
   static AuthRepository of(BuildContext context) {
@@ -28,5 +24,6 @@ class AuthScope extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(AuthScope oldWidget) => repository != oldWidget.repository;
+  bool updateShouldNotify(AuthScope oldWidget) =>
+      repository != oldWidget.repository;
 }

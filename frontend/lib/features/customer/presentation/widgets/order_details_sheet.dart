@@ -122,9 +122,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
         : (_order.id.length > 8 ? _order.id.substring(0, 8) : _order.id);
 
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: mediaQuery.size.height * 0.85,
-      ),
+      constraints: BoxConstraints(maxHeight: mediaQuery.size.height * 0.85),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(
@@ -167,7 +165,8 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                           style: AppTextStyles.headlineSmall,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (_order.storeName != null && _order.storeName!.isNotEmpty)
+                        if (_order.storeName != null &&
+                            _order.storeName!.isNotEmpty)
                           Text(
                             _order.storeName!,
                             style: AppTextStyles.bodySmall.copyWith(
@@ -178,7 +177,10 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.close,
+                      color: AppColors.textSecondary,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -192,7 +194,9 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                 padding: EdgeInsets.all(AppDimensions.spacingXl),
                 child: Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
                   ),
                 ),
               )
@@ -201,11 +205,17 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                 padding: const EdgeInsets.all(AppDimensions.spacingLg),
                 child: Column(
                   children: [
-                    const Icon(Icons.error_outline, size: 40.0, color: AppColors.error),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 40.0,
+                      color: AppColors.error,
+                    ),
                     const SizedBox(height: AppDimensions.spacingSm),
                     Text(
                       _errorMessage!,
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.error),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.error,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppDimensions.spacingMd),
@@ -233,8 +243,12 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                           ),
                           decoration: BoxDecoration(
                             color: statusColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                            border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusSm,
+                            ),
+                            border: Border.all(
+                              color: statusColor.withValues(alpha: 0.3),
+                            ),
                           ),
                           child: Text(
                             _order.status.displayName,
@@ -251,10 +265,15 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Placed At', style: AppTextStyles.bodyMedium),
+                          const Text(
+                            'Placed At',
+                            style: AppTextStyles.bodyMedium,
+                          ),
                           Text(
                             _formatDate(_order.createdAt),
-                            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -264,14 +283,18 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                     // Fulfillment & Delivery Details
                     Text(
                       'Fulfillment Details',
-                      style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                      style: AppTextStyles.titleMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: AppDimensions.spacingSm),
                     Container(
                       padding: const EdgeInsets.all(AppDimensions.spacingMd),
                       decoration: BoxDecoration(
                         color: AppColors.background,
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
                         border: Border.all(color: AppColors.borderSubtle),
                       ),
                       child: Column(
@@ -289,7 +312,9 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                               const SizedBox(width: AppDimensions.spacingSm),
                               Text(
                                 _order.fulfillment.displayName,
-                                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700),
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ],
                           ),
@@ -299,10 +324,13 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                             const SizedBox(height: AppDimensions.spacingXs),
                             Text(
                               _order.deliveryAddress!,
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           ],
-                          if (_order.notes != null && _order.notes!.isNotEmpty) ...[
+                          if (_order.notes != null &&
+                              _order.notes!.isNotEmpty) ...[
                             const SizedBox(height: AppDimensions.spacingSm),
                             Text(
                               'Notes: ${_order.notes}',
@@ -312,11 +340,14 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                               ),
                             ),
                           ],
-                          if (_order.rejectedReason != null && _order.rejectedReason!.isNotEmpty) ...[
+                          if (_order.rejectedReason != null &&
+                              _order.rejectedReason!.isNotEmpty) ...[
                             const SizedBox(height: AppDimensions.spacingSm),
                             Text(
                               'Rejection reason: ${_order.rejectedReason}',
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.error,
+                              ),
                             ),
                           ],
                         ],
@@ -327,56 +358,77 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                     // Items list
                     Text(
                       'Items (${_order.itemCount})',
-                      style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                      style: AppTextStyles.titleMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: AppDimensions.spacingSm),
                     Container(
                       padding: const EdgeInsets.all(AppDimensions.spacingMd),
                       decoration: BoxDecoration(
                         color: AppColors.background,
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
                         border: Border.all(color: AppColors.borderSubtle),
                       ),
                       child: Column(
                         children: [
                           if (_order.items.isEmpty)
                             Padding(
-                              padding: const EdgeInsets.all(AppDimensions.spacingSm),
+                              padding: const EdgeInsets.all(
+                                AppDimensions.spacingSm,
+                              ),
                               child: Text(
                                 'No item details available.',
-                                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textTertiary,
+                                ),
                               ),
                             )
                           else
-                            ..._order.items.map((item) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          '${item.quantity}x ${item.name}',
-                                          style: AppTextStyles.bodyMedium,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
+                            ..._order.items.map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${item.quantity}x ${item.name}',
+                                        style: AppTextStyles.bodyMedium,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      Text(
-                                        '${item.subtotal.toStringAsFixed(2)} ${widget.currency}',
-                                        style: AppTextStyles.bodyMedium.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                    ),
+                                    Text(
+                                      '${item.subtotal.toStringAsFixed(2)} ${widget.currency}',
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                    ],
-                                  ),
-                                )),
-                          const Divider(height: 16.0, color: AppColors.borderSubtle),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          const Divider(
+                            height: 16.0,
+                            color: AppColors.borderSubtle,
+                          ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Subtotal', style: AppTextStyles.bodyMedium),
+                              const Text(
+                                'Subtotal',
+                                style: AppTextStyles.bodyMedium,
+                              ),
                               Text(
                                 '${_order.subtotal.toStringAsFixed(2)} ${widget.currency}',
-                                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ],
                           ),
@@ -385,7 +437,10 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text('Discount', style: AppTextStyles.bodyMedium),
+                                const Text(
+                                  'Discount',
+                                  style: AppTextStyles.bodyMedium,
+                                ),
                                 Text(
                                   '-${_order.discount.toStringAsFixed(2)} ${widget.currency}',
                                   style: AppTextStyles.bodyMedium.copyWith(
@@ -401,19 +456,30 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text('Delivery Fee', style: AppTextStyles.bodyMedium),
+                                const Text(
+                                  'Delivery Fee',
+                                  style: AppTextStyles.bodyMedium,
+                                ),
                                 Text(
                                   '${_order.deliveryFee.toStringAsFixed(2)} ${widget.currency}',
-                                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
                           ],
-                          const Divider(height: 16.0, color: AppColors.borderSubtle),
+                          const Divider(
+                            height: 16.0,
+                            color: AppColors.borderSubtle,
+                          ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Total', style: AppTextStyles.titleMedium),
+                              const Text(
+                                'Total',
+                                style: AppTextStyles.titleMedium,
+                              ),
                               Text(
                                 '${_order.total.toStringAsFixed(2)} ${widget.currency}',
                                 style: AppTextStyles.titleMedium.copyWith(
@@ -427,8 +493,11 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                             const SizedBox(height: AppDimensions.spacingSm),
                             Row(
                               children: [
-                                const Icon(Icons.stars_rounded,
-                                    size: 16.0, color: AppColors.warning),
+                                const Icon(
+                                  Icons.stars_rounded,
+                                  size: 16.0,
+                                  color: AppColors.warning,
+                                ),
                                 const SizedBox(width: 4.0),
                                 Text(
                                   '+${_order.pointsEarned} loyalty points earned',
@@ -489,7 +558,8 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(
-                            AppDimensions.radiusSm),
+                          AppDimensions.radiusSm,
+                        ),
                       ),
                       elevation: 0,
                     ),

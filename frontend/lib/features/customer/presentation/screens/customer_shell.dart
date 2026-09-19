@@ -81,14 +81,23 @@ class _CustomerShellState extends State<CustomerShell> {
     final config = AppConfig.fromEnvironment();
     final defaultApiClient = DefaultApiClient(
       baseUrl: config.apiBaseUrl,
-      tokenProvider: () => const FlutterSecureStorageImpl().read(key: StorageKeys.authToken),
+      tokenProvider: () =>
+          const FlutterSecureStorageImpl().read(key: StorageKeys.authToken),
       timeout: config.connectTimeout,
     );
 
-    _storeRepository = widget.storeRepository ?? StoreRepositoryImpl(apiClient: defaultApiClient);
-    _productRepository = widget.productRepository ?? ProductRepositoryImpl(apiClient: defaultApiClient);
-    _cartRepository = widget.cartRepository ?? CartRepositoryImpl(apiClient: defaultApiClient);
-    _orderRepository = widget.orderRepository ?? OrderRepositoryImpl(apiClient: defaultApiClient);
+    _storeRepository =
+        widget.storeRepository ??
+        StoreRepositoryImpl(apiClient: defaultApiClient);
+    _productRepository =
+        widget.productRepository ??
+        ProductRepositoryImpl(apiClient: defaultApiClient);
+    _cartRepository =
+        widget.cartRepository ??
+        CartRepositoryImpl(apiClient: defaultApiClient);
+    _orderRepository =
+        widget.orderRepository ??
+        OrderRepositoryImpl(apiClient: defaultApiClient);
 
     if (widget.cartNotifier != null) {
       _cartNotifier = widget.cartNotifier!;
@@ -164,9 +173,7 @@ class _CustomerShellState extends State<CustomerShell> {
               onExploreMarket: () => _onNavigationTabSelected(0),
               onOrderPlaced: (_) => _onNavigationTabSelected(3),
             ),
-            CustomerOrdersScreen(
-              orderRepository: _orderRepository,
-            ),
+            CustomerOrdersScreen(orderRepository: _orderRepository),
             CustomerAccountScreen(authRepository: widget.authRepository),
           ],
         ),

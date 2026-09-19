@@ -170,12 +170,18 @@ class _RiderActiveOrderScreenState extends State<RiderActiveOrderScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: AppColors.error,
+              ),
               const SizedBox(height: AppDimensions.spacingMd),
               Text(
                 _failure!.message,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: AppDimensions.spacingMd),
               OutlinedButton.icon(
@@ -255,7 +261,11 @@ class _RiderActiveOrderScreenState extends State<RiderActiveOrderScreen> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.delivery_dining_rounded, color: Colors.white, size: 32),
+                const Icon(
+                  Icons.delivery_dining_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
                 const SizedBox(width: AppDimensions.spacingSm),
                 Expanded(
                   child: Column(
@@ -308,7 +318,8 @@ class _RiderActiveOrderScreenState extends State<RiderActiveOrderScreen> {
           ),
 
           // Notes
-          if (_activeOrder!.notes != null && _activeOrder!.notes!.isNotEmpty) ...[
+          if (_activeOrder!.notes != null &&
+              _activeOrder!.notes!.isNotEmpty) ...[
             const SizedBox(height: AppDimensions.spacingSm),
             Container(
               width: double.infinity,
@@ -323,7 +334,11 @@ class _RiderActiveOrderScreenState extends State<RiderActiveOrderScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.notes_rounded, size: 18, color: AppColors.textSecondary),
+                      const Icon(
+                        Icons.notes_rounded,
+                        size: 18,
+                        color: AppColors.textSecondary,
+                      ),
                       const SizedBox(width: AppDimensions.spacingSm),
                       Text(
                         'Delivery Notes',
@@ -440,7 +455,9 @@ class _RiderActiveOrderScreenState extends State<RiderActiveOrderScreen> {
           if (phone != null && phone.isNotEmpty) ...[
             const SizedBox(height: AppDimensions.spacingSm),
             InkWell(
-              key: Key('rider_call_${title.toLowerCase().replaceAll(' ', '_')}'),
+              key: Key(
+                'rider_call_${title.toLowerCase().replaceAll(' ', '_')}',
+              ),
               onTap: () {
                 // Simple tel: URI launch — does not require external dependencies
                 // on most platforms the OS handles tel: links natively
@@ -458,7 +475,11 @@ class _RiderActiveOrderScreenState extends State<RiderActiveOrderScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.phone_outlined, size: 16, color: AppColors.info),
+                    const Icon(
+                      Icons.phone_outlined,
+                      size: 16,
+                      color: AppColors.info,
+                    ),
                     const SizedBox(width: AppDimensions.spacingXs),
                     Text(
                       phone,

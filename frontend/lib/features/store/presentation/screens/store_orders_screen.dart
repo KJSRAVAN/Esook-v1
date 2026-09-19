@@ -14,11 +14,7 @@ class StoreOrdersScreen extends StatefulWidget {
   final String? storeId;
   final StoreOrdersRepository? ordersRepository;
 
-  const StoreOrdersScreen({
-    super.key,
-    this.storeId,
-    this.ordersRepository,
-  });
+  const StoreOrdersScreen({super.key, this.storeId, this.ordersRepository});
 
   @override
   State<StoreOrdersScreen> createState() => _StoreOrdersScreenState();
@@ -58,7 +54,9 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> {
       _errorMessage = null;
     });
 
-    final statusParam = _selectedStatusFilter == 'ALL' ? null : _selectedStatusFilter;
+    final statusParam = _selectedStatusFilter == 'ALL'
+        ? null
+        : _selectedStatusFilter;
     final result = await _ordersRepo.getStoreOrders(
       storeId: storeId,
       status: statusParam,
@@ -74,12 +72,16 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> {
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to load store orders';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to load store orders';
       });
     }
   }
 
-  Future<void> _handleQuickStatusChange(OrderModel order, OrderStatus newStatus) async {
+  Future<void> _handleQuickStatusChange(
+    OrderModel order,
+    OrderStatus newStatus,
+  ) async {
     final result = await _ordersRepo.updateOrderStatus(
       orderId: order.id,
       status: newStatus,
@@ -94,14 +96,18 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Order #${order.orderNumber ?? order.id.substring(0, 6)} is now ${updated.status.displayName}'),
+          content: Text(
+            'Order #${order.orderNumber ?? order.id.substring(0, 6)} is now ${updated.status.displayName}',
+          ),
           backgroundColor: AppColors.success,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.failureOrNull?.message ?? 'Failed to update order status'),
+          content: Text(
+            result.failureOrNull?.message ?? 'Failed to update order status',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -116,7 +122,9 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> {
     ).then((updated) {
       if (updated != null && mounted) {
         setState(() {
-          _orders = _orders.map((o) => o.id == updated.id ? updated : o).toList();
+          _orders = _orders
+              .map((o) => o.id == updated.id ? updated : o)
+              .toList();
         });
       }
     });
@@ -136,7 +144,8 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> {
         final matchNum = o.orderNumber?.toLowerCase().contains(q) ?? false;
         final matchId = o.id.toLowerCase().contains(q);
         final matchCustomer = o.customerId.toLowerCase().contains(q);
-        final matchAddress = o.deliveryAddress?.toLowerCase().contains(q) ?? false;
+        final matchAddress =
+            o.deliveryAddress?.toLowerCase().contains(q) ?? false;
         return matchNum || matchId || matchCustomer || matchAddress;
       }).toList();
     }
@@ -179,10 +188,17 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> {
                       hintText: 'Search order number or address...',
                       prefixIcon: const Icon(Icons.search_rounded, size: 20),
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                        borderSide: const BorderSide(color: AppColors.borderSubtle),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
+                        borderSide: const BorderSide(
+                          color: AppColors.borderSubtle,
+                        ),
                       ),
                     ),
                     onChanged: (val) => setState(() => _searchQuery = val),
@@ -197,7 +213,10 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> {
                         _buildFilterChip('ACCEPTED', 'Accepted'),
                         _buildFilterChip('PREPARING', 'Preparing'),
                         _buildFilterChip('READY', 'Ready'),
-                        _buildFilterChip('OUT_FOR_DELIVERY', 'Out for Delivery'),
+                        _buildFilterChip(
+                          'OUT_FOR_DELIVERY',
+                          'Out for Delivery',
+                        ),
                         _buildFilterChip('DELIVERED', 'Completed'),
                         _buildFilterChip('REJECTED', 'Rejected / Cancelled'),
                       ],
@@ -209,9 +228,7 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> {
             const Divider(height: 1),
 
             // Orders list or states
-            Expanded(
-              child: _buildListBody(),
-            ),
+            Expanded(child: _buildListBody()),
           ],
         ),
       ),
@@ -258,13 +275,19 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.error,
+                size: 48,
+              ),
               const SizedBox(height: AppDimensions.spacingSm),
               Text('Failed to Load Orders', style: AppTextStyles.titleMedium),
               const SizedBox(height: 4),
               Text(
                 _errorMessage!,
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingMd),
@@ -293,18 +316,26 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.receipt_long_outlined, size: 48, color: AppColors.textTertiary),
+                    const Icon(
+                      Icons.receipt_long_outlined,
+                      size: 48,
+                      color: AppColors.textTertiary,
+                    ),
                     const SizedBox(height: AppDimensions.spacingSm),
                     Text(
                       'No Orders Found',
-                      style: AppTextStyles.titleMedium.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _selectedStatusFilter == 'ALL'
                           ? 'There are currently no orders for this store'
                           : 'No orders matching the selected status filter',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
                     ),
                   ],
                 ),
@@ -326,7 +357,8 @@ class _StoreOrdersScreenState extends State<StoreOrdersScreen> {
             key: Key('store_order_card_${order.id}'),
             order: order,
             onTap: () => _openOrderDetails(order),
-            onQuickStatusChange: (newStatus) => _handleQuickStatusChange(order, newStatus),
+            onQuickStatusChange: (newStatus) =>
+                _handleQuickStatusChange(order, newStatus),
           );
         },
       ),

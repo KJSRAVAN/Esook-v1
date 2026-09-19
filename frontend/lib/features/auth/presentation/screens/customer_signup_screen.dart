@@ -18,10 +18,7 @@ import '../widgets/auth_text_field.dart';
 class CustomerSignupScreen extends StatefulWidget {
   final AuthRepository? authRepository;
 
-  const CustomerSignupScreen({
-    super.key,
-    this.authRepository,
-  });
+  const CustomerSignupScreen({super.key, this.authRepository});
 
   @override
   State<CustomerSignupScreen> createState() => _CustomerSignupScreenState();
@@ -75,7 +72,11 @@ class _CustomerSignupScreenState extends State<CustomerSignupScreen> {
     if (result.isSuccess) {
       final authResponse = result.dataOrNull!;
       setState(() => _isSubmitting = false);
-      RoleRouting.navigateForRole(context, authResponse.user.role, clearStack: true);
+      RoleRouting.navigateForRole(
+        context,
+        authResponse.user.role,
+        clearStack: true,
+      );
     } else {
       setState(() {
         _isSubmitting = false;

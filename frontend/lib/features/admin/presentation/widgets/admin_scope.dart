@@ -28,9 +28,12 @@ class AdminScope extends InheritedWidget {
     return context.dependOnInheritedWidgetOfExactType<AdminScope>();
   }
 
-  static AdminUsersRepository usersRepositoryOf(BuildContext context) => of(context).usersRepository;
-  static AdminDriversRepository driversRepositoryOf(BuildContext context) => of(context).driversRepository;
-  static AdminStoresRepository storesRepositoryOf(BuildContext context) => of(context).storesRepository;
+  static AdminUsersRepository usersRepositoryOf(BuildContext context) =>
+      of(context).usersRepository;
+  static AdminDriversRepository driversRepositoryOf(BuildContext context) =>
+      of(context).driversRepository;
+  static AdminStoresRepository storesRepositoryOf(BuildContext context) =>
+      of(context).storesRepository;
 
   @override
   bool updateShouldNotify(AdminScope oldWidget) {

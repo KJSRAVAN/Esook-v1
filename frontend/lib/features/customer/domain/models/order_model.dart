@@ -87,9 +87,11 @@ enum FulfillmentType {
   pickup,
   delivery;
 
-  String get displayName => this == FulfillmentType.pickup ? 'Pickup' : 'Delivery';
+  String get displayName =>
+      this == FulfillmentType.pickup ? 'Pickup' : 'Delivery';
 
-  String toBackendString() => this == FulfillmentType.pickup ? 'PICKUP' : 'DELIVERY';
+  String toBackendString() =>
+      this == FulfillmentType.pickup ? 'PICKUP' : 'DELIVERY';
 
   static FulfillmentType fromString(String? value) {
     if (value == null) return FulfillmentType.delivery;
@@ -173,13 +175,17 @@ class OrderModel {
         .toList();
 
     final statusStr = json['status'] as String?;
-    final fulfillmentStr = json['fulfillment'] as String? ??
+    final fulfillmentStr =
+        json['fulfillment'] as String? ??
         json['fulfillmentType'] as String? ??
         json['fulfillment_type'] as String?;
 
     final subtotalVal = parseDouble(json['subtotal']);
     final totalVal = parseDouble(
-      json['total'] ?? json['totalAmount'] ?? json['total_amount'] ?? subtotalVal,
+      json['total'] ??
+          json['totalAmount'] ??
+          json['total_amount'] ??
+          subtotalVal,
     );
 
     String? storeName;
@@ -193,10 +199,12 @@ class OrderModel {
 
     return OrderModel(
       id: json['id'] as String? ?? '',
-      orderNumber: json['orderNumber'] as String? ??
+      orderNumber:
+          json['orderNumber'] as String? ??
           json['order_number'] as String? ??
           json['orderNo'] as String?,
-      customerId: json['customerId'] as String? ??
+      customerId:
+          json['customerId'] as String? ??
           json['customer_id'] as String? ??
           json['userId'] as String? ??
           json['user_id'] as String? ??
@@ -205,8 +213,11 @@ class OrderModel {
       storeName: storeName,
       status: OrderStatus.fromString(statusStr),
       fulfillment: FulfillmentType.fromString(fulfillmentStr),
-      deliveryAddress: json['deliveryAddress'] as String? ?? json['delivery_address'] as String?,
-      couponCode: json['couponCode'] as String? ??
+      deliveryAddress:
+          json['deliveryAddress'] as String? ??
+          json['delivery_address'] as String?,
+      couponCode:
+          json['couponCode'] as String? ??
           json['coupon_code'] as String? ??
           json['couponId'] as String? ??
           json['coupon_id'] as String?,
@@ -219,7 +230,9 @@ class OrderModel {
       items: items,
       createdAt: parseDate(json['createdAt'] ?? json['created_at']),
       updatedAt: parseDate(json['updatedAt'] ?? json['updated_at']),
-      rejectedReason: json['rejectedReason'] as String? ?? json['rejected_reason'] as String?,
+      rejectedReason:
+          json['rejectedReason'] as String? ??
+          json['rejected_reason'] as String?,
     );
   }
 

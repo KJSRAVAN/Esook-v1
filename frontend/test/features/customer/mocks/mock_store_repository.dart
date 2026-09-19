@@ -35,14 +35,8 @@ class MockStoreRepository implements StoreRepository {
   ];
 
   List<AreaModel> defaultAreas = [
-    const AreaModel(
-      id: 'area-1',
-      name: 'Riyadh - Olaya',
-    ),
-    const AreaModel(
-      id: 'area-2',
-      name: 'Riyadh - Al Malqa',
-    ),
+    const AreaModel(id: 'area-1', name: 'Riyadh - Olaya'),
+    const AreaModel(id: 'area-2', name: 'Riyadh - Al Malqa'),
   ];
 
   @override

@@ -18,11 +18,7 @@ class AdminVerifyScreen extends StatefulWidget {
   final String? token;
   final AuthRepository? authRepository;
 
-  const AdminVerifyScreen({
-    super.key,
-    this.token,
-    this.authRepository,
-  });
+  const AdminVerifyScreen({super.key, this.token, this.authRepository});
 
   @override
   State<AdminVerifyScreen> createState() => _AdminVerifyScreenState();
@@ -69,7 +65,11 @@ class _AdminVerifyScreenState extends State<AdminVerifyScreen> {
         _isVerifying = false;
         _isSuccess = true;
       });
-      RoleRouting.navigateForRole(context, authResponse.user.role, clearStack: true);
+      RoleRouting.navigateForRole(
+        context,
+        authResponse.user.role,
+        clearStack: true,
+      );
     } else {
       setState(() {
         _isVerifying = false;
@@ -91,13 +91,17 @@ class _AdminVerifyScreenState extends State<AdminVerifyScreen> {
           if (_isVerifying) ...[
             const Center(
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: AppDimensions.spacingLg),
+                padding: EdgeInsets.symmetric(
+                  vertical: AppDimensions.spacingLg,
+                ),
                 child: SizedBox(
                   width: 36,
                   height: 36,
                   child: CircularProgressIndicator(
                     strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
                   ),
                 ),
               ),
@@ -113,7 +117,8 @@ class _AdminVerifyScreenState extends State<AdminVerifyScreen> {
               child: Column(
                 children: [
                   Text(
-                    _failure?.message ?? 'Magic link is invalid or has expired.',
+                    _failure?.message ??
+                        'Magic link is invalid or has expired.',
                     style: AppTextStyles.bodyMedium.copyWith(
                       color: const Color(0xFF991B1B),
                       fontWeight: FontWeight.w500,
@@ -135,7 +140,9 @@ class _AdminVerifyScreenState extends State<AdminVerifyScreen> {
             AuthPrimaryButton(
               label: 'Request New Link',
               onPressed: () {
-                Navigator.of(context).pushReplacementNamed(AppRoutes.adminMagicLink);
+                Navigator.of(
+                  context,
+                ).pushReplacementNamed(AppRoutes.adminMagicLink);
               },
             ),
           ] else if (_isSuccess) ...[

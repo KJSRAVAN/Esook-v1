@@ -17,10 +17,7 @@ import '../widgets/auth_text_field.dart';
 class RiderLoginScreen extends StatefulWidget {
   final AuthRepository? authRepository;
 
-  const RiderLoginScreen({
-    super.key,
-    this.authRepository,
-  });
+  const RiderLoginScreen({super.key, this.authRepository});
 
   @override
   State<RiderLoginScreen> createState() => _RiderLoginScreenState();
@@ -66,7 +63,11 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
     if (result.isSuccess) {
       final authResponse = result.dataOrNull!;
       setState(() => _isSubmitting = false);
-      RoleRouting.navigateForRole(context, authResponse.user.role, clearStack: true);
+      RoleRouting.navigateForRole(
+        context,
+        authResponse.user.role,
+        clearStack: true,
+      );
     } else {
       setState(() {
         _isSubmitting = false;
@@ -80,7 +81,8 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
     return AuthScaffold(
       maxWidth: 440.0,
       showBackButton: true,
-      onBackPressed: () => Navigator.of(context).pushReplacementNamed(AppRoutes.login),
+      onBackPressed: () =>
+          Navigator.of(context).pushReplacementNamed(AppRoutes.login),
       headerBadge: Container(
         width: 64,
         height: 64,
@@ -171,12 +173,11 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
         TextButton.icon(
           onPressed: _isSubmitting
               ? null
-              : () => Navigator.of(context).pushReplacementNamed(AppRoutes.login),
+              : () =>
+                    Navigator.of(context).pushReplacementNamed(AppRoutes.login),
           icon: const Icon(Icons.shopping_bag_outlined, size: 16),
           label: const Text('Return to Customer App'),
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.textSecondary,
-          ),
+          style: TextButton.styleFrom(foregroundColor: AppColors.textSecondary),
         ),
       ],
     );

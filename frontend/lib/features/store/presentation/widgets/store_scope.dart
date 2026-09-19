@@ -36,12 +36,19 @@ class StoreScope extends InheritedWidget {
     return context.dependOnInheritedWidgetOfExactType<StoreScope>();
   }
 
-  static StoreOrdersRepository ordersRepositoryOf(BuildContext context) => of(context).ordersRepository;
-  static StoreProductsRepository productsRepositoryOf(BuildContext context) => of(context).productsRepository;
-  static StoreCategoriesRepository categoriesRepositoryOf(BuildContext context) => of(context).categoriesRepository;
-  static AuthRepository authRepositoryOf(BuildContext context) => of(context).authRepository;
-  static UserModel? currentUserOf(BuildContext context) => of(context).currentUser;
-  static String? storeIdOf(BuildContext context) => of(context).storeId ?? of(context).currentUser?.storeId;
+  static StoreOrdersRepository ordersRepositoryOf(BuildContext context) =>
+      of(context).ordersRepository;
+  static StoreProductsRepository productsRepositoryOf(BuildContext context) =>
+      of(context).productsRepository;
+  static StoreCategoriesRepository categoriesRepositoryOf(
+    BuildContext context,
+  ) => of(context).categoriesRepository;
+  static AuthRepository authRepositoryOf(BuildContext context) =>
+      of(context).authRepository;
+  static UserModel? currentUserOf(BuildContext context) =>
+      of(context).currentUser;
+  static String? storeIdOf(BuildContext context) =>
+      of(context).storeId ?? of(context).currentUser?.storeId;
 
   @override
   bool updateShouldNotify(StoreScope oldWidget) {

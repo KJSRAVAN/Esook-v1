@@ -14,10 +14,7 @@ import '../widgets/admin_scope.dart';
 class AdminOrdersScreen extends StatefulWidget {
   final AdminStoresRepository? storesRepository;
 
-  const AdminOrdersScreen({
-    super.key,
-    this.storesRepository,
-  });
+  const AdminOrdersScreen({super.key, this.storesRepository});
 
   @override
   State<AdminOrdersScreen> createState() => _AdminOrdersScreenState();
@@ -62,9 +59,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Orders Oversight'),
-      ),
+      appBar: AppBar(title: const Text('Orders Oversight')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppDimensions.spacingMd),
@@ -117,7 +112,9 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                   child: Padding(
                     padding: EdgeInsets.all(AppDimensions.spacingLg),
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
+                      ),
                     ),
                   ),
                 )
@@ -140,7 +137,9 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                         const SizedBox(height: 4),
                         Text(
                           'Create store locations first to inspect store-specific orders.',
-                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -150,7 +149,9 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
               else ...[
                 Text(
                   'Select Store for Order Stream',
-                  style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.labelLarge.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: AppDimensions.spacingXs),
                 DropdownButtonFormField<String>(
@@ -180,7 +181,9 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                           height: 56,
                           decoration: BoxDecoration(
                             color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusMd,
+                            ),
                           ),
                           child: const Icon(
                             Icons.receipt_long_outlined,
@@ -191,12 +194,16 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                         const SizedBox(height: AppDimensions.spacingMd),
                         Text(
                           'Store Orders Stream Active',
-                          style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                          style: AppTextStyles.titleMedium.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Staff and managers process incoming orders for this store directly in the Store Operations portal.',
-                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ],

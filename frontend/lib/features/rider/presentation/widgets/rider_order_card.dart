@@ -68,7 +68,8 @@ class RiderOrderCard extends StatelessWidget {
             const SizedBox(height: AppDimensions.spacingSm),
 
             // Delivery address
-            if (order.deliveryAddress != null && order.deliveryAddress!.isNotEmpty)
+            if (order.deliveryAddress != null &&
+                order.deliveryAddress!.isNotEmpty)
               _InfoRow(
                 icon: Icons.location_on_outlined,
                 iconColor: AppColors.error,
@@ -92,7 +93,11 @@ class RiderOrderCard extends StatelessWidget {
               const SizedBox(height: AppDimensions.spacingSm),
               Row(
                 children: [
-                  const Icon(Icons.schedule_rounded, size: 14, color: AppColors.textTertiary),
+                  const Icon(
+                    Icons.schedule_rounded,
+                    size: 14,
+                    color: AppColors.textTertiary,
+                  ),
                   const SizedBox(width: AppDimensions.spacingXs),
                   Text(
                     _formatTimestamp(order.createdAt!),
@@ -116,7 +121,9 @@ class RiderOrderCard extends StatelessWidget {
                     backgroundColor: _actionColor(order.status),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusSm,
+                      ),
                     ),
                     elevation: 0,
                   ),
@@ -126,7 +133,9 @@ class RiderOrderCard extends StatelessWidget {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : Text(
@@ -170,9 +179,18 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (Color bg, Color fg) = switch (status) {
-      RiderOrderStatus.ready => (const Color(0xFFFEF3C7), const Color(0xFFD97706)),
-      RiderOrderStatus.outForDelivery => (const Color(0xFFDBEAFE), const Color(0xFF2563EB)),
-      RiderOrderStatus.delivered => (const Color(0xFFD1FAE5), const Color(0xFF059669)),
+      RiderOrderStatus.ready => (
+        const Color(0xFFFEF3C7),
+        const Color(0xFFD97706),
+      ),
+      RiderOrderStatus.outForDelivery => (
+        const Color(0xFFDBEAFE),
+        const Color(0xFF2563EB),
+      ),
+      RiderOrderStatus.delivered => (
+        const Color(0xFFD1FAE5),
+        const Color(0xFF059669),
+      ),
     };
 
     return Container(
@@ -183,11 +201,7 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         status.displayName,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: fg,
-        ),
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: fg),
       ),
     );
   }

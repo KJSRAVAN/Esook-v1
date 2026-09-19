@@ -12,10 +12,7 @@ import '../../domain/repositories/admin_stores_repository.dart';
 class CreateStoreDialog extends StatefulWidget {
   final AdminStoresRepository storesRepository;
 
-  const CreateStoreDialog({
-    super.key,
-    required this.storesRepository,
-  });
+  const CreateStoreDialog({super.key, required this.storesRepository});
 
   static Future<AdminStoreModel?> show(
     BuildContext context, {
@@ -78,7 +75,8 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
     } else {
       setState(() {
         _isSubmitting = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to create store';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to create store';
       });
     }
   }
@@ -109,7 +107,9 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: AppColors.primaryLight,
-                              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusSm,
+                              ),
                             ),
                             child: const Icon(
                               Icons.add_business_rounded,
@@ -128,7 +128,9 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded, size: 20),
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                       ),
                     ],
                   ),
@@ -137,15 +139,23 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
                   if (_errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(AppDimensions.spacingSm),
-                      margin: const EdgeInsets.only(bottom: AppDimensions.spacingSm),
+                      margin: const EdgeInsets.only(
+                        bottom: AppDimensions.spacingSm,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSm,
+                        ),
+                        border: Border.all(
+                          color: AppColors.error.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.error,
+                        ),
                       ),
                     ),
 
@@ -158,8 +168,12 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
                     prefixIcon: Icons.storefront_rounded,
                     enabled: !_isSubmitting,
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) return 'Please enter store name';
-                      if (val.trim().length < 2) return 'Store name must be at least 2 characters';
+                      if (val == null || val.trim().isEmpty) {
+                        return 'Please enter store name';
+                      }
+                      if (val.trim().length < 2) {
+                        return 'Store name must be at least 2 characters';
+                      }
                       return null;
                     },
                   ),
@@ -174,8 +188,12 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
                     prefixIcon: Icons.location_on_outlined,
                     enabled: !_isSubmitting,
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) return 'Please enter delivery area';
-                      if (val.trim().length < 2) return 'Area must be at least 2 characters';
+                      if (val == null || val.trim().isEmpty) {
+                        return 'Please enter delivery area';
+                      }
+                      if (val.trim().length < 2) {
+                        return 'Area must be at least 2 characters';
+                      }
                       return null;
                     },
                   ),
@@ -208,7 +226,9 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                         child: const Text('Cancel'),
                       ),
                       const SizedBox(width: AppDimensions.spacingSm),

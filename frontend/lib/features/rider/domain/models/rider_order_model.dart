@@ -22,11 +22,11 @@ class RiderStoreInfo {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        if (address != null) 'address': address,
-        if (phone != null) 'phone': phone,
-      };
+    'id': id,
+    'name': name,
+    if (address != null) 'address': address,
+    if (phone != null) 'phone': phone,
+  };
 
   @override
   bool operator ==(Object other) =>
@@ -50,20 +50,22 @@ class RiderCustomerInfo {
 
   factory RiderCustomerInfo.fromJson(Map<String, dynamic> json) {
     return RiderCustomerInfo(
-      phone: json['phone'] as String? ??
+      phone:
+          json['phone'] as String? ??
           json['phone_number'] as String? ??
           json['customer_phone'] as String? ??
           '',
-      name: json['name'] as String? ??
+      name:
+          json['name'] as String? ??
           json['full_name'] as String? ??
           json['customer_name'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'phone': phone,
-        if (name != null) 'name': name,
-      };
+    'phone': phone,
+    if (name != null) 'name': name,
+  };
 
   @override
   bool operator ==(Object other) =>
@@ -94,11 +96,11 @@ enum RiderOrderStatus {
   String toBackendString() {
     switch (this) {
       case RiderOrderStatus.ready:
-        return 'preparing';
+        return 'READY';
       case RiderOrderStatus.outForDelivery:
-        return 'out_for_delivery';
+        return 'OUT_FOR_DELIVERY';
       case RiderOrderStatus.delivered:
-        return 'completed';
+        return 'DELIVERED';
     }
   }
 
@@ -185,7 +187,8 @@ class RiderOrderModel {
     }
 
     double? parsedTotal;
-    final rawTotal = json['total_amount'] ?? json['total'] ?? json['totalAmount'];
+    final rawTotal =
+        json['total_amount'] ?? json['total'] ?? json['totalAmount'];
     if (rawTotal is num) {
       parsedTotal = rawTotal.toDouble();
     } else if (rawTotal is String) {
@@ -194,16 +197,20 @@ class RiderOrderModel {
 
     return RiderOrderModel(
       id: json['id'] as String? ?? '',
-      orderNumber: json['order_number'] as String? ?? json['orderNumber'] as String?,
+      orderNumber:
+          json['order_number'] as String? ?? json['orderNumber'] as String?,
       status: RiderOrderStatus.fromString(rawStatus),
       rawStatus: rawStatus,
-      fulfillment: json['fulfillment_type'] as String? ??
+      fulfillment:
+          json['fulfillment_type'] as String? ??
           json['fulfillment'] as String? ??
           'delivery',
-      deliveryAddress: json['delivery_address'] as String? ??
+      deliveryAddress:
+          json['delivery_address'] as String? ??
           json['deliveryAddress'] as String?,
       notes: json['notes'] as String?,
-      driverId: json['rider_id'] as String? ??
+      driverId:
+          json['rider_id'] as String? ??
           json['driver_id'] as String? ??
           json['driverId'] as String?,
       totalAmount: parsedTotal,
@@ -214,18 +221,18 @@ class RiderOrderModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        if (orderNumber != null) 'order_number': orderNumber,
-        'status': status.toBackendString(),
-        'fulfillment': fulfillment,
-        if (deliveryAddress != null) 'delivery_address': deliveryAddress,
-        if (notes != null) 'notes': notes,
-        if (driverId != null) 'driver_id': driverId,
-        if (totalAmount != null) 'total_amount': totalAmount,
-        if (createdAt != null) 'created_at': createdAt?.toIso8601String(),
-        'store': store.toJson(),
-        'customer': customer.toJson(),
-      };
+    'id': id,
+    if (orderNumber != null) 'order_number': orderNumber,
+    'status': status.toBackendString(),
+    'fulfillment': fulfillment,
+    if (deliveryAddress != null) 'delivery_address': deliveryAddress,
+    if (notes != null) 'notes': notes,
+    if (driverId != null) 'driver_id': driverId,
+    if (totalAmount != null) 'total_amount': totalAmount,
+    if (createdAt != null) 'created_at': createdAt?.toIso8601String(),
+    'store': store.toJson(),
+    'customer': customer.toJson(),
+  };
 
   RiderOrderModel copyWith({
     String? id,

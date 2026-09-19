@@ -261,7 +261,9 @@ void main() {
       );
     }
 
-    testWidgets('renders StoreDashboardScreen by default for staff', (tester) async {
+    testWidgets('renders StoreDashboardScreen by default for staff', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget(user: staffUser));
       await tester.pumpAndSettle();
 
@@ -270,78 +272,98 @@ void main() {
       expect(find.text('Order Pipeline'), findsOneWidget);
     });
 
-    testWidgets('unassigned store user displays StoreAssignmentRequiredScreen', (tester) async {
-      await tester.pumpWidget(createTestWidget(user: unassignedUser));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'unassigned store user displays StoreAssignmentRequiredScreen',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget(user: unassignedUser));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(StoreAssignmentRequiredScreen), findsOneWidget);
-      expect(find.text('Store Assignment Required'), findsOneWidget);
-    });
+        expect(find.byType(StoreAssignmentRequiredScreen), findsOneWidget);
+        expect(find.text('Store Assignment Required'), findsOneWidget);
+      },
+    );
 
-    testWidgets('navigation switches between Dashboard, Orders, Products, Categories, Account', (tester) async {
-      await tester.pumpWidget(createTestWidget(user: staffUser));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'navigation switches between Dashboard, Orders, Products, Categories, Account',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget(user: staffUser));
+        await tester.pumpAndSettle();
 
-      // Navigate to Orders tab
-      await tester.tap(find.text('Orders'));
-      await tester.pumpAndSettle();
-      expect(find.text('Store Orders'), findsOneWidget);
+        // Navigate to Orders tab
+        await tester.tap(find.text('Orders'));
+        await tester.pumpAndSettle();
+        expect(find.text('Store Orders'), findsOneWidget);
 
-      // Navigate to Products tab
-      await tester.tap(find.text('Products'));
-      await tester.pumpAndSettle();
-      expect(find.text('Store Products'), findsOneWidget);
+        // Navigate to Products tab
+        await tester.tap(find.text('Products'));
+        await tester.pumpAndSettle();
+        expect(find.text('Store Products'), findsOneWidget);
 
-      // Navigate to Categories tab
-      await tester.tap(find.text('Categories'));
-      await tester.pumpAndSettle();
-      expect(find.text('Store Categories'), findsOneWidget);
+        // Navigate to Categories tab
+        await tester.tap(find.text('Categories'));
+        await tester.pumpAndSettle();
+        expect(find.text('Store Categories'), findsOneWidget);
 
-      // Navigate to Account tab
-      await tester.tap(find.text('Account'));
-      await tester.pumpAndSettle();
-      expect(find.text('Staff Account'), findsOneWidget);
-      expect(find.text('Store Staff Member'), findsOneWidget);
-    });
+        // Navigate to Account tab
+        await tester.tap(find.text('Account'));
+        await tester.pumpAndSettle();
+        expect(find.text('Staff Account'), findsOneWidget);
+        expect(find.text('Store Staff Member'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Staff user CANNOT see add product, edit product, or add category FABs', (tester) async {
-      await tester.pumpWidget(createTestWidget(user: staffUser));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Staff user CANNOT see add product, edit product, or add category FABs',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget(user: staffUser));
+        await tester.pumpAndSettle();
 
-      // Go to Products
-      await tester.tap(find.text('Products'));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('store_add_product_fab')), findsNothing);
-      expect(find.byKey(const Key('product_edit_btn_prod-1')), findsNothing);
-      expect(find.byKey(const Key('product_toggle_prod-1')), findsNothing);
+        // Go to Products
+        await tester.tap(find.text('Products'));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('store_add_product_fab')), findsNothing);
+        expect(find.byKey(const Key('product_edit_btn_prod-1')), findsNothing);
+        expect(find.byKey(const Key('product_toggle_prod-1')), findsNothing);
 
-      // Go to Categories
-      await tester.tap(find.text('Categories'));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('store_add_category_fab')), findsNothing);
-    });
+        // Go to Categories
+        await tester.tap(find.text('Categories'));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('store_add_category_fab')), findsNothing);
+      },
+    );
 
-    testWidgets('Manager user CAN see add product, edit product, toggle availability, add category', (tester) async {
-      await tester.pumpWidget(createTestWidget(user: managerUser));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Manager user CAN see add product, edit product, toggle availability, add category',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget(user: managerUser));
+        await tester.pumpAndSettle();
 
-      // Go to Products
-      await tester.tap(find.text('Products'));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('store_add_product_fab')), findsOneWidget);
-      expect(find.byKey(const Key('product_edit_btn_prod-1')), findsOneWidget);
-      expect(find.byKey(const Key('product_toggle_prod-1')), findsOneWidget);
+        // Go to Products
+        await tester.tap(find.text('Products'));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('store_add_product_fab')), findsOneWidget);
+        expect(
+          find.byKey(const Key('product_edit_btn_prod-1')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('product_toggle_prod-1')), findsOneWidget);
 
-      // Verify delete product button does not exist for Manager
-      expect(find.byKey(const Key('product_delete_btn_prod-1')), findsNothing);
+        // Verify delete product button does not exist for Manager
+        expect(
+          find.byKey(const Key('product_delete_btn_prod-1')),
+          findsNothing,
+        );
 
-      // Go to Categories
-      await tester.tap(find.text('Categories'));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('store_add_category_fab')), findsOneWidget);
-    });
+        // Go to Categories
+        await tester.tap(find.text('Categories'));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('store_add_category_fab')), findsOneWidget);
+      },
+    );
 
-    testWidgets('Account screen sign out button calls auth logout', (tester) async {
+    testWidgets('Account screen sign out button calls auth logout', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget(user: staffUser));
       await tester.pumpAndSettle();
 
@@ -354,7 +376,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Confirm dialog
-      await tester.tap(find.byKey(const Key('store_account_confirm_signout_btn')));
+      await tester.tap(
+        find.byKey(const Key('store_account_confirm_signout_btn')),
+      );
       await tester.pumpAndSettle();
 
       expect(authRepo.logoutCalled, isTrue);

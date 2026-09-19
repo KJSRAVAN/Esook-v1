@@ -21,13 +21,13 @@ void main() {
     Widget buildOrdersScreen() {
       return MaterialApp(
         theme: AppTheme.lightTheme,
-        home: CustomerOrdersScreen(
-          orderRepository: mockOrderRepository,
-        ),
+        home: CustomerOrdersScreen(orderRepository: mockOrderRepository),
       );
     }
 
-    testWidgets('displays empty state when customer has no orders', (tester) async {
+    testWidgets('displays empty state when customer has no orders', (
+      tester,
+    ) async {
       mockOrderRepository.ordersToReturn = [];
 
       await tester.pumpWidget(buildOrdersScreen());
@@ -36,21 +36,30 @@ void main() {
       expect(find.text('Orders'), findsOneWidget);
       expect(find.text('No Orders Yet'), findsOneWidget);
       expect(
-        find.text('Track active deliveries and view past grocery order history here.'),
+        find.text(
+          'Track active deliveries and view past grocery order history here.',
+        ),
         findsOneWidget,
       );
       expect(find.byIcon(Icons.receipt_long_outlined), findsOneWidget);
     });
 
-    testWidgets('displays error state with retry button on failure', (tester) async {
-      mockOrderRepository.failureToReturn = const ServerFailure(message: 'Could not load orders');
+    testWidgets('displays error state with retry button on failure', (
+      tester,
+    ) async {
+      mockOrderRepository.failureToReturn = const ServerFailure(
+        message: 'Could not load orders',
+      );
 
       await tester.pumpWidget(buildOrdersScreen());
       await tester.pumpAndSettle();
 
       expect(find.text('Unable to load orders'), findsOneWidget);
       expect(find.text('Could not load orders'), findsOneWidget);
-      expect(find.byKey(const Key('orders_error_retry_button')), findsOneWidget);
+      expect(
+        find.byKey(const Key('orders_error_retry_button')),
+        findsOneWidget,
+      );
 
       // Now set success and tap Retry
       mockOrderRepository.failureToReturn = null;
@@ -63,7 +72,9 @@ void main() {
       expect(find.text('Unable to load orders'), findsNothing);
     });
 
-    testWidgets('displays list of orders when orders are loaded', (tester) async {
+    testWidgets('displays list of orders when orders are loaded', (
+      tester,
+    ) async {
       final order1 = OrderModel(
         id: 'ord-001',
         orderNumber: 'ESK-001',
@@ -138,7 +149,10 @@ void main() {
       await tester.tap(find.byKey(const Key('orders_refresh_button')));
       await tester.pumpAndSettle();
 
-      expect(mockOrderRepository.getMyOrdersCallCount, equals(initialCalls + 1));
+      expect(
+        mockOrderRepository.getMyOrdersCallCount,
+        equals(initialCalls + 1),
+      );
     });
   });
 }

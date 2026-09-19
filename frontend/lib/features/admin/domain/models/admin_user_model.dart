@@ -47,7 +47,10 @@ class AdminUserModel {
       role: role,
       rawRole: rawRoleString,
       storeId: json['store_id'] as String? ?? json['storeId'] as String?,
-      isPhoneVerified: json['is_phone_verified'] as bool? ?? json['isPhoneVerified'] as bool? ?? false,
+      isPhoneVerified:
+          json['is_phone_verified'] as bool? ??
+          json['isPhoneVerified'] as bool? ??
+          false,
       isActive: isActive,
       createdAt: parsedCreatedAt,
     );

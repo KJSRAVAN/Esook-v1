@@ -65,7 +65,8 @@ class ProductModel {
       if (catVal is String && catVal.isNotEmpty) {
         return catVal;
       }
-      return json['category_name'] as String? ?? json['categoryName'] as String?;
+      return json['category_name'] as String? ??
+          json['categoryName'] as String?;
     }
 
     String? parseCategoryId(dynamic catVal, dynamic explicitCatId) {
@@ -79,10 +80,12 @@ class ProductModel {
     }
 
     String parseStoreId(dynamic jsonVal) {
-      if (jsonVal['storeId'] is String && (jsonVal['storeId'] as String).isNotEmpty) {
+      if (jsonVal['storeId'] is String &&
+          (jsonVal['storeId'] as String).isNotEmpty) {
         return jsonVal['storeId'] as String;
       }
-      if (jsonVal['store_id'] is String && (jsonVal['store_id'] as String).isNotEmpty) {
+      if (jsonVal['store_id'] is String &&
+          (jsonVal['store_id'] as String).isNotEmpty) {
         return jsonVal['store_id'] as String;
       }
       if (jsonVal['store'] is Map<String, dynamic>) {
@@ -103,9 +106,12 @@ class ProductModel {
       price: parsePrice(json['price']),
       category: parseCategoryName(catVal),
       imageUrl: json['imageUrl'] as String? ?? json['image_url'] as String?,
-      isAvailable: json['isAvailable'] as bool? ?? json['is_available'] as bool? ?? true,
+      isAvailable:
+          json['isAvailable'] as bool? ?? json['is_available'] as bool? ?? true,
       sortOrder: parseSortOrder(json['sortOrder'] ?? json['sort_order']),
-      loyaltyPointsPerUnit: parsePoints(json['loyalty_points_per_unit'] ?? json['loyaltyPointsPerUnit']),
+      loyaltyPointsPerUnit: parsePoints(
+        json['loyalty_points_per_unit'] ?? json['loyaltyPointsPerUnit'],
+      ),
       createdAt: parseDate(json['createdAt'] ?? json['created_at']),
       updatedAt: parseDate(json['updatedAt'] ?? json['updated_at']),
     );

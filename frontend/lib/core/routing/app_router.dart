@@ -68,7 +68,10 @@ abstract final class AppRouter {
 
       case AppRoutes.adminPending:
         final args = settings.arguments as Map<String, dynamic>?;
-        final email = args?['email'] as String? ?? uri.queryParameters['email'] ?? 'admin@esouq.com';
+        final email =
+            args?['email'] as String? ??
+            uri.queryParameters['email'] ??
+            'admin@esouq.com';
         return MaterialPageRoute<void>(
           settings: settings,
           builder: (_) => AdminMagicLinkPendingScreen(email: email),

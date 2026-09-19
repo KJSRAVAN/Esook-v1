@@ -50,15 +50,18 @@ void main() {
       expect(mockRepo.lastQuantityParam, equals(4));
     });
 
-    test('setQuantity with quantity <= 0 routes directly to removeItem', () async {
-      await notifier.loadForStore('store-1');
+    test(
+      'setQuantity with quantity <= 0 routes directly to removeItem',
+      () async {
+        await notifier.loadForStore('store-1');
 
-      await notifier.setQuantity('prod-1', 0);
+        await notifier.setQuantity('prod-1', 0);
 
-      expect(mockRepo.setItemQuantityCallCount, equals(0));
-      expect(mockRepo.removeItemCallCount, equals(1));
-      expect(mockRepo.lastProductIdParam, equals('prod-1'));
-    });
+        expect(mockRepo.setItemQuantityCallCount, equals(0));
+        expect(mockRepo.removeItemCallCount, equals(1));
+        expect(mockRepo.lastProductIdParam, equals('prod-1'));
+      },
+    );
 
     test('removeItem calls repository and updates cart', () async {
       await notifier.loadForStore('store-1');
@@ -78,18 +81,23 @@ void main() {
       expect(notifier.cart?.isEmpty, isTrue);
     });
 
-    test('failed mutation preserves previous cart and exposes failure', () async {
-      await notifier.loadForStore('store-1');
-      final originalCart = notifier.cart;
+    test(
+      'failed mutation preserves previous cart and exposes failure',
+      () async {
+        await notifier.loadForStore('store-1');
+        final originalCart = notifier.cart;
 
-      mockRepo.failureToReturn = const ValidationFailure(message: 'Item unavailable');
+        mockRepo.failureToReturn = const ValidationFailure(
+          message: 'Item unavailable',
+        );
 
-      await notifier.addItem('prod-999', 1);
+        await notifier.addItem('prod-999', 1);
 
-      expect(notifier.error, isA<ValidationFailure>());
-      expect(notifier.error?.message, equals('Item unavailable'));
-      expect(notifier.cart, equals(originalCart));
-    });
+        expect(notifier.error, isA<ValidationFailure>());
+        expect(notifier.error?.message, equals('Item unavailable'));
+        expect(notifier.cart, equals(originalCart));
+      },
+    );
 
     test('stale store response is discarded if store changes', () async {
       // Start loading store-1
@@ -102,13 +110,16 @@ void main() {
       expect(notifier.currentStoreId, equals('store-2'));
     });
 
-    test('quantityForProduct returns matching cart item quantity or 0', () async {
-      await notifier.loadForStore('store-1');
+    test(
+      'quantityForProduct returns matching cart item quantity or 0',
+      () async {
+        await notifier.loadForStore('store-1');
 
-      expect(notifier.quantityForProduct('prod-1'), equals(2));
-      expect(notifier.quantityForProduct('prod-2'), equals(1));
-      expect(notifier.quantityForProduct('prod-nonexistent'), equals(0));
-    });
+        expect(notifier.quantityForProduct('prod-1'), equals(2));
+        expect(notifier.quantityForProduct('prod-2'), equals(1));
+        expect(notifier.quantityForProduct('prod-nonexistent'), equals(0));
+      },
+    );
 
     test('sequential queue processes rapid mutations in order', () async {
       await notifier.loadForStore('store-1');

@@ -52,7 +52,9 @@ class AdminStatCard extends StatelessWidget {
                     height: 36,
                     decoration: BoxDecoration(
                       color: iconBgColor,
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusSm,
+                      ),
                     ),
                     child: Icon(icon, color: iconColor, size: 20),
                   ),

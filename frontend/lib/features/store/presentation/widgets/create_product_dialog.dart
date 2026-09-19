@@ -80,14 +80,18 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
     final result = await _productsRepo.getStoreProducts(widget.storeId);
     if (mounted) {
       final prods = result.dataOrNull ?? [];
-      final uniqueCats = prods
-          .map((p) => p.category?.trim())
-          .where((c) => c != null && c.isNotEmpty)
-          .cast<String>()
-          .toSet()
-          .map((c) => StoreCategoryModel(id: c, name: c, storeId: widget.storeId))
-          .toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
+      final uniqueCats =
+          prods
+              .map((p) => p.category?.trim())
+              .where((c) => c != null && c.isNotEmpty)
+              .cast<String>()
+              .toSet()
+              .map(
+                (c) =>
+                    StoreCategoryModel(id: c, name: c, storeId: widget.storeId),
+              )
+              .toList()
+            ..sort((a, b) => a.name.compareTo(b.name));
 
       setState(() {
         _categories = uniqueCats;
@@ -113,10 +117,14 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
     final result = await _productsRepo.createProduct(
       storeId: widget.storeId,
       name: _nameController.text.trim(),
-      description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+      description: _descriptionController.text.trim().isEmpty
+          ? null
+          : _descriptionController.text.trim(),
       price: price,
       category: _selectedCategoryId,
-      imageUrl: _imageUrlController.text.trim().isEmpty ? null : _imageUrlController.text.trim(),
+      imageUrl: _imageUrlController.text.trim().isEmpty
+          ? null
+          : _imageUrlController.text.trim(),
     );
 
     if (!mounted) return;
@@ -126,7 +134,8 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
     } else {
       setState(() {
         _isSubmitting = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to create product';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to create product';
       });
     }
   }
@@ -134,7 +143,9 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusLg)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+      ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 500),
         child: Padding(
@@ -151,11 +162,15 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
                     children: [
                       Text(
                         'Add Store Item',
-                        style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.w700),
+                        style: AppTextStyles.headlineSmall.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded),
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                       ),
                     ],
                   ),
@@ -165,14 +180,20 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
                   if (_errorMessage != null) ...[
                     Container(
                       padding: const EdgeInsets.all(AppDimensions.spacingSm),
-                      margin: const EdgeInsets.only(bottom: AppDimensions.spacingSm),
+                      margin: const EdgeInsets.only(
+                        bottom: AppDimensions.spacingSm,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFEE2E2),
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSm,
+                        ),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.error,
+                        ),
                       ),
                     ),
                   ],
@@ -198,7 +219,9 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
                   TextFormField(
                     key: const Key('create_product_price_input'),
                     controller: _priceController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: const InputDecoration(
                       labelText: 'Price (AED) *',
                       hintText: 'e.g. 12.50',
@@ -243,7 +266,8 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
                           ),
                         ),
                       ],
-                      onChanged: (val) => setState(() => _selectedCategoryId = val),
+                      onChanged: (val) =>
+                          setState(() => _selectedCategoryId = val),
                     ),
                   const SizedBox(height: AppDimensions.spacingSm),
 
@@ -287,7 +311,9 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                         child: const Text('Cancel'),
                       ),
                       const SizedBox(width: AppDimensions.spacingSm),
@@ -298,7 +324,10 @@ class _CreateProductDialogState extends State<CreateProductDialog> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : const Text('Add Product'),
                       ),

@@ -10,19 +10,37 @@ void main() {
       expect(OrderStatus.rejected.displayName, equals('Rejected'));
       expect(OrderStatus.preparing.displayName, equals('Preparing'));
       expect(OrderStatus.ready.displayName, equals('Ready'));
-      expect(OrderStatus.outForDelivery.displayName, equals('Out for Delivery'));
+      expect(
+        OrderStatus.outForDelivery.displayName,
+        equals('Out for Delivery'),
+      );
       expect(OrderStatus.delivered.displayName, equals('Delivered'));
       expect(OrderStatus.cancelled.displayName, equals('Cancelled'));
 
       expect(OrderStatus.pending.toBackendString(), equals('PENDING'));
-      expect(OrderStatus.outForDelivery.toBackendString(), equals('OUT_FOR_DELIVERY'));
+      expect(
+        OrderStatus.outForDelivery.toBackendString(),
+        equals('OUT_FOR_DELIVERY'),
+      );
 
       expect(OrderStatus.fromString('PENDING'), equals(OrderStatus.pending));
       expect(OrderStatus.fromString('accepted'), equals(OrderStatus.accepted));
-      expect(OrderStatus.fromString('out_for_delivery'), equals(OrderStatus.outForDelivery));
-      expect(OrderStatus.fromString('completed'), equals(OrderStatus.delivered));
-      expect(OrderStatus.fromString('delivered'), equals(OrderStatus.delivered));
-      expect(OrderStatus.fromString('cancelled'), equals(OrderStatus.cancelled));
+      expect(
+        OrderStatus.fromString('out_for_delivery'),
+        equals(OrderStatus.outForDelivery),
+      );
+      expect(
+        OrderStatus.fromString('completed'),
+        equals(OrderStatus.delivered),
+      );
+      expect(
+        OrderStatus.fromString('delivered'),
+        equals(OrderStatus.delivered),
+      );
+      expect(
+        OrderStatus.fromString('cancelled'),
+        equals(OrderStatus.cancelled),
+      );
       expect(OrderStatus.fromString('unknown'), equals(OrderStatus.pending));
     });
 
@@ -33,11 +51,26 @@ void main() {
       expect(FulfillmentType.pickup.toBackendString(), equals('PICKUP'));
       expect(FulfillmentType.delivery.toBackendString(), equals('DELIVERY'));
 
-      expect(FulfillmentType.fromString('PICKUP'), equals(FulfillmentType.pickup));
-      expect(FulfillmentType.fromString('pickup'), equals(FulfillmentType.pickup));
-      expect(FulfillmentType.fromString('DELIVERY'), equals(FulfillmentType.delivery));
-      expect(FulfillmentType.fromString('delivery'), equals(FulfillmentType.delivery));
-      expect(FulfillmentType.fromString(null), equals(FulfillmentType.delivery));
+      expect(
+        FulfillmentType.fromString('PICKUP'),
+        equals(FulfillmentType.pickup),
+      );
+      expect(
+        FulfillmentType.fromString('pickup'),
+        equals(FulfillmentType.pickup),
+      );
+      expect(
+        FulfillmentType.fromString('DELIVERY'),
+        equals(FulfillmentType.delivery),
+      );
+      expect(
+        FulfillmentType.fromString('delivery'),
+        equals(FulfillmentType.delivery),
+      );
+      expect(
+        FulfillmentType.fromString(null),
+        equals(FulfillmentType.delivery),
+      );
     });
 
     test('OrderModel parses standard backend JSON format', () {
@@ -80,7 +113,10 @@ void main() {
       expect(order.storeName, equals('eSOuQ Olaya Flagship'));
       expect(order.status, equals(OrderStatus.pending));
       expect(order.fulfillment, equals(FulfillmentType.delivery));
-      expect(order.deliveryAddress, equals('Building 4B, King Fahd Rd, Riyadh'));
+      expect(
+        order.deliveryAddress,
+        equals('Building 4B, King Fahd Rd, Riyadh'),
+      );
       expect(order.couponCode, equals('WELCOME10'));
       expect(order.notes, equals('Ring the bell'));
       expect(order.subtotal, equals(15.50));
@@ -100,10 +136,7 @@ void main() {
         'order_number': 'ESK-2026-002',
         'user_id': 'usr-2',
         'store_id': 'store-2',
-        'store': {
-          'id': 'store-2',
-          'name': 'eSOuQ Al Malqa',
-        },
+        'store': {'id': 'store-2', 'name': 'eSOuQ Al Malqa'},
         'status': 'out_for_delivery',
         'fulfillment_type': 'pickup',
         'subtotal': '20.00',

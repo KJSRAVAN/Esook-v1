@@ -35,7 +35,9 @@ void main() {
   }
 
   group('StoreSelectionView', () {
-    testWidgets('renders loading state initially and then lists stores', (tester) async {
+    testWidgets('renders loading state initially and then lists stores', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildWidget(onStoreSelected: (_) {}));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
@@ -51,7 +53,9 @@ void main() {
 
     testWidgets('calls onStoreSelected when tapping a store', (tester) async {
       StoreModel? selected;
-      await tester.pumpWidget(buildWidget(onStoreSelected: (s) => selected = s));
+      await tester.pumpWidget(
+        buildWidget(onStoreSelected: (s) => selected = s),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('eSOuQ Olaya Flagship'));
@@ -61,7 +65,9 @@ void main() {
       expect(selected!.id, equals('store-1'));
     });
 
-    testWidgets('renders error view on failure and allows retry', (tester) async {
+    testWidgets('renders error view on failure and allows retry', (
+      tester,
+    ) async {
       mockStoreRepo.getStoresResult = Result.failure(
         const NetworkFailure(message: 'Connection failed'),
       );
@@ -74,7 +80,9 @@ void main() {
       expect(find.text('Try Again'), findsOneWidget);
 
       // Now set success and tap Try Again
-      mockStoreRepo.getStoresResult = Result.success(mockStoreRepo.defaultStores);
+      mockStoreRepo.getStoresResult = Result.success(
+        mockStoreRepo.defaultStores,
+      );
       await tester.tap(find.text('Try Again'));
       await tester.pumpAndSettle();
 

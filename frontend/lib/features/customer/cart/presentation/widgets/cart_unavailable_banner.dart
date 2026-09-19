@@ -18,10 +18,7 @@ class CartUnavailableBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.warning.withAlpha(25),
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        border: Border.all(
-          color: AppColors.warning.withAlpha(120),
-          width: 1.0,
-        ),
+        border: Border.all(color: AppColors.warning.withAlpha(120), width: 1.0),
       ),
       child: Row(
         children: [

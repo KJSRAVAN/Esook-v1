@@ -8,11 +8,7 @@ class CartEmptyState extends StatelessWidget {
   final String? storeName;
   final VoidCallback? onExploreMarket;
 
-  const CartEmptyState({
-    super.key,
-    this.storeName,
-    this.onExploreMarket,
-  });
+  const CartEmptyState({super.key, this.storeName, this.onExploreMarket});
 
   @override
   Widget build(BuildContext context) {

@@ -23,14 +23,17 @@ void main() {
       expect(route.settings.name, equals(AppRoutes.customerHome));
     });
 
-    test('generates MaterialPageRoute for devCustomerPreview in debug mode', () {
-      final route = AppRouter.onGenerateRoute(
-        const RouteSettings(name: AppRoutes.devCustomerPreview),
-      );
+    test(
+      'generates MaterialPageRoute for devCustomerPreview in debug mode',
+      () {
+        final route = AppRouter.onGenerateRoute(
+          const RouteSettings(name: AppRoutes.devCustomerPreview),
+        );
 
-      expect(route, isA<MaterialPageRoute<void>>());
-      expect(route.settings.name, equals(AppRoutes.devCustomerPreview));
-    });
+        expect(route, isA<MaterialPageRoute<void>>());
+        expect(route.settings.name, equals(AppRoutes.devCustomerPreview));
+      },
+    );
 
     test('generates fallback route for unknown routes', () {
       final route = AppRouter.onGenerateRoute(

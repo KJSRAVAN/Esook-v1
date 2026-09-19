@@ -93,10 +93,10 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
 
     final targetStoreId = widget.cart.storeId ?? widget.cart.store.id;
     final itemsInput = widget.cart.items
-        .map((item) => OrderItemInput(
-              itemId: item.itemId,
-              quantity: item.quantity,
-            ))
+        .map(
+          (item) =>
+              OrderItemInput(itemId: item.itemId, quantity: item.quantity),
+        )
         .toList();
 
     final result = await widget.orderRepository.createOrder(
@@ -141,9 +141,7 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
     final storeDisplayName = widget.storeName ?? widget.cart.store.name;
 
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: mediaQuery.size.height * 0.9,
-      ),
+      constraints: BoxConstraints(maxHeight: mediaQuery.size.height * 0.9),
       decoration: const BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(
@@ -196,8 +194,13 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                       ],
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.textSecondary),
-                      onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                      icon: const Icon(
+                        Icons.close,
+                        color: AppColors.textSecondary,
+                      ),
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),
@@ -215,15 +218,25 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                       if (_errorMessage != null) ...[
                         Container(
                           key: const Key('checkout_error_banner'),
-                          padding: const EdgeInsets.all(AppDimensions.spacingMd),
+                          padding: const EdgeInsets.all(
+                            AppDimensions.spacingMd,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.error.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                            border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusMd,
+                            ),
+                            border: Border.all(
+                              color: AppColors.error.withValues(alpha: 0.3),
+                            ),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.error_outline, color: AppColors.error, size: 20.0),
+                              const Icon(
+                                Icons.error_outline,
+                                color: AppColors.error,
+                                size: 20.0,
+                              ),
                               const SizedBox(width: AppDimensions.spacingSm),
                               Expanded(
                                 child: Text(
@@ -243,7 +256,9 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                       // Fulfillment Selector
                       Text(
                         'Fulfillment Method',
-                        style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                        style: AppTextStyles.titleMedium.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: AppDimensions.spacingSm),
                       Row(
@@ -254,7 +269,8 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                               title: 'Delivery',
                               subtitle: 'To your doorstep',
                               icon: Icons.delivery_dining_outlined,
-                              isSelected: _fulfillment == FulfillmentType.delivery,
+                              isSelected:
+                                  _fulfillment == FulfillmentType.delivery,
                               onTap: _isSubmitting
                                   ? null
                                   : () {
@@ -271,7 +287,8 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                               title: 'Pickup',
                               subtitle: 'At the store',
                               icon: Icons.storefront_outlined,
-                              isSelected: _fulfillment == FulfillmentType.pickup,
+                              isSelected:
+                                  _fulfillment == FulfillmentType.pickup,
                               onTap: _isSubmitting
                                   ? null
                                   : () {
@@ -289,7 +306,9 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                       if (_fulfillment == FulfillmentType.delivery) ...[
                         Text(
                           'Delivery Address',
-                          style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                          style: AppTextStyles.titleMedium.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const SizedBox(height: AppDimensions.spacingXs),
                         TextFormField(
@@ -298,7 +317,10 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                           enabled: !_isSubmitting,
                           decoration: const InputDecoration(
                             hintText: 'e.g. Building 4B, King Fahd Rd, Riyadh',
-                            prefixIcon: Icon(Icons.location_on_outlined, color: AppColors.textTertiary),
+                            prefixIcon: Icon(
+                              Icons.location_on_outlined,
+                              color: AppColors.textTertiary,
+                            ),
                           ),
                           validator: (value) {
                             if (_fulfillment == FulfillmentType.delivery) {
@@ -315,7 +337,9 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                       // Optional Notes
                       Text(
                         'Order Notes (Optional)',
-                        style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                        style: AppTextStyles.titleMedium.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: AppDimensions.spacingXs),
                       TextFormField(
@@ -325,7 +349,10 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                         maxLines: 2,
                         decoration: const InputDecoration(
                           hintText: 'e.g. Please leave package at front door',
-                          prefixIcon: Icon(Icons.notes_outlined, color: AppColors.textTertiary),
+                          prefixIcon: Icon(
+                            Icons.notes_outlined,
+                            color: AppColors.textTertiary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: AppDimensions.spacingLg),
@@ -333,7 +360,9 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                       // Optional Coupon Code
                       Text(
                         'Coupon Code (Optional)',
-                        style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                        style: AppTextStyles.titleMedium.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: AppDimensions.spacingXs),
                       TextFormField(
@@ -343,7 +372,10 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                         textCapitalization: TextCapitalization.characters,
                         decoration: const InputDecoration(
                           hintText: 'e.g. WELCOME10',
-                          prefixIcon: Icon(Icons.local_offer_outlined, color: AppColors.textTertiary),
+                          prefixIcon: Icon(
+                            Icons.local_offer_outlined,
+                            color: AppColors.textTertiary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: AppDimensions.spacingLg),
@@ -351,47 +383,64 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                       // Order Items Summary
                       Text(
                         'Order Summary (${widget.cart.itemCount} ${widget.cart.itemCount == 1 ? 'item' : 'items'})',
-                        style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                        style: AppTextStyles.titleMedium.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(height: AppDimensions.spacingSm),
                       Container(
                         padding: const EdgeInsets.all(AppDimensions.spacingMd),
                         decoration: BoxDecoration(
                           color: AppColors.background,
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusMd,
+                          ),
                           border: Border.all(color: AppColors.borderSubtle),
                         ),
                         child: Column(
                           children: [
-                            ...widget.cart.items.map((item) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          '${item.quantity}x ${item.name}',
-                                          style: AppTextStyles.bodyMedium,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
+                            ...widget.cart.items.map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${item.quantity}x ${item.name}',
+                                        style: AppTextStyles.bodyMedium,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      Text(
-                                        '${item.itemSubtotal.toStringAsFixed(2)} ${widget.currency}',
-                                        style: AppTextStyles.bodyMedium.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                    ),
+                                    Text(
+                                      '${item.itemSubtotal.toStringAsFixed(2)} ${widget.currency}',
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        fontWeight: FontWeight.w600,
                                       ),
-                                    ],
-                                  ),
-                                )),
-                            const Divider(height: 16.0, color: AppColors.borderSubtle),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const Divider(
+                              height: 16.0,
+                              color: AppColors.borderSubtle,
+                            ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text('Subtotal', style: AppTextStyles.bodyMedium),
+                                const Text(
+                                  'Subtotal',
+                                  style: AppTextStyles.bodyMedium,
+                                ),
                                 Text(
                                   '${widget.cart.subtotal.toStringAsFixed(2)} ${widget.currency}',
-                                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                             ),
@@ -399,19 +448,28 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text('Delivery Fee', style: AppTextStyles.bodyMedium),
+                                const Text(
+                                  'Delivery Fee',
+                                  style: AppTextStyles.bodyMedium,
+                                ),
                                 Text(
-                                  _fulfillment == FulfillmentType.delivery ? 'Free' : '0.00 ${widget.currency}',
+                                  _fulfillment == FulfillmentType.delivery
+                                      ? 'Free'
+                                      : '0.00 ${widget.currency}',
                                   style: AppTextStyles.bodyMedium.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: _fulfillment == FulfillmentType.delivery
+                                    color:
+                                        _fulfillment == FulfillmentType.delivery
                                         ? AppColors.success
                                         : AppColors.textPrimary,
                                   ),
                                 ),
                               ],
                             ),
-                            const Divider(height: 16.0, color: AppColors.borderSubtle),
+                            const Divider(
+                              height: 16.0,
+                              color: AppColors.borderSubtle,
+                            ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -450,7 +508,9 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                       disabledBackgroundColor: AppColors.borderSubtle,
                       padding: const EdgeInsets.symmetric(vertical: 14.0),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
                       ),
                       elevation: 0,
                     ),
@@ -460,7 +520,9 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                             width: 20.0,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.0,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : Text(
@@ -517,7 +579,9 @@ class _FulfillmentOptionCard extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? AppColors.primaryDark : AppColors.textSecondary,
+              color: isSelected
+                  ? AppColors.primaryDark
+                  : AppColors.textSecondary,
               size: 24.0,
             ),
             const SizedBox(height: AppDimensions.spacingSm),
@@ -525,7 +589,9 @@ class _FulfillmentOptionCard extends StatelessWidget {
               title,
               style: AppTextStyles.titleMedium.copyWith(
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? AppColors.primaryDark : AppColors.textPrimary,
+                color: isSelected
+                    ? AppColors.primaryDark
+                    : AppColors.textPrimary,
               ),
             ),
             Text(

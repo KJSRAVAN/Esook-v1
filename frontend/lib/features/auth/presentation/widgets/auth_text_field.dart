@@ -73,11 +73,7 @@ class AuthTextField extends StatelessWidget {
               color: AppColors.textTertiary,
             ),
             prefixIcon: prefixIcon != null
-                ? Icon(
-                    prefixIcon,
-                    color: AppColors.textSecondary,
-                    size: 20,
-                  )
+                ? Icon(prefixIcon, color: AppColors.textSecondary, size: 20)
                 : null,
             suffixIcon: suffixIcon,
             filled: true,

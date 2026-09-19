@@ -38,10 +38,9 @@ class RoleHomePlaceholderScreen extends StatelessWidget {
             onPressed: () async {
               await repository.logout();
               if (context.mounted) {
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  AppRoutes.login,
-                  (route) => false,
-                );
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
               }
             },
           ),

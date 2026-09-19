@@ -35,7 +35,9 @@ class CartItemTile extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         side: BorderSide(
-          color: isAvailable ? AppColors.borderSubtle : AppColors.error.withAlpha(80),
+          color: isAvailable
+              ? AppColors.borderSubtle
+              : AppColors.error.withAlpha(80),
           width: 1.0,
         ),
       ),
@@ -72,7 +74,9 @@ class CartItemTile extends StatelessWidget {
                     item.productName,
                     style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: isAvailable ? AppColors.textPrimary : AppColors.textTertiary,
+                      color: isAvailable
+                          ? AppColors.textPrimary
+                          : AppColors.textTertiary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -90,10 +94,15 @@ class CartItemTile extends StatelessWidget {
                       if (item.loyaltyPointsPerUnit > 0) ...[
                         const SizedBox(width: AppDimensions.spacingXs),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5.0,
+                            vertical: 1.0,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.primaryLight,
-                            borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusXs,
+                            ),
                           ),
                           child: Text(
                             '+${item.loyaltyPointsPerUnit} pts',
@@ -110,10 +119,15 @@ class CartItemTile extends StatelessWidget {
                   const SizedBox(height: 4.0),
                   if (!isAvailable)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6.0,
+                        vertical: 2.0,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.error.withAlpha(25),
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusXs),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusXs,
+                        ),
                       ),
                       child: Text(
                         'Currently Unavailable',
@@ -148,7 +162,9 @@ class CartItemTile extends StatelessWidget {
                     height: 18.0,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.0,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -156,7 +172,11 @@ class CartItemTile extends StatelessWidget {
             else if (!isAvailable)
               IconButton(
                 key: Key('cart_remove_unavailable_${item.productId}'),
-                icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 22.0),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.error,
+                  size: 22.0,
+                ),
                 onPressed: onRemove,
                 tooltip: 'Remove unavailable item',
               )
@@ -232,7 +252,11 @@ class _QuantityStepper extends StatelessWidget {
           ),
           IconButton(
             key: const Key('cart_qty_increment'),
-            icon: const Icon(Icons.add, size: 16.0, color: AppColors.textPrimary),
+            icon: const Icon(
+              Icons.add,
+              size: 16.0,
+              color: AppColors.textPrimary,
+            ),
             padding: const EdgeInsets.all(4.0),
             constraints: const BoxConstraints(minWidth: 30.0, minHeight: 30.0),
             onPressed: onIncrement,

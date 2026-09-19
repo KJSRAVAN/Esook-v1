@@ -49,11 +49,13 @@ void main() {
           method: HttpMethod.get,
           headers: {},
         ),
-        throwsA(isA<NetworkException>().having(
-          (e) => e.message,
-          'message',
-          contains('Failed to connect'),
-        )),
+        throwsA(
+          isA<NetworkException>().having(
+            (e) => e.message,
+            'message',
+            contains('Failed to connect'),
+          ),
+        ),
       );
     });
 
@@ -72,11 +74,13 @@ void main() {
           headers: {},
           timeout: const Duration(milliseconds: 10),
         ),
-        throwsA(isA<NetworkException>().having(
-          (e) => e.message,
-          'message',
-          contains('timed out'),
-        )),
+        throwsA(
+          isA<NetworkException>().having(
+            (e) => e.message,
+            'message',
+            contains('timed out'),
+          ),
+        ),
       );
     });
   });

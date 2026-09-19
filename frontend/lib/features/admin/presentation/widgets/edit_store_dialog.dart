@@ -27,10 +27,8 @@ class EditStoreDialog extends StatefulWidget {
     return showDialog<AdminStoreModel>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => EditStoreDialog(
-        store: store,
-        storesRepository: storesRepository,
-      ),
+      builder: (ctx) =>
+          EditStoreDialog(store: store, storesRepository: storesRepository),
     );
   }
 
@@ -54,7 +52,9 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
     super.initState();
     _nameController = TextEditingController(text: widget.store.name);
     _areaController = TextEditingController(text: widget.store.area);
-    _addressController = TextEditingController(text: widget.store.address ?? '');
+    _addressController = TextEditingController(
+      text: widget.store.address ?? '',
+    );
     _phoneController = TextEditingController(text: widget.store.phone ?? '');
     _isActive = widget.store.isActive;
   }
@@ -97,7 +97,8 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
     } else {
       setState(() {
         _isSubmitting = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to update store';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to update store';
       });
     }
   }
@@ -128,7 +129,9 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: AppColors.primaryLight,
-                              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusSm,
+                              ),
                             ),
                             child: const Icon(
                               Icons.edit_location_alt_rounded,
@@ -147,7 +150,9 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded, size: 20),
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                       ),
                     ],
                   ),
@@ -156,15 +161,23 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                   if (_errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(AppDimensions.spacingSm),
-                      margin: const EdgeInsets.only(bottom: AppDimensions.spacingSm),
+                      margin: const EdgeInsets.only(
+                        bottom: AppDimensions.spacingSm,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSm,
+                        ),
+                        border: Border.all(
+                          color: AppColors.error.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.error,
+                        ),
                       ),
                     ),
 
@@ -176,7 +189,9 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                     prefixIcon: Icons.storefront_rounded,
                     enabled: !_isSubmitting,
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) return 'Please enter store name';
+                      if (val == null || val.trim().isEmpty) {
+                        return 'Please enter store name';
+                      }
                       return null;
                     },
                   ),
@@ -190,7 +205,9 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                     prefixIcon: Icons.location_on_outlined,
                     enabled: !_isSubmitting,
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) return 'Please enter delivery area';
+                      if (val == null || val.trim().isEmpty) {
+                        return 'Please enter delivery area';
+                      }
                       return null;
                     },
                   ),
@@ -228,9 +245,13 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                       _isActive
                           ? 'Store is open and visible to customers'
                           : 'Store is disabled and hidden from customers',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                    onChanged: _isSubmitting ? null : (val) => setState(() => _isActive = val),
+                    onChanged: _isSubmitting
+                        ? null
+                        : (val) => setState(() => _isActive = val),
                   ),
                   const SizedBox(height: AppDimensions.spacingLg),
 
@@ -238,7 +259,9 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                         child: const Text('Cancel'),
                       ),
                       const SizedBox(width: AppDimensions.spacingSm),

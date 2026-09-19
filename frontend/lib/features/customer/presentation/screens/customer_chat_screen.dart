@@ -12,9 +12,7 @@ class CustomerChatScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Chat'),
-      ),
+      appBar: AppBar(title: const Text('Chat')),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -32,7 +30,9 @@ class CustomerChatScreen extends StatelessWidget {
                         height: 64,
                         decoration: BoxDecoration(
                           color: AppColors.primaryLight,
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusLg,
+                          ),
                         ),
                         child: const Icon(
                           Icons.chat_bubble_outline_rounded,

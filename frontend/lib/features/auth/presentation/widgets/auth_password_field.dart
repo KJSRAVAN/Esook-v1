@@ -53,7 +53,9 @@ class _AuthPasswordFieldState extends State<AuthPasswordField> {
           validator: widget.validator,
           onFieldSubmitted: widget.onFieldSubmitted,
           style: AppTextStyles.bodyLarge.copyWith(
-            color: widget.enabled ? AppColors.textPrimary : AppColors.textTertiary,
+            color: widget.enabled
+                ? AppColors.textPrimary
+                : AppColors.textTertiary,
           ),
           decoration: InputDecoration(
             hintText: widget.hintText,
@@ -67,7 +69,9 @@ class _AuthPasswordFieldState extends State<AuthPasswordField> {
             ),
             suffixIcon: IconButton(
               icon: Icon(
-                _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                _obscureText
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
                 color: AppColors.textSecondary,
                 size: 20,
               ),
@@ -81,7 +85,9 @@ class _AuthPasswordFieldState extends State<AuthPasswordField> {
               tooltip: _obscureText ? 'Show password' : 'Hide password',
             ),
             filled: true,
-            fillColor: widget.enabled ? AppColors.surface : AppColors.background,
+            fillColor: widget.enabled
+                ? AppColors.surface
+                : AppColors.background,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AppDimensions.spacingMd,
               vertical: AppDimensions.spacingSm + 4,

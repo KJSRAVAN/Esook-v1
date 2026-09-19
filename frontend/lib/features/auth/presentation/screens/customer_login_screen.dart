@@ -15,19 +15,13 @@ import '../widgets/auth_scope.dart';
 import '../widgets/auth_text_field.dart';
 
 /// Customer login step for phone-based OTP authentication flow.
-enum CustomerLoginStep {
-  phoneInput,
-  otpVerification,
-}
+enum CustomerLoginStep { phoneInput, otpVerification }
 
 /// Customer login screen for eSOuQ using phone OTP authentication.
 class CustomerLoginScreen extends StatefulWidget {
   final AuthRepository? authRepository;
 
-  const CustomerLoginScreen({
-    super.key,
-    this.authRepository,
-  });
+  const CustomerLoginScreen({super.key, this.authRepository});
 
   @override
   State<CustomerLoginScreen> createState() => _CustomerLoginScreenState();
@@ -68,9 +62,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
 
     final phone = _phoneController.text.trim();
 
-    final result = await _repository.sendOtp(
-      phone: phone,
-    );
+    final result = await _repository.sendOtp(phone: phone);
 
     if (!mounted) return;
 
@@ -102,17 +94,18 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
     final phone = _phoneController.text.trim();
     final code = _otpController.text.trim();
 
-    final result = await _repository.verifyOtp(
-      phone: phone,
-      code: code,
-    );
+    final result = await _repository.verifyOtp(phone: phone, code: code);
 
     if (!mounted) return;
 
     if (result.isSuccess) {
       final authResponse = result.dataOrNull!;
       setState(() => _isSubmitting = false);
-      RoleRouting.navigateForRole(context, authResponse.user.role, clearStack: true);
+      RoleRouting.navigateForRole(
+        context,
+        authResponse.user.role,
+        clearStack: true,
+      );
     } else {
       setState(() {
         _isSubmitting = false;
@@ -155,7 +148,9 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
             AuthErrorBanner(
               failure: _failure,
               onDismiss: () => setState(() => _failure = null),
-              onRetry: _failure is NetworkFailure ? () => _handleSendOtp() : null,
+              onRetry: _failure is NetworkFailure
+                  ? () => _handleSendOtp()
+                  : null,
             ),
 
           // Phone Number Field
@@ -246,11 +241,17 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
               decoration: BoxDecoration(
                 color: AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.mark_email_read_outlined, color: AppColors.primaryDark, size: 20),
+                  const Icon(
+                    Icons.mark_email_read_outlined,
+                    color: AppColors.primaryDark,
+                    size: 20,
+                  ),
                   const SizedBox(width: AppDimensions.spacingSm),
                   Expanded(
                     child: Text(
@@ -315,7 +316,9 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                 ),
               ),
               TextButton.icon(
-                onPressed: _isSubmitting ? null : () => _handleSendOtp(isResend: true),
+                onPressed: _isSubmitting
+                    ? null
+                    : () => _handleSendOtp(isResend: true),
                 icon: const Icon(Icons.refresh_rounded, size: 16),
                 label: const Text('Resend Code'),
                 style: TextButton.styleFrom(
@@ -372,7 +375,9 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
             TextButton(
               onPressed: _isSubmitting
                   ? null
-                  : () => Navigator.of(context).pushNamed(AppRoutes.adminMagicLink),
+                  : () => Navigator.of(
+                      context,
+                    ).pushNamed(AppRoutes.adminMagicLink),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.textSecondary,
                 visualDensity: VisualDensity.compact,
@@ -385,7 +390,8 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
           const SizedBox(height: AppDimensions.spacingMd),
           OutlinedButton.icon(
             key: const Key('dev_customer_preview_button'),
-            onPressed: () => Navigator.of(context).pushNamed(AppRoutes.devCustomerPreview),
+            onPressed: () =>
+                Navigator.of(context).pushNamed(AppRoutes.devCustomerPreview),
             icon: const Icon(Icons.preview_rounded, size: 18),
             label: const Text('Developer Preview: Customer Shell'),
             style: OutlinedButton.styleFrom(

@@ -15,17 +15,26 @@ class AppConfig {
   const AppConfig({
     required this.apiBaseUrl,
     required this.environment,
-    this.defaultCurrency = const String.fromEnvironment('APP_CURRENCY', defaultValue: 'SAR'),
+    this.defaultCurrency = const String.fromEnvironment(
+      'APP_CURRENCY',
+      defaultValue: 'SAR',
+    ),
     this.connectTimeout = const Duration(seconds: 15),
     this.receiveTimeout = const Duration(seconds: 15),
   });
 
   /// Factory creating configuration from environment definitions.
   factory AppConfig.fromEnvironment() {
-    const defaultBaseUrl = 'http://localhost:3000/api';
-    const baseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: defaultBaseUrl);
+    const defaultBaseUrl = 'https://esook-production-production.up.railway.app';
+    const baseUrl = String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: defaultBaseUrl,
+    );
     const envString = String.fromEnvironment('APP_ENV', defaultValue: 'dev');
-    const currency = String.fromEnvironment('APP_CURRENCY', defaultValue: 'SAR');
+    const currency = String.fromEnvironment(
+      'APP_CURRENCY',
+      defaultValue: 'SAR',
+    );
 
     return AppConfig(
       apiBaseUrl: baseUrl,

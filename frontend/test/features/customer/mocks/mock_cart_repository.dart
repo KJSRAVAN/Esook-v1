@@ -21,42 +21,42 @@ class MockCartRepository implements CartRepository {
   int? lastQuantityParam;
 
   CartModel get defaultCart => const CartModel(
-        userId: 'usr-123',
-        storeId: 'store-1',
-        store: CartStoreRef(
-          id: 'store-1',
-          name: 'eSOuQ Olaya Flagship',
-          area: 'Olaya',
-          isActive: true,
-        ),
-        items: [
-          CartItemModel(
-            itemId: 'prod-1',
-            productId: 'prod-1',
-            name: 'Fresh Whole Milk 1L',
-            productName: 'Fresh Whole Milk 1L',
-            price: 1.25,
-            unitPrice: 1.25,
-            imageUrl: null,
-            isAvailable: true,
-            loyaltyPointsPerUnit: 5,
-            quantity: 2,
-          ),
-          CartItemModel(
-            itemId: 'prod-2',
-            productId: 'prod-2',
-            name: 'Organic Bananas 1kg',
-            productName: 'Organic Bananas 1kg',
-            price: 0.85,
-            unitPrice: 0.85,
-            imageUrl: null,
-            isAvailable: true,
-            loyaltyPointsPerUnit: 2,
-            quantity: 1,
-          ),
-        ],
-        subtotal: 3.35,
-      );
+    userId: 'usr-123',
+    storeId: 'store-1',
+    store: CartStoreRef(
+      id: 'store-1',
+      name: 'eSOuQ Olaya Flagship',
+      area: 'Olaya',
+      isActive: true,
+    ),
+    items: [
+      CartItemModel(
+        itemId: 'prod-1',
+        productId: 'prod-1',
+        name: 'Fresh Whole Milk 1L',
+        productName: 'Fresh Whole Milk 1L',
+        price: 1.25,
+        unitPrice: 1.25,
+        imageUrl: null,
+        isAvailable: true,
+        loyaltyPointsPerUnit: 5,
+        quantity: 2,
+      ),
+      CartItemModel(
+        itemId: 'prod-2',
+        productId: 'prod-2',
+        name: 'Organic Bananas 1kg',
+        productName: 'Organic Bananas 1kg',
+        price: 0.85,
+        unitPrice: 0.85,
+        imageUrl: null,
+        isAvailable: true,
+        loyaltyPointsPerUnit: 2,
+        quantity: 1,
+      ),
+    ],
+    subtotal: 3.35,
+  );
 
   @override
   Future<Result<CartModel>> getCart({String? storeId}) async {

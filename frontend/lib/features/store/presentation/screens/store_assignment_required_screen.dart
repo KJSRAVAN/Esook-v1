@@ -18,10 +18,9 @@ class StoreAssignmentRequiredScreen extends StatelessWidget {
   Future<void> _handleLogout(BuildContext context) async {
     await authRepository.logout();
     if (context.mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.login,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
     }
   }
 
@@ -56,7 +55,9 @@ class StoreAssignmentRequiredScreen extends StatelessWidget {
                       height: 64,
                       decoration: BoxDecoration(
                         color: const Color(0xFFFEF3C7),
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
                       ),
                       child: const Icon(
                         Icons.store_mall_directory_outlined,
@@ -67,13 +68,17 @@ class StoreAssignmentRequiredScreen extends StatelessWidget {
                     const SizedBox(height: AppDimensions.spacingMd),
                     Text(
                       'Store Assignment Required',
-                      style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.w700),
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppDimensions.spacingSm),
                     Text(
                       'Your staff account is not currently assigned to a supermarket location. Please contact your system administrator to configure your store assignment.',
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppDimensions.spacingLg),

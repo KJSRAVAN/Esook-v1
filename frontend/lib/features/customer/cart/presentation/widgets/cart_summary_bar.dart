@@ -26,10 +26,7 @@ class CartSummaryBar extends StatelessWidget {
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(
-          top: BorderSide(
-            color: AppColors.borderSubtle,
-            width: 1.0,
-          ),
+          top: BorderSide(color: AppColors.borderSubtle, width: 1.0),
         ),
       ),
       child: SafeArea(
@@ -101,15 +98,21 @@ class CartSummaryBar extends StatelessWidget {
                     disabledForegroundColor: AppColors.textTertiary,
                     padding: const EdgeInsets.symmetric(vertical: 14.0),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMd,
+                      ),
                     ),
                     elevation: 0,
                   ),
                   child: Text(
-                    hasUnavailable ? 'Remove Unavailable Items' : 'Proceed to Checkout',
+                    hasUnavailable
+                        ? 'Remove Unavailable Items'
+                        : 'Proceed to Checkout',
                     style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: hasUnavailable ? AppColors.textTertiary : Colors.white,
+                      color: hasUnavailable
+                          ? AppColors.textTertiary
+                          : Colors.white,
                     ),
                   ),
                 ),

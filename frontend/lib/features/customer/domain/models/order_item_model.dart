@@ -3,15 +3,9 @@ class OrderItemInput {
   final String itemId;
   final int quantity;
 
-  const OrderItemInput({
-    required this.itemId,
-    required this.quantity,
-  });
+  const OrderItemInput({required this.itemId, required this.quantity});
 
-  Map<String, dynamic> toJson() => {
-        'itemId': itemId,
-        'quantity': quantity,
-      };
+  Map<String, dynamic> toJson() => {'itemId': itemId, 'quantity': quantity};
 
   @override
   bool operator ==(Object other) =>
@@ -49,8 +43,8 @@ class OrderItemModel {
     this.imageUrl,
     this.loyaltyPointsPerUnit = 0,
     int? subtotalPoints,
-  })  : subtotal = subtotal ?? (itemPrice * quantity),
-        subtotalPoints = subtotalPoints ?? (loyaltyPointsPerUnit * quantity);
+  }) : subtotal = subtotal ?? (itemPrice * quantity),
+       subtotalPoints = subtotalPoints ?? (loyaltyPointsPerUnit * quantity);
 
   String get productId => itemId;
   String get name => itemName;
@@ -89,19 +83,22 @@ class OrderItemModel {
           json['pointsPerUnit'] ??
           json['points_per_unit'],
     );
-    final subPoints = json['subtotalPoints'] != null || json['subtotal_points'] != null
+    final subPoints =
+        json['subtotalPoints'] != null || json['subtotal_points'] != null
         ? parseInt(json['subtotalPoints'] ?? json['subtotal_points'])
         : (pointsPerUnit * quantity);
 
     return OrderItemModel(
       id: json['id'] as String?,
       orderId: json['orderId'] as String? ?? json['order_id'] as String?,
-      itemId: json['itemId'] as String? ??
+      itemId:
+          json['itemId'] as String? ??
           json['item_id'] as String? ??
           json['productId'] as String? ??
           json['product_id'] as String? ??
           '',
-      itemName: json['itemName'] as String? ??
+      itemName:
+          json['itemName'] as String? ??
           json['item_name'] as String? ??
           json['name'] as String? ??
           json['productName'] as String? ??
@@ -168,5 +165,6 @@ class OrderItemModel {
           itemPrice == other.itemPrice;
 
   @override
-  int get hashCode => id.hashCode ^ itemId.hashCode ^ quantity.hashCode ^ itemPrice.hashCode;
+  int get hashCode =>
+      id.hashCode ^ itemId.hashCode ^ quantity.hashCode ^ itemPrice.hashCode;
 }

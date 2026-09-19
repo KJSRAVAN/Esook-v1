@@ -13,10 +13,7 @@ import '../widgets/auth_scope.dart';
 class SessionBootstrapScreen extends StatefulWidget {
   final AuthRepository? authRepository;
 
-  const SessionBootstrapScreen({
-    super.key,
-    this.authRepository,
-  });
+  const SessionBootstrapScreen({super.key, this.authRepository});
 
   @override
   State<SessionBootstrapScreen> createState() => _SessionBootstrapScreenState();
@@ -125,7 +122,9 @@ class _SessionBootstrapScreenState extends State<SessionBootstrapScreen> {
                     height: 28,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppDimensions.spacingMd),
@@ -141,7 +140,9 @@ class _SessionBootstrapScreenState extends State<SessionBootstrapScreen> {
                     padding: const EdgeInsets.all(AppDimensions.spacingMd),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMd,
+                      ),
                       border: Border.all(color: AppColors.borderSubtle),
                     ),
                     child: Column(
@@ -173,7 +174,9 @@ class _SessionBootstrapScreenState extends State<SessionBootstrapScreen> {
                         const SizedBox(height: AppDimensions.spacingSm),
                         TextButton(
                           onPressed: () {
-                            Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+                            Navigator.of(
+                              context,
+                            ).pushReplacementNamed(AppRoutes.login);
                           },
                           child: const Text('Go to Login'),
                         ),

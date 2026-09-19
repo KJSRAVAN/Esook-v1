@@ -43,8 +43,9 @@ void main() {
       );
     }
 
-    testWidgets('renders real user name, phone, email, and role badge',
-        (tester) async {
+    testWidgets('renders real user name, phone, email, and role badge', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWidget(initialUser: testUser));
       await tester.pumpAndSettle();
 
@@ -59,38 +60,43 @@ void main() {
       expect(find.text('Active'), findsOneWidget);
     });
 
-    testWidgets('Edit Profile action exists and navigates to CustomerEditProfileScreen',
-        (tester) async {
-      await tester.pumpWidget(buildTestWidget(initialUser: testUser));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Edit Profile action exists and navigates to CustomerEditProfileScreen',
+      (tester) async {
+        await tester.pumpWidget(buildTestWidget(initialUser: testUser));
+        await tester.pumpAndSettle();
 
-      final editTile = find.byKey(const Key('account_edit_profile_tile'));
-      expect(editTile, findsOneWidget);
+        final editTile = find.byKey(const Key('account_edit_profile_tile'));
+        expect(editTile, findsOneWidget);
 
-      await tester.tap(editTile);
-      await tester.pumpAndSettle();
+        await tester.tap(editTile);
+        await tester.pumpAndSettle();
 
-      expect(find.byType(CustomerEditProfileScreen), findsOneWidget);
-      expect(find.text('Edit Profile'), findsOneWidget);
-    });
+        expect(find.byType(CustomerEditProfileScreen), findsOneWidget);
+        expect(find.text('Edit Profile'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Sign Out button remains functional and calls repository logout',
-        (tester) async {
-      await tester.pumpWidget(buildTestWidget(initialUser: testUser));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Sign Out button remains functional and calls repository logout',
+      (tester) async {
+        await tester.pumpWidget(buildTestWidget(initialUser: testUser));
+        await tester.pumpAndSettle();
 
-      final signOutBtn = find.byKey(const Key('account_signout_button'));
-      expect(signOutBtn, findsOneWidget);
+        final signOutBtn = find.byKey(const Key('account_signout_button'));
+        expect(signOutBtn, findsOneWidget);
 
-      await tester.tap(signOutBtn);
-      await tester.pumpAndSettle();
+        await tester.tap(signOutBtn);
+        await tester.pumpAndSettle();
 
-      expect(mockAuthRepository.logoutCallCount, equals(1));
-      expect(find.text('Login Screen'), findsOneWidget);
-    });
+        expect(mockAuthRepository.logoutCallCount, equals(1));
+        expect(find.text('Login Screen'), findsOneWidget);
+      },
+    );
 
-    testWidgets('refreshes profile information when refresh button is tapped',
-        (tester) async {
+    testWidgets('refreshes profile information when refresh button is tapped', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWidget(initialUser: testUser));
       await tester.pumpAndSettle();
 

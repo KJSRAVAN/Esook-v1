@@ -72,11 +72,15 @@ class StoreModel {
       area: parseArea(areaVal),
       areaId: parseAreaId(areaVal, explicitAreaId),
       address: json['address'] as String?,
-      phoneNumber: json['phone'] as String? ??
+      phoneNumber:
+          json['phone'] as String? ??
           json['phone_number'] as String? ??
           json['phoneNumber'] as String?,
       isActive: json['isActive'] as bool? ?? json['is_active'] as bool? ?? true,
-      itemCount: parseItemCount(json['_count'], json['item_count'] ?? json['itemCount']),
+      itemCount: parseItemCount(
+        json['_count'],
+        json['item_count'] ?? json['itemCount'],
+      ),
       createdAt: parseDate(json['createdAt'] ?? json['created_at']),
       updatedAt: parseDate(json['updatedAt'] ?? json['updated_at']),
     );

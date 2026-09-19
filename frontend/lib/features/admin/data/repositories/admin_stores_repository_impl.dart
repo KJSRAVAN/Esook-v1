@@ -10,7 +10,8 @@ import '../../domain/repositories/admin_stores_repository.dart';
 class AdminStoresRepositoryImpl implements AdminStoresRepository {
   final ApiClient _apiClient;
 
-  const AdminStoresRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
+  const AdminStoresRepositoryImpl({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
   @override
   Future<Result<List<AdminStoreModel>>> getStores() async {
@@ -23,7 +24,9 @@ class AdminStoresRepositoryImpl implements AdminStoresRepository {
       if (rawData is List) {
         rawList = rawData;
       } else if (rawData is Map<String, dynamic>) {
-        rawList = (rawData['stores'] ?? rawData['data']) as List<dynamic>? ?? const [];
+        rawList =
+            (rawData['stores'] ?? rawData['data']) as List<dynamic>? ??
+            const [];
       } else {
         rawList = const [];
       }
@@ -37,15 +40,42 @@ class AdminStoresRepositoryImpl implements AdminStoresRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch stores: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch stores: $e'),
+      );
     }
   }
 
   @override
   Future<Result<List<AdminAreaModel>>> getAreas() async {
-    // The production backend has no standalone /stores/areas endpoint;
-    // delivery areas are represented directly as strings on stores.
-    return Result.success(const []);
+    try {
+      final response = await _apiClient.get<dynamic>('/stores/areas');
+
+      final dynamic rawData = response.data;
+      final List<dynamic> rawList;
+
+      if (rawData is List) {
+        rawList = rawData;
+      } else if (rawData is Map<String, dynamic>) {
+        rawList =
+            (rawData['areas'] ?? rawData['data']) as List<dynamic>? ?? const [];
+      } else {
+        rawList = const [];
+      }
+
+      final areas = rawList
+          .whereType<Map<String, dynamic>>()
+          .map(AdminAreaModel.fromJson)
+          .toList();
+
+      return Result.success(areas);
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch areas: $e'),
+      );
+    }
   }
 
   @override
@@ -58,19 +88,16 @@ class AdminStoresRepositoryImpl implements AdminStoresRepository {
     bool? isActive,
   }) async {
     try {
-      final effectiveArea = (area ?? areaId ?? '').trim();
+      final effectiveAreaId = (areaId ?? area ?? '').trim();
       final body = <String, dynamic>{
         'name': name.trim(),
-        'area': effectiveArea,
-        if (address != null && address.trim().isNotEmpty) 'address': address.trim(),
-        if (phone != null && phone.trim().isNotEmpty) 'phone_number': phone.trim(),
-        if (isActive != null) 'is_active': isActive,
+        'areaId': effectiveAreaId,
+        if (address != null && address.trim().isNotEmpty)
+          'address': address.trim(),
+        if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
       };
 
-      final response = await _apiClient.post<dynamic>(
-        '/stores',
-        body: body,
-      );
+      final response = await _apiClient.post<dynamic>('/stores', body: body);
 
       final dynamic rawData = response.data;
       final Map<String, dynamic> rawStore;
@@ -91,7 +118,9 @@ class AdminStoresRepositoryImpl implements AdminStoresRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to create store: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to create store: $e'),
+      );
     }
   }
 
@@ -107,10 +136,11 @@ class AdminStoresRepositoryImpl implements AdminStoresRepository {
     try {
       final body = <String, dynamic>{
         if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
-        if (area != null && area.trim().isNotEmpty) 'area': area.trim(),
-        if (address != null && address.trim().isNotEmpty) 'address': address.trim(),
-        if (phone != null && phone.trim().isNotEmpty) 'phone_number': phone.trim(),
-        if (isActive != null) 'is_active': isActive,
+        if (area != null && area.trim().isNotEmpty) 'areaId': area.trim(),
+        if (address != null && address.trim().isNotEmpty)
+          'address': address.trim(),
+        if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
+        if (isActive != null) 'isActive': isActive,
       };
 
       final response = await _apiClient.patch<dynamic>(
@@ -137,7 +167,9 @@ class AdminStoresRepositoryImpl implements AdminStoresRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to update store $storeId: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to update store $storeId: $e'),
+      );
     }
   }
 }

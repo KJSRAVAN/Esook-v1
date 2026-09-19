@@ -16,8 +16,10 @@ class AuthResponseModel {
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
     final userJson = json['user'] as Map<String, dynamic>? ?? {};
-    final token = json['token'] as String? ?? json['accessToken'] as String? ?? '';
-    final refreshToken = json['refreshToken'] as String? ?? json['refresh_token'] as String?;
+    final token =
+        json['token'] as String? ?? json['accessToken'] as String? ?? '';
+    final refreshToken =
+        json['refreshToken'] as String? ?? json['refresh_token'] as String?;
     final isNew = json['isNew'] as bool? ?? json['is_new'] as bool? ?? false;
 
     return AuthResponseModel(
@@ -52,5 +54,6 @@ class AuthResponseModel {
       user.hashCode ^ token.hashCode ^ refreshToken.hashCode ^ isNew.hashCode;
 
   @override
-  String toString() => 'AuthResponseModel(user: ${user.fullName}, token: [REDACTED])';
+  String toString() =>
+      'AuthResponseModel(user: ${user.fullName}, token: [REDACTED])';
 }

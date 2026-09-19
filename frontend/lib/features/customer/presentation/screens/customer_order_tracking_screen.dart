@@ -191,8 +191,9 @@ class _CustomerOrderTrackingScreenState
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.primary,
+                        ),
                       ),
                     )
                   : const Icon(Icons.refresh_rounded),
@@ -202,9 +203,7 @@ class _CustomerOrderTrackingScreenState
             ),
         ],
       ),
-      body: SafeArea(
-        child: _buildBody(),
-      ),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
@@ -224,19 +223,24 @@ class _CustomerOrderTrackingScreenState
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline_rounded,
-                  size: 48, color: AppColors.error),
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: AppColors.error,
+              ),
               const SizedBox(height: AppDimensions.spacingMd),
               Text(
                 'Unable to load order details',
-                style: AppTextStyles.titleMedium
-                    .copyWith(fontWeight: FontWeight.w700),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppDimensions.spacingXs),
               Text(
                 _errorMessage!,
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingLg),
@@ -357,14 +361,16 @@ class _CustomerOrderTrackingScreenState
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.12),
-                    borderRadius:
-                        BorderRadius.circular(AppDimensions.radiusSm),
-                    border:
-                        Border.all(color: statusColor.withValues(alpha: 0.3)),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     order.status.displayName,
@@ -477,8 +483,7 @@ class _CustomerOrderTrackingScreenState
       ),
       child: const Row(
         children: [
-          Icon(Icons.remove_circle_outline,
-              color: Color(0xFFD97706), size: 24),
+          Icon(Icons.remove_circle_outline, color: Color(0xFFD97706), size: 24),
           SizedBox(width: AppDimensions.spacingSm),
           Expanded(
             child: Column(
@@ -495,10 +500,7 @@ class _CustomerOrderTrackingScreenState
                 SizedBox(height: 2),
                 Text(
                   'This order has been cancelled and will not be fulfilled.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFFB45309),
-                  ),
+                  style: TextStyle(fontSize: 13, color: Color(0xFFB45309)),
                 ),
               ],
             ),
@@ -600,18 +602,18 @@ class _CustomerOrderTrackingScreenState
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Order Progress',
-                  style: AppTextStyles.titleMedium,
-                ),
+                const Text('Order Progress', style: AppTextStyles.titleMedium),
                 if (!_isTerminalState)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primaryLight,
-                      borderRadius:
-                          BorderRadius.circular(AppDimensions.radiusFull),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusFull,
+                      ),
                     ),
                     child: const Text(
                       'Live Updates',
@@ -770,8 +772,8 @@ class _CustomerOrderTrackingScreenState
                     color: isCurrent
                         ? AppColors.primary
                         : (isCompleted
-                            ? AppColors.textPrimary
-                            : AppColors.textTertiary),
+                              ? AppColors.textPrimary
+                              : AppColors.textTertiary),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -908,8 +910,9 @@ class _CustomerOrderTrackingScreenState
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(
                   'No item details available.',
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.textTertiary),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
                 ),
               )
             else
@@ -943,8 +946,9 @@ class _CustomerOrderTrackingScreenState
                 const Text('Subtotal', style: AppTextStyles.bodyMedium),
                 Text(
                   '${order.subtotal.toStringAsFixed(2)} ${widget.currency}',
-                  style: AppTextStyles.bodyMedium
-                      .copyWith(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -972,8 +976,9 @@ class _CustomerOrderTrackingScreenState
                   const Text('Delivery Fee', style: AppTextStyles.bodyMedium),
                   Text(
                     '${order.deliveryFee.toStringAsFixed(2)} ${widget.currency}',
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(fontWeight: FontWeight.w600),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),

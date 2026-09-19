@@ -56,10 +56,17 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('renders empty cart state when store cart has 0 items', (tester) async {
+    testWidgets('renders empty cart state when store cart has 0 items', (
+      tester,
+    ) async {
       mockRepo.cartToReturn = const CartModel(
         cartId: null,
-        store: CartStoreRef(id: 's-1', name: 'eSOuQ Olaya Flagship', area: 'Olaya', isActive: true),
+        store: CartStoreRef(
+          id: 's-1',
+          name: 'eSOuQ Olaya Flagship',
+          area: 'Olaya',
+          isActive: true,
+        ),
         items: [],
         subtotal: 0.0,
         itemCount: 0,
@@ -72,11 +79,18 @@ void main() {
 
       expect(find.byType(CartEmptyState), findsOneWidget);
       expect(find.text('Your Cart is Empty'), findsOneWidget);
-      expect(find.byKey(const Key('cart_explore_market_button')), findsOneWidget);
+      expect(
+        find.byKey(const Key('cart_explore_market_button')),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('renders error view on failure and allows retry', (tester) async {
-      mockRepo.failureToReturn = const ServerFailure(message: 'Database unavailable');
+    testWidgets('renders error view on failure and allows retry', (
+      tester,
+    ) async {
+      mockRepo.failureToReturn = const ServerFailure(
+        message: 'Database unavailable',
+      );
 
       await notifier.loadForStore('s-1');
       await tester.pumpWidget(buildWidget());
@@ -94,23 +108,36 @@ void main() {
       expect(find.byType(CartItemTile), findsNWidgets(2));
     });
 
-    testWidgets('renders populated cart with items, subtotal, and summary bar', (tester) async {
-      await notifier.loadForStore('s-1');
-      await tester.pumpWidget(buildWidget());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'renders populated cart with items, subtotal, and summary bar',
+      (tester) async {
+        await notifier.loadForStore('s-1');
+        await tester.pumpWidget(buildWidget());
+        await tester.pumpAndSettle();
 
-      expect(find.byType(CartItemTile), findsNWidgets(2));
-      expect(find.text('Fresh Whole Milk 1L'), findsOneWidget);
-      expect(find.text('Organic Bananas 1kg'), findsOneWidget);
-      expect(find.text('3.35 ${AppConstants.defaultCurrency}'), findsOneWidget);
-      expect(find.byType(CartSummaryBar), findsOneWidget);
-      expect(find.byKey(const Key('cart_checkout_button')), findsOneWidget);
-    });
+        expect(find.byType(CartItemTile), findsNWidgets(2));
+        expect(find.text('Fresh Whole Milk 1L'), findsOneWidget);
+        expect(find.text('Organic Bananas 1kg'), findsOneWidget);
+        expect(
+          find.text('3.35 ${AppConstants.defaultCurrency}'),
+          findsOneWidget,
+        );
+        expect(find.byType(CartSummaryBar), findsOneWidget);
+        expect(find.byKey(const Key('cart_checkout_button')), findsOneWidget);
+      },
+    );
 
-    testWidgets('renders unavailable items banner and disables checkout', (tester) async {
+    testWidgets('renders unavailable items banner and disables checkout', (
+      tester,
+    ) async {
       mockRepo.cartToReturn = const CartModel(
         cartId: 'cart-1',
-        store: CartStoreRef(id: 's-1', name: 'eSOuQ Olaya Flagship', area: 'Olaya', isActive: true),
+        store: CartStoreRef(
+          id: 's-1',
+          name: 'eSOuQ Olaya Flagship',
+          area: 'Olaya',
+          isActive: true,
+        ),
         items: [
           CartItemModel(
             itemId: 'item-1',
@@ -121,7 +148,7 @@ void main() {
             loyaltyPointsPerUnit: 0,
             quantity: 1,
             itemSubtotal: 1.00,
-          )
+          ),
         ],
         subtotal: 1.00,
         itemCount: 1,
@@ -136,11 +163,15 @@ void main() {
       expect(find.text('Currently Unavailable'), findsOneWidget);
       expect(find.text('Remove Unavailable Items'), findsOneWidget);
 
-      final button = tester.widget<ElevatedButton>(find.byKey(const Key('cart_checkout_button')));
+      final button = tester.widget<ElevatedButton>(
+        find.byKey(const Key('cart_checkout_button')),
+      );
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('shows confirmation dialog and clears cart on confirm', (tester) async {
+    testWidgets('shows confirmation dialog and clears cart on confirm', (
+      tester,
+    ) async {
       await notifier.loadForStore('s-1');
       await tester.pumpWidget(buildWidget());
       await tester.pumpAndSettle();

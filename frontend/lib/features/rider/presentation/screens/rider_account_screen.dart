@@ -14,11 +14,7 @@ class RiderAccountScreen extends StatefulWidget {
   final AuthRepository? authRepository;
   final UserModel? currentUser;
 
-  const RiderAccountScreen({
-    super.key,
-    this.authRepository,
-    this.currentUser,
-  });
+  const RiderAccountScreen({super.key, this.authRepository, this.currentUser});
 
   @override
   State<RiderAccountScreen> createState() => _RiderAccountScreenState();
@@ -60,10 +56,9 @@ class _RiderAccountScreenState extends State<RiderAccountScreen> {
 
     if (!mounted) return;
 
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      AppRoutes.login,
-      (route) => false,
-    );
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
   }
 
   @override
@@ -99,7 +94,10 @@ class _RiderAccountScreenState extends State<RiderAccountScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF7ED),
                     borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-                    border: Border.all(color: const Color(0xFFFED7AA), width: 2),
+                    border: Border.all(
+                      color: const Color(0xFFFED7AA),
+                      width: 2,
+                    ),
                   ),
                   child: const Icon(
                     Icons.delivery_dining_rounded,
@@ -134,10 +132,15 @@ class _RiderAccountScreenState extends State<RiderAccountScreen> {
 
                 // Role badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF7ED),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusFull,
+                    ),
                     border: Border.all(color: const Color(0xFFFED7AA)),
                   ),
                   child: const Text(
@@ -180,7 +183,9 @@ class _RiderAccountScreenState extends State<RiderAccountScreen> {
                   icon: Icons.verified_user_outlined,
                   label: 'Status',
                   value: (user?.isActive ?? false) ? 'Active' : 'Inactive',
-                  valueColor: (user?.isActive ?? false) ? AppColors.success : AppColors.error,
+                  valueColor: (user?.isActive ?? false)
+                      ? AppColors.success
+                      : AppColors.error,
                 ),
               ],
             ),

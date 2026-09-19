@@ -7,8 +7,14 @@ void main() {
     test('parses all valid backend roles', () {
       expect(UserRole.fromString('customer'), equals(UserRole.customer));
       expect(UserRole.fromString('store_staff'), equals(UserRole.storeStaff));
-      expect(UserRole.fromString('store_manager'), equals(UserRole.storeManager));
-      expect(UserRole.fromString('delivery_rider'), equals(UserRole.deliveryRider));
+      expect(
+        UserRole.fromString('store_manager'),
+        equals(UserRole.storeManager),
+      );
+      expect(
+        UserRole.fromString('delivery_rider'),
+        equals(UserRole.deliveryRider),
+      );
       expect(UserRole.fromString('driver'), equals(UserRole.deliveryRider));
       expect(UserRole.fromString('DRIVER'), equals(UserRole.deliveryRider));
       expect(UserRole.fromString('super_admin'), equals(UserRole.superAdmin));

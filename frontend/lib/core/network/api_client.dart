@@ -52,8 +52,8 @@ class DefaultApiClient implements ApiClient {
     HttpTransport? transport,
     Future<String?> Function()? tokenProvider,
     this.timeout = const Duration(seconds: 15),
-  })  : _transport = transport ?? PackageHttpTransport(),
-        _tokenProvider = tokenProvider;
+  }) : _transport = transport ?? PackageHttpTransport(),
+       _tokenProvider = tokenProvider;
 
   @override
   Future<ApiResponse<T>> get<T>(
@@ -61,14 +61,13 @@ class DefaultApiClient implements ApiClient {
     Map<String, String>? headers,
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
-  }) =>
-      _request<T>(
-        path: path,
-        method: HttpMethod.get,
-        headers: headers,
-        queryParameters: queryParameters,
-        fromJson: fromJson,
-      );
+  }) => _request<T>(
+    path: path,
+    method: HttpMethod.get,
+    headers: headers,
+    queryParameters: queryParameters,
+    fromJson: fromJson,
+  );
 
   @override
   Future<ApiResponse<T>> post<T>(
@@ -77,15 +76,14 @@ class DefaultApiClient implements ApiClient {
     Map<String, String>? headers,
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
-  }) =>
-      _request<T>(
-        path: path,
-        method: HttpMethod.post,
-        body: body,
-        headers: headers,
-        queryParameters: queryParameters,
-        fromJson: fromJson,
-      );
+  }) => _request<T>(
+    path: path,
+    method: HttpMethod.post,
+    body: body,
+    headers: headers,
+    queryParameters: queryParameters,
+    fromJson: fromJson,
+  );
 
   @override
   Future<ApiResponse<T>> patch<T>(
@@ -94,15 +92,14 @@ class DefaultApiClient implements ApiClient {
     Map<String, String>? headers,
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
-  }) =>
-      _request<T>(
-        path: path,
-        method: HttpMethod.patch,
-        body: body,
-        headers: headers,
-        queryParameters: queryParameters,
-        fromJson: fromJson,
-      );
+  }) => _request<T>(
+    path: path,
+    method: HttpMethod.patch,
+    body: body,
+    headers: headers,
+    queryParameters: queryParameters,
+    fromJson: fromJson,
+  );
 
   @override
   Future<ApiResponse<T>> delete<T>(
@@ -111,15 +108,14 @@ class DefaultApiClient implements ApiClient {
     Map<String, String>? headers,
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
-  }) =>
-      _request<T>(
-        path: path,
-        method: HttpMethod.delete,
-        body: body,
-        headers: headers,
-        queryParameters: queryParameters,
-        fromJson: fromJson,
-      );
+  }) => _request<T>(
+    path: path,
+    method: HttpMethod.delete,
+    body: body,
+    headers: headers,
+    queryParameters: queryParameters,
+    fromJson: fromJson,
+  );
 
   Future<ApiResponse<T>> _request<T>({
     required String path,
@@ -145,7 +141,9 @@ class DefaultApiClient implements ApiClient {
   }
 
   Uri _buildUri(String path, Map<String, dynamic>? queryParameters) {
-    final cleanBase = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+    final cleanBase = baseUrl.endsWith('/')
+        ? baseUrl.substring(0, baseUrl.length - 1)
+        : baseUrl;
     final cleanPath = path.startsWith('/') ? path : '/$path';
     final fullUrl = '$cleanBase$cleanPath';
 
@@ -158,13 +156,14 @@ class DefaultApiClient implements ApiClient {
       (key, value) => MapEntry(key, value?.toString() ?? ''),
     );
 
-    return uri.replace(queryParameters: {
-      ...uri.queryParameters,
-      ...stringParams,
-    });
+    return uri.replace(
+      queryParameters: {...uri.queryParameters, ...stringParams},
+    );
   }
 
-  Future<Map<String, String>> _buildHeaders(Map<String, String>? customHeaders) async {
+  Future<Map<String, String>> _buildHeaders(
+    Map<String, String>? customHeaders,
+  ) async {
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -220,7 +219,9 @@ class DefaultApiClient implements ApiClient {
       );
     }
 
-    final errorMessage = _extractErrorMessage(decodedJson) ?? 'Request failed with status $statusCode';
+    final errorMessage =
+        _extractErrorMessage(decodedJson) ??
+        'Request failed with status $statusCode';
 
     if (statusCode == 401) {
       throw UnauthorizedException(

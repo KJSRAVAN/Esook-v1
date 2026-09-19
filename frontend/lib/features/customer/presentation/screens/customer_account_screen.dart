@@ -87,10 +87,9 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
 
     await _repository.logout();
     if (context.mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.login,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
     }
   }
 
@@ -159,15 +158,18 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                           Card(
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppDimensions.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusMd,
+                              ),
                               side: const BorderSide(
-                                  color: AppColors.borderSubtle),
+                                color: AppColors.borderSubtle,
+                              ),
                             ),
                             color: AppColors.surface,
                             child: Padding(
-                              padding:
-                                  const EdgeInsets.all(AppDimensions.spacingMd),
+                              padding: const EdgeInsets.all(
+                                AppDimensions.spacingMd,
+                              ),
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -181,7 +183,8 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                                         decoration: BoxDecoration(
                                           color: AppColors.primaryLight,
                                           borderRadius: BorderRadius.circular(
-                                              AppDimensions.radiusMd),
+                                            AppDimensions.radiusMd,
+                                          ),
                                         ),
                                         child: const Icon(
                                           Icons.person_outline_rounded,
@@ -190,7 +193,8 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                                         ),
                                       ),
                                       const SizedBox(
-                                          width: AppDimensions.spacingSm),
+                                        width: AppDimensions.spacingSm,
+                                      ),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment:
@@ -201,32 +205,37 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                                               style: AppTextStyles.titleMedium,
                                             ),
                                             Text(
-                                              _currentUser?.fullName
+                                              _currentUser
+                                                          ?.fullName
                                                           .isNotEmpty ==
                                                       true
                                                   ? _currentUser!.fullName
                                                   : 'eSOuQ Customer',
                                               key: const Key(
-                                                  'account_user_name'),
+                                                'account_user_name',
+                                              ),
                                               style: theme.textTheme.bodyMedium
                                                   ?.copyWith(
-                                                fontWeight: FontWeight.w600,
-                                                color: AppColors.textPrimary,
-                                              ),
+                                                    fontWeight: FontWeight.w600,
+                                                    color:
+                                                        AppColors.textPrimary,
+                                                  ),
                                               overflow: TextOverflow.ellipsis,
                                             ),
-                                            if (_currentUser?.phoneNumber
+                                            if (_currentUser
+                                                    ?.phoneNumber
                                                     .isNotEmpty ==
                                                 true)
                                               Text(
                                                 _currentUser!.phoneNumber,
                                                 key: const Key(
-                                                    'account_user_phone'),
+                                                  'account_user_phone',
+                                                ),
                                                 style: theme.textTheme.bodySmall
                                                     ?.copyWith(
-                                                  color:
-                                                      AppColors.textSecondary,
-                                                ),
+                                                      color: AppColors
+                                                          .textSecondary,
+                                                    ),
                                               ),
                                           ],
                                         ),
@@ -237,12 +246,15 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                                         children: [
                                           Container(
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 3),
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: AppColors.primaryLight,
                                               borderRadius:
                                                   BorderRadius.circular(
-                                                      AppDimensions.radiusFull),
+                                                    AppDimensions.radiusFull,
+                                                  ),
                                             ),
                                             child: const Text(
                                               'Customer',
@@ -256,15 +268,19 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                                           const SizedBox(height: 4),
                                           Container(
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 2),
+                                              horizontal: 8,
+                                              vertical: 2,
+                                            ),
                                             decoration: BoxDecoration(
-                                              color: (_currentUser?.isActive ??
+                                              color:
+                                                  (_currentUser?.isActive ??
                                                       true)
                                                   ? const Color(0xFFD1FAE5)
                                                   : const Color(0xFFFEE2E2),
                                               borderRadius:
                                                   BorderRadius.circular(
-                                                      AppDimensions.radiusFull),
+                                                    AppDimensions.radiusFull,
+                                                  ),
                                             ),
                                             child: Text(
                                               (_currentUser?.isActive ?? true)
@@ -273,8 +289,8 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                                               style: TextStyle(
                                                 fontSize: 9,
                                                 fontWeight: FontWeight.w600,
-                                                color: (_currentUser
-                                                            ?.isActive ??
+                                                color:
+                                                    (_currentUser?.isActive ??
                                                         true)
                                                     ? const Color(0xFF059669)
                                                     : AppColors.error,
@@ -287,7 +303,8 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                                   ),
 
                                   const SizedBox(
-                                      height: AppDimensions.spacingSm),
+                                    height: AppDimensions.spacingSm,
+                                  ),
                                   const Divider(height: 1),
 
                                   // Edit Profile Action Tile
@@ -324,12 +341,15 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                                   // Email row
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
-                                        vertical: 6.0),
+                                      vertical: 6.0,
+                                    ),
                                     child: Row(
                                       children: [
-                                        const Icon(Icons.email_outlined,
-                                            size: 16,
-                                            color: AppColors.textSecondary),
+                                        const Icon(
+                                          Icons.email_outlined,
+                                          size: 16,
+                                          color: AppColors.textSecondary,
+                                        ),
                                         const SizedBox(width: 8),
                                         const Text(
                                           'Email: ',
@@ -343,11 +363,13 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                                           child: Text(
                                             _currentUser?.email != null &&
                                                     _currentUser!
-                                                        .email!.isNotEmpty
+                                                        .email!
+                                                        .isNotEmpty
                                                 ? _currentUser!.email!
                                                 : 'Not set',
                                             key: const Key(
-                                                'account_user_email'),
+                                              'account_user_email',
+                                            ),
                                             style: const TextStyle(
                                               fontSize: 12,
                                               color: AppColors.textPrimary,
@@ -378,18 +400,20 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                                       width: 18,
                                       height: 18,
                                       child: CircularProgressIndicator(
-                                          strokeWidth: 2),
+                                        strokeWidth: 2,
+                                      ),
                                     )
                                   : const Icon(Icons.logout_rounded, size: 20),
-                              label: Text(_isLoggingOut
-                                  ? 'Signing out...'
-                                  : 'Sign Out'),
+                              label: Text(
+                                _isLoggingOut ? 'Signing out...' : 'Sign Out',
+                              ),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: AppColors.error,
                                 side: const BorderSide(color: AppColors.error),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(
-                                      AppDimensions.radiusSm),
+                                    AppDimensions.radiusSm,
+                                  ),
                                 ),
                               ),
                             ),

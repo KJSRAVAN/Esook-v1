@@ -12,10 +12,7 @@ import '../widgets/create_driver_dialog.dart';
 class AdminDriversScreen extends StatefulWidget {
   final AdminDriversRepository? driversRepository;
 
-  const AdminDriversScreen({
-    super.key,
-    this.driversRepository,
-  });
+  const AdminDriversScreen({super.key, this.driversRepository});
 
   @override
   State<AdminDriversScreen> createState() => _AdminDriversScreenState();
@@ -53,7 +50,8 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to load drivers fleet';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to load drivers fleet';
       });
     }
   }
@@ -67,7 +65,9 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
     if (createdDriver != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Driver "${createdDriver.name}" registered successfully!'),
+          content: Text(
+            'Driver "${createdDriver.name}" registered successfully!',
+          ),
           backgroundColor: AppColors.success,
           duration: const Duration(seconds: 3),
         ),
@@ -100,9 +100,7 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
         backgroundColor: const Color(0xFFEA580C),
         foregroundColor: Colors.white,
       ),
-      body: SafeArea(
-        child: _buildBody(),
-      ),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
@@ -122,16 +120,24 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.error,
+                size: 48,
+              ),
               const SizedBox(height: AppDimensions.spacingSm),
               Text(
                 'Unable to Load Drivers',
-                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppDimensions.spacingXs),
               Text(
                 _errorMessage!,
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingMd),
@@ -174,12 +180,16 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
               const SizedBox(height: AppDimensions.spacingMd),
               Text(
                 'No Drivers Registered',
-                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppDimensions.spacingXs),
               Text(
                 'Add driver accounts to enable order pickup and home delivery dispatch.',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingLg),
@@ -207,7 +217,8 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
         80, // Padding for FAB
       ),
       itemCount: _drivers.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.spacingSm),
+      separatorBuilder: (_, __) =>
+          const SizedBox(height: AppDimensions.spacingSm),
       itemBuilder: (context, index) {
         final driver = _drivers[index];
         return Card(
@@ -239,23 +250,32 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
                           Flexible(
                             child: Text(
                               driver.name,
-                              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w600),
+                              style: AppTextStyles.titleMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: AppDimensions.spacingSm),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.success.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusFull,
+                              ),
                             ),
                             child: Text(
                               driver.isActive ? 'Active' : 'Inactive',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
-                                color: driver.isActive ? AppColors.success : AppColors.error,
+                                color: driver.isActive
+                                    ? AppColors.success
+                                    : AppColors.error,
                               ),
                             ),
                           ),
@@ -265,11 +285,17 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
                       if (driver.phone != null)
                         Row(
                           children: [
-                            const Icon(Icons.phone_outlined, size: 14, color: AppColors.textSecondary),
+                            const Icon(
+                              Icons.phone_outlined,
+                              size: 14,
+                              color: AppColors.textSecondary,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               driver.phone!,
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           ],
                         ),

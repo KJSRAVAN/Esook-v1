@@ -48,7 +48,9 @@ class CategoryModel {
       storeId: json['storeId'] as String? ?? json['store_id'] as String? ?? '',
       name: json['name'] as String? ?? '',
       sortOrder: parseSortOrder(json['sortOrder'] ?? json['sort_order']),
-      itemCount: parseCount(json['_count'] ?? json['itemCount'] ?? json['item_count']),
+      itemCount: parseCount(
+        json['_count'] ?? json['itemCount'] ?? json['item_count'],
+      ),
       createdAt: parseDate(json['createdAt'] ?? json['created_at']),
       updatedAt: parseDate(json['updatedAt'] ?? json['updated_at']),
     );

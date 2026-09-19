@@ -3,75 +3,81 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ProductModel', () {
-    test('parses backend Prisma Item response with nested category object correctly', () {
-      final json = {
-        'id': 'item-101',
-        'storeId': 'store-1',
-        'categoryId': 'cat-1',
-        'name': 'Mango Juice 1L',
-        'description': 'Fresh mango juice, chilled',
-        'price': 12.5,
-        'imageUrl': 'https://cdn.example.com/mango.jpg',
-        'isAvailable': true,
-        'sortOrder': 3,
-        'category': {
-          'id': 'cat-1',
+    test(
+      'parses backend Prisma Item response with nested category object correctly',
+      () {
+        final json = {
+          'id': 'item-101',
           'storeId': 'store-1',
-          'name': 'Beverages',
-          'sortOrder': 0,
+          'categoryId': 'cat-1',
+          'name': 'Mango Juice 1L',
+          'description': 'Fresh mango juice, chilled',
+          'price': 12.5,
+          'imageUrl': 'https://cdn.example.com/mango.jpg',
+          'isAvailable': true,
+          'sortOrder': 3,
+          'category': {
+            'id': 'cat-1',
+            'storeId': 'store-1',
+            'name': 'Beverages',
+            'sortOrder': 0,
+            'createdAt': '2026-09-07T19:06:18.000Z',
+            'updatedAt': '2026-09-07T19:06:18.000Z',
+          },
           'createdAt': '2026-09-07T19:06:18.000Z',
           'updatedAt': '2026-09-07T19:06:18.000Z',
-        },
-        'createdAt': '2026-09-07T19:06:18.000Z',
-        'updatedAt': '2026-09-07T19:06:18.000Z',
-      };
+        };
 
-      final product = ProductModel.fromJson(json);
+        final product = ProductModel.fromJson(json);
 
-      expect(product.id, equals('item-101'));
-      expect(product.storeId, equals('store-1'));
-      expect(product.categoryId, equals('cat-1'));
-      expect(product.name, equals('Mango Juice 1L'));
-      expect(product.description, equals('Fresh mango juice, chilled'));
-      expect(product.price, equals(12.5));
-      expect(product.category, equals('Beverages'));
-      expect(product.imageUrl, equals('https://cdn.example.com/mango.jpg'));
-      expect(product.isAvailable, isTrue);
-      expect(product.sortOrder, equals(3));
-      expect(product.loyaltyPointsPerUnit, equals(0));
-      expect(product.createdAt, isNotNull);
-      expect(product.updatedAt, isNotNull);
-    });
+        expect(product.id, equals('item-101'));
+        expect(product.storeId, equals('store-1'));
+        expect(product.categoryId, equals('cat-1'));
+        expect(product.name, equals('Mango Juice 1L'));
+        expect(product.description, equals('Fresh mango juice, chilled'));
+        expect(product.price, equals(12.5));
+        expect(product.category, equals('Beverages'));
+        expect(product.imageUrl, equals('https://cdn.example.com/mango.jpg'));
+        expect(product.isAvailable, isTrue);
+        expect(product.sortOrder, equals(3));
+        expect(product.loyaltyPointsPerUnit, equals(0));
+        expect(product.createdAt, isNotNull);
+        expect(product.updatedAt, isNotNull);
+      },
+    );
 
-    test('parses full legacy JSON response with string numeric price correctly', () {
-      final json = {
-        'id': 'p-1',
-        'store_id': 's-1',
-        'name': 'Fresh Milk 1L',
-        'description': 'Pure cow milk',
-        'price': '6.50',
-        'category': 'Dairy & Eggs',
-        'image_url': 'https://example.com/milk.jpg',
-        'is_available': true,
-        'loyalty_points_per_unit': 5,
-        'created_at': '2026-09-10T12:00:00.000Z',
-        'updated_at': '2026-09-10T13:00:00.000Z',
-      };
+    test(
+      'parses full legacy JSON response with string numeric price correctly',
+      () {
+        final json = {
+          'id': 'p-1',
+          'store_id': 's-1',
+          'name': 'Fresh Milk 1L',
+          'description': 'Pure cow milk',
+          'price': '6.50',
+          'category': 'Dairy & Eggs',
+          'image_url': 'https://example.com/milk.jpg',
+          'is_available': true,
+          'loyalty_points_per_unit': 5,
+          'created_at': '2026-09-10T12:00:00.000Z',
+          'updated_at': '2026-09-10T13:00:00.000Z',
+        };
 
-      final product = ProductModel.fromJson(json);
+        final product = ProductModel.fromJson(json);
 
-      expect(product.id, equals('p-1'));
-      expect(product.storeId, equals('s-1'));
-      expect(product.name, equals('Fresh Milk 1L'));
-      expect(product.description, equals('Pure cow milk'));
-      expect(product.price, equals(6.50));
-      expect(product.category, equals('Dairy & Eggs'));
-      expect(product.imageUrl, equals('https://example.com/milk.jpg'));
-      expect(product.isAvailable, isTrue);
-      expect(product.loyaltyPointsPerUnit, equals(5));
-      expect(product.createdAt, isNotNull);
-      expect(product.updatedAt, isNotNull);
-    });
+        expect(product.id, equals('p-1'));
+        expect(product.storeId, equals('s-1'));
+        expect(product.name, equals('Fresh Milk 1L'));
+        expect(product.description, equals('Pure cow milk'));
+        expect(product.price, equals(6.50));
+        expect(product.category, equals('Dairy & Eggs'));
+        expect(product.imageUrl, equals('https://example.com/milk.jpg'));
+        expect(product.isAvailable, isTrue);
+        expect(product.loyaltyPointsPerUnit, equals(5));
+        expect(product.createdAt, isNotNull);
+        expect(product.updatedAt, isNotNull);
+      },
+    );
 
     test('parses double and int price types safely', () {
       final json1 = {

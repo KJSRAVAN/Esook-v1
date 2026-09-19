@@ -72,14 +72,15 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
 
     if (productsRes.isSuccess) {
       final prods = productsRes.dataOrNull ?? [];
-      final derivedCategories = prods
-          .map((p) => p.category?.trim())
-          .where((c) => c != null && c.isNotEmpty)
-          .cast<String>()
-          .toSet()
-          .map((c) => StoreCategoryModel(id: c, name: c, storeId: storeId))
-          .toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
+      final derivedCategories =
+          prods
+              .map((p) => p.category?.trim())
+              .where((c) => c != null && c.isNotEmpty)
+              .cast<String>()
+              .toSet()
+              .map((c) => StoreCategoryModel(id: c, name: c, storeId: storeId))
+              .toList()
+            ..sort((a, b) => a.name.compareTo(b.name));
 
       setState(() {
         _products = prods;
@@ -89,12 +90,17 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = productsRes.failureOrNull?.message ?? 'Failed to load store products';
+        _errorMessage =
+            productsRes.failureOrNull?.message ??
+            'Failed to load store products';
       });
     }
   }
 
-  Future<void> _toggleProductAvailability(ProductModel product, bool newStatus) async {
+  Future<void> _toggleProductAvailability(
+    ProductModel product,
+    bool newStatus,
+  ) async {
     final storeId = _effectiveStoreId;
     if (storeId == null) return;
 
@@ -109,18 +115,26 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
     if (result.isSuccess) {
       final updated = result.dataOrNull!;
       setState(() {
-        _products = _products.map((p) => p.id == updated.id ? updated : p).toList();
+        _products = _products
+            .map((p) => p.id == updated.id ? updated : p)
+            .toList();
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${product.name} is now ${newStatus ? "Available" : "Unavailable"}'),
-          backgroundColor: newStatus ? AppColors.success : AppColors.textSecondary,
+          content: Text(
+            '${product.name} is now ${newStatus ? "Available" : "Unavailable"}',
+          ),
+          backgroundColor: newStatus
+              ? AppColors.success
+              : AppColors.textSecondary,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.failureOrNull?.message ?? 'Failed to toggle availability'),
+          content: Text(
+            result.failureOrNull?.message ?? 'Failed to toggle availability',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -162,7 +176,9 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
     ).then((updated) {
       if (updated != null && mounted) {
         setState(() {
-          _products = _products.map((p) => p.id == updated.id ? updated : p).toList();
+          _products = _products
+              .map((p) => p.id == updated.id ? updated : p)
+              .toList();
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -178,7 +194,13 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
     var list = _products;
 
     if (_selectedCategory != null && _selectedCategory != 'ALL') {
-      list = list.where((p) => p.category == _selectedCategory || p.categoryId == _selectedCategory).toList();
+      list = list
+          .where(
+            (p) =>
+                p.category == _selectedCategory ||
+                p.categoryId == _selectedCategory,
+          )
+          .toList();
     }
 
     if (_searchQuery.trim().isNotEmpty) {
@@ -236,10 +258,17 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                       hintText: 'Search product name or category...',
                       prefixIcon: const Icon(Icons.search_rounded, size: 20),
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                        borderSide: const BorderSide(color: AppColors.borderSubtle),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
+                        borderSide: const BorderSide(
+                          color: AppColors.borderSubtle,
+                        ),
                       ),
                     ),
                     onChanged: (val) => setState(() => _searchQuery = val),
@@ -251,7 +280,9 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                       child: Row(
                         children: [
                           _buildCategoryFilterChip(null, 'All Categories'),
-                          ..._categories.map((c) => _buildCategoryFilterChip(c.id, c.name)),
+                          ..._categories.map(
+                            (c) => _buildCategoryFilterChip(c.id, c.name),
+                          ),
                         ],
                       ),
                     ),
@@ -262,9 +293,7 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
             const Divider(height: 1),
 
             // Product List
-            Expanded(
-              child: _buildProductsList(isManager),
-            ),
+            Expanded(child: _buildProductsList(isManager)),
           ],
         ),
       ),
@@ -310,13 +339,19 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.error,
+                size: 48,
+              ),
               const SizedBox(height: AppDimensions.spacingSm),
               Text('Failed to Load Products', style: AppTextStyles.titleMedium),
               const SizedBox(height: 4),
               Text(
                 _errorMessage!,
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingMd),
@@ -345,18 +380,26 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.textTertiary),
+                    const Icon(
+                      Icons.inventory_2_outlined,
+                      size: 48,
+                      color: AppColors.textTertiary,
+                    ),
                     const SizedBox(height: AppDimensions.spacingSm),
                     Text(
                       'No Products in Catalog',
-                      style: AppTextStyles.titleMedium.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       isManager
                           ? 'Tap the button below to add items to this store.'
                           : 'No items found matching the current search criteria.',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -403,7 +446,11 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                 color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
               ),
-              child: const Icon(Icons.shopping_basket_outlined, color: AppColors.textTertiary, size: 28),
+              child: const Icon(
+                Icons.shopping_basket_outlined,
+                color: AppColors.textTertiary,
+                size: 28,
+              ),
             ),
             const SizedBox(width: AppDimensions.spacingMd),
 
@@ -414,13 +461,18 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                 children: [
                   Text(
                     product.name,
-                    style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                    style: AppTextStyles.titleMedium.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  if (product.category != null && product.category!.isNotEmpty) ...[
+                  if (product.category != null &&
+                      product.category!.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
                       product.category!,
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 4),
@@ -440,15 +492,24 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    color: product.isAvailable ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                    color: product.isAvailable
+                        ? const Color(0xFFDCFCE7)
+                        : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusFull,
+                    ),
                   ),
                   child: Text(
                     product.isAvailable ? 'Available' : 'Unavailable',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: product.isAvailable ? const Color(0xFF15803D) : const Color(0xFF64748B),
+                      color: product.isAvailable
+                          ? const Color(0xFF15803D)
+                          : const Color(0xFF64748B),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -465,7 +526,8 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                           key: Key('product_toggle_${product.id}'),
                           value: product.isAvailable,
                           activeColor: AppColors.primary,
-                          onChanged: (val) => _toggleProductAvailability(product, val),
+                          onChanged: (val) =>
+                              _toggleProductAvailability(product, val),
                         ),
                       ),
                       // Edit Button

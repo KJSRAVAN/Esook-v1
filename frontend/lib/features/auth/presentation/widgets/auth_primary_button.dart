@@ -41,7 +41,9 @@ class AuthPrimaryButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
           ),
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingLg),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.spacingLg,
+          ),
         ),
         child: isLoading
             ? const SizedBox(

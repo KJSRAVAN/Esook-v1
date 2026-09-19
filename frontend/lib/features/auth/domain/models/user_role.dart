@@ -33,7 +33,8 @@ enum UserRole {
   }
 
   bool get isCustomer => this == UserRole.customer;
-  bool get isStoreStaff => this == UserRole.storeStaff || this == UserRole.storeManager;
+  bool get isStoreStaff =>
+      this == UserRole.storeStaff || this == UserRole.storeManager;
   bool get isStoreManager => this == UserRole.storeManager;
   bool get isDeliveryRider => this == UserRole.deliveryRider;
   bool get isSuperAdmin => this == UserRole.superAdmin;

@@ -9,9 +9,7 @@ void main() {
         'storeId': 'store-1',
         'name': 'Beverages',
         'sortOrder': 2,
-        '_count': {
-          'items': 14,
-        },
+        '_count': {'items': 14},
         'createdAt': '2026-09-10T12:00:00.000Z',
         'updatedAt': '2026-09-10T13:00:00.000Z',
       };

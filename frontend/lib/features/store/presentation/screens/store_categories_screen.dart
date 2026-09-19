@@ -81,8 +81,7 @@ class _StoreCategoriesScreenState extends State<StoreCategoriesScreen> {
           storeId: storeId,
           productCount: entry.value,
         );
-      }).toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
+      }).toList()..sort((a, b) => a.name.compareTo(b.name));
 
       setState(() {
         _categories = derivedCategories;
@@ -91,7 +90,8 @@ class _StoreCategoriesScreenState extends State<StoreCategoriesScreen> {
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to load store categories';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to load store categories';
       });
     }
   }
@@ -146,9 +146,7 @@ class _StoreCategoriesScreenState extends State<StoreCategoriesScreen> {
               backgroundColor: AppColors.primary,
             )
           : null,
-      body: SafeArea(
-        child: _buildBody(isManager),
-      ),
+      body: SafeArea(child: _buildBody(isManager)),
     );
   }
 
@@ -168,13 +166,22 @@ class _StoreCategoriesScreenState extends State<StoreCategoriesScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.error,
+                size: 48,
+              ),
               const SizedBox(height: AppDimensions.spacingSm),
-              Text('Failed to Load Categories', style: AppTextStyles.titleMedium),
+              Text(
+                'Failed to Load Categories',
+                style: AppTextStyles.titleMedium,
+              ),
               const SizedBox(height: 4),
               Text(
                 _errorMessage!,
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingMd),
@@ -201,18 +208,26 @@ class _StoreCategoriesScreenState extends State<StoreCategoriesScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.category_outlined, size: 48, color: AppColors.textTertiary),
+                    const Icon(
+                      Icons.category_outlined,
+                      size: 48,
+                      color: AppColors.textTertiary,
+                    ),
                     const SizedBox(height: AppDimensions.spacingSm),
                     Text(
                       'No Categories Found',
-                      style: AppTextStyles.titleMedium.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       isManager
                           ? 'Tap the button below to add categories for this store.'
                           : 'No categories currently registered for this store.',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -241,20 +256,35 @@ class _StoreCategoriesScreenState extends State<StoreCategoriesScreen> {
                   color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                 ),
-                child: const Icon(Icons.category_outlined, color: AppColors.primary, size: 20),
+                child: const Icon(
+                  Icons.category_outlined,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
-              title: Text(cat.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+              title: Text(
+                cat.name,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
               subtitle: Text('Sort order: ${cat.sortOrder}'),
               trailing: cat.productCount != null
                   ? Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusFull,
+                        ),
                       ),
                       child: Text(
                         '${cat.productCount} items',
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     )
                   : null,

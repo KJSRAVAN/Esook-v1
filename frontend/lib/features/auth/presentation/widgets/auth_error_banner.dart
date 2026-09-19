@@ -21,7 +21,10 @@ class AuthErrorBanner extends StatelessWidget {
     this.failure,
     this.onDismiss,
     this.onRetry,
-  }) : assert(message != null || failure != null, 'Must provide either message or failure');
+  }) : assert(
+         message != null || failure != null,
+         'Must provide either message or failure',
+       );
 
   String _resolveMessage() {
     if (message != null && message!.isNotEmpty) {
@@ -32,15 +35,40 @@ class AuthErrorBanner extends StatelessWidget {
     if (f == null) return 'An unexpected error occurred. Please try again.';
 
     return switch (f) {
-      UnauthorizedFailure() => f.message.isNotEmpty ? f.message : 'Invalid credentials. Please check your phone number and password.',
-      ForbiddenFailure() => f.message.isNotEmpty ? f.message : 'Access restricted. You do not have permission to access this portal.',
-      ValidationFailure() => f.message.isNotEmpty ? f.message : 'Please correct the highlighted errors and try again.',
-      ConflictFailure() => f.message.isNotEmpty ? f.message : 'An account with these details already exists.',
-      RateLimitFailure() => f.message.isNotEmpty ? f.message : 'Too many attempts. Please wait a moment before trying again.',
-      NetworkFailure() => 'Network connection error. Please check your internet connection and try again.',
-      ServerFailure() => f.message.isNotEmpty ? f.message : 'Our servers are experiencing issues. Please try again shortly.',
-      NotFoundFailure() => f.message.isNotEmpty ? f.message : 'Resource not found. Please try again.',
-      UnknownFailure() => f.message.isNotEmpty ? f.message : 'An unexpected error occurred. Please try again.',
+      UnauthorizedFailure() =>
+        f.message.isNotEmpty
+            ? f.message
+            : 'Invalid credentials. Please check your phone number and password.',
+      ForbiddenFailure() =>
+        f.message.isNotEmpty
+            ? f.message
+            : 'Access restricted. You do not have permission to access this portal.',
+      ValidationFailure() =>
+        f.message.isNotEmpty
+            ? f.message
+            : 'Please correct the highlighted errors and try again.',
+      ConflictFailure() =>
+        f.message.isNotEmpty
+            ? f.message
+            : 'An account with these details already exists.',
+      RateLimitFailure() =>
+        f.message.isNotEmpty
+            ? f.message
+            : 'Too many attempts. Please wait a moment before trying again.',
+      NetworkFailure() =>
+        'Network connection error. Please check your internet connection and try again.',
+      ServerFailure() =>
+        f.message.isNotEmpty
+            ? f.message
+            : 'Our servers are experiencing issues. Please try again shortly.',
+      NotFoundFailure() =>
+        f.message.isNotEmpty
+            ? f.message
+            : 'Resource not found. Please try again.',
+      UnknownFailure() =>
+        f.message.isNotEmpty
+            ? f.message
+            : 'An unexpected error occurred. Please try again.',
     };
   }
 
@@ -89,12 +117,19 @@ class AuthErrorBanner extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 foregroundColor: AppColors.error,
               ),
-              child: const Text('Retry', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+              child: const Text(
+                'Retry',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              ),
             ),
           ],
           if (onDismiss != null) ...[
             IconButton(
-              icon: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF991B1B)),
+              icon: const Icon(
+                Icons.close_rounded,
+                size: 16,
+                color: Color(0xFF991B1B),
+              ),
               onPressed: onDismiss,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),

@@ -25,41 +25,87 @@ class FakeAuthRepository implements AuthRepository {
   Future<Result<UserModel?>> checkSession() async => Result.success(null);
   @override
   Future<Result<UserModel>> getCurrentUser() async => Result.success(
-        const UserModel(id: 'admin-1', phoneNumber: '+966500000000', fullName: 'Admin', role: UserRole.superAdmin),
-      );
+    const UserModel(
+      id: 'admin-1',
+      phoneNumber: '+966500000000',
+      fullName: 'Admin',
+      role: UserRole.superAdmin,
+    ),
+  );
   @override
-  Future<Result<AuthResponseModel>> login({required String phoneNumber, required String password}) async =>
+  Future<Result<AuthResponseModel>> login({
+    String? phoneNumber,
+    String? email,
+    required String password,
+  }) async =>
       Result.failure(const UnknownFailure(message: 'Not implemented in fake'));
   @override
   Future<Result<AuthResponseModel>> refreshToken() async =>
       Result.failure(const UnknownFailure(message: 'Not implemented in fake'));
   @override
-  Future<Result<String>> requestAdminMagicLink({required String email}) async => Result.success('Link sent');
+  Future<Result<String>> requestAdminMagicLink({required String email}) async =>
+      Result.success('Link sent');
   @override
-  Future<Result<String>> sendOtp({required String phone, String? email, String? name}) async => Result.success('Sent');
+  Future<Result<String>> sendOtp({
+    required String phone,
+    String? email,
+    String? name,
+  }) async => Result.success('Sent');
   @override
-  Future<Result<AuthResponseModel>> signupCustomer({required String phoneNumber, required String fullName, required String password, String? address}) async =>
+  Future<Result<AuthResponseModel>> signupCustomer({
+    required String phoneNumber,
+    required String fullName,
+    required String password,
+    String? address,
+  }) async =>
       Result.failure(const UnknownFailure(message: 'Not implemented in fake'));
   @override
-  Future<Result<AuthResponseModel>> verifyAdminMagicLink({required String token}) async =>
+  Future<Result<AuthResponseModel>> verifyAdminMagicLink({
+    required String token,
+  }) async =>
       Result.failure(const UnknownFailure(message: 'Not implemented in fake'));
   @override
-  Future<Result<AuthResponseModel>> verifyOtp({required String phone, required String code}) async =>
+  Future<Result<AuthResponseModel>> verifyOtp({
+    required String phone,
+    required String code,
+  }) async =>
       Result.failure(const UnknownFailure(message: 'Not implemented in fake'));
   @override
-  Future<Result<UserModel>> updateProfile({String? name, String? email}) async =>
+  Future<Result<UserModel>> updateProfile({
+    String? name,
+    String? email,
+  }) async =>
       Result.failure(const UnknownFailure(message: 'Not implemented in fake'));
 }
 
 class FakeAdminUsersRepository implements AdminUsersRepository {
   @override
-  Future<Result<AdminUsersPage>> getUsers({int page = 1, int limit = 50, String? role}) async {
+  Future<Result<AdminUsersPage>> getUsers({
+    int page = 1,
+    int limit = 50,
+    String? role,
+  }) async {
     return Result.success(
       const AdminUsersPage(
         users: [
-          AdminUserModel(id: 'u-1', name: 'Super Admin', role: UserRole.superAdmin, email: 'admin@esook.store'),
-          AdminUserModel(id: 'u-2', name: 'Manager Riyadh', role: UserRole.storeManager, storeId: 'store-1'),
-          AdminUserModel(id: 'u-3', name: 'Driver Mohammed', role: UserRole.deliveryRider, phone: '+966501234567'),
+          AdminUserModel(
+            id: 'u-1',
+            name: 'Super Admin',
+            role: UserRole.superAdmin,
+            email: 'admin@esook.store',
+          ),
+          AdminUserModel(
+            id: 'u-2',
+            name: 'Manager Riyadh',
+            role: UserRole.storeManager,
+            storeId: 'store-1',
+          ),
+          AdminUserModel(
+            id: 'u-3',
+            name: 'Driver Mohammed',
+            role: UserRole.deliveryRider,
+            phone: '+966501234567',
+          ),
         ],
         total: 3,
         page: 1,
@@ -71,12 +117,18 @@ class FakeAdminUsersRepository implements AdminUsersRepository {
 
 class FakeAdminDriversRepository implements AdminDriversRepository {
   @override
-  Future<Result<List<AdminUserModel>>> getDrivers({int page = 1, int limit = 50}) async {
-    return Result.success(
-      const [
-        AdminUserModel(id: 'd-1', name: 'Driver Mohammed', role: UserRole.deliveryRider, phone: '+966501234567'),
-      ],
-    );
+  Future<Result<List<AdminUserModel>>> getDrivers({
+    int page = 1,
+    int limit = 50,
+  }) async {
+    return Result.success(const [
+      AdminUserModel(
+        id: 'd-1',
+        name: 'Driver Mohammed',
+        role: UserRole.deliveryRider,
+        phone: '+966501234567',
+      ),
+    ]);
   }
 
   @override
@@ -87,7 +139,12 @@ class FakeAdminDriversRepository implements AdminDriversRepository {
     String? storeId,
   }) async {
     return Result.success(
-      AdminUserModel(id: 'd-2', name: name, role: UserRole.deliveryRider, phone: phone),
+      AdminUserModel(
+        id: 'd-2',
+        name: name,
+        role: UserRole.deliveryRider,
+        phone: phone,
+      ),
     );
   }
 }
@@ -95,20 +152,20 @@ class FakeAdminDriversRepository implements AdminDriversRepository {
 class FakeAdminStoresRepository implements AdminStoresRepository {
   @override
   Future<Result<List<AdminStoreModel>>> getStores() async {
-    return Result.success(
-      const [
-        AdminStoreModel(id: 'store-1', name: 'Fresh Mart Riyadh', areaId: 'area-1', area: 'Riyadh', areaName: 'Riyadh'),
-      ],
-    );
+    return Result.success(const [
+      AdminStoreModel(
+        id: 'store-1',
+        name: 'Fresh Mart Riyadh',
+        areaId: 'area-1',
+        area: 'Riyadh',
+        areaName: 'Riyadh',
+      ),
+    ]);
   }
 
   @override
   Future<Result<List<AdminAreaModel>>> getAreas() async {
-    return Result.success(
-      const [
-        AdminAreaModel(id: 'area-1', name: 'Riyadh'),
-      ],
-    );
+    return Result.success(const [AdminAreaModel(id: 'area-1', name: 'Riyadh')]);
   }
 
   @override
@@ -122,7 +179,14 @@ class FakeAdminStoresRepository implements AdminStoresRepository {
     bool? isActive,
   }) async {
     return Result.success(
-      AdminStoreModel(id: 'store-2', name: name, areaId: areaId ?? 'area-1', area: area ?? 'Riyadh', address: address, phone: phone),
+      AdminStoreModel(
+        id: 'store-2',
+        name: name,
+        areaId: areaId ?? 'area-1',
+        area: area ?? 'Riyadh',
+        address: address,
+        phone: phone,
+      ),
     );
   }
 
@@ -137,7 +201,13 @@ class FakeAdminStoresRepository implements AdminStoresRepository {
     bool? isActive,
   }) async {
     return Result.success(
-      AdminStoreModel(id: storeId, name: name ?? 'Store', areaId: 'area-1', area: area ?? 'Riyadh', isActive: isActive ?? true),
+      AdminStoreModel(
+        id: storeId,
+        name: name ?? 'Store',
+        areaId: 'area-1',
+        area: area ?? 'Riyadh',
+        isActive: isActive ?? true,
+      ),
     );
   }
 }
@@ -171,7 +241,9 @@ void main() {
       );
     }
 
-    testWidgets('renders AdminShell with Dashboard tab by default', (tester) async {
+    testWidgets('renders AdminShell with Dashboard tab by default', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 
@@ -181,37 +253,42 @@ void main() {
       expect(find.text('Total Users'), findsOneWidget);
     });
 
-    testWidgets('can switch navigation tabs to Stores, Users, Drivers, Orders', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'can switch navigation tabs to Stores, Users, Drivers, Orders',
+      (tester) async {
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
 
-      // Tap Stores tab
-      await tester.tap(find.byIcon(Icons.storefront_outlined));
-      await tester.pumpAndSettle();
-      expect(find.text('Store Management'), findsOneWidget);
-      expect(find.text('Fresh Mart Riyadh'), findsOneWidget);
+        // Tap Stores tab
+        await tester.tap(find.byIcon(Icons.storefront_outlined));
+        await tester.pumpAndSettle();
+        expect(find.text('Store Management'), findsOneWidget);
+        expect(find.text('Fresh Mart Riyadh'), findsOneWidget);
 
-      // Tap Users tab
-      await tester.tap(find.byIcon(Icons.people_outline_rounded));
-      await tester.pumpAndSettle();
-      expect(find.text('User Directory'), findsOneWidget);
-      expect(find.text('Super Admin'), findsOneWidget);
-      expect(find.text('Manager Riyadh'), findsOneWidget);
+        // Tap Users tab
+        await tester.tap(find.byIcon(Icons.people_outline_rounded));
+        await tester.pumpAndSettle();
+        expect(find.text('User Directory'), findsOneWidget);
+        expect(find.text('Super Admin'), findsOneWidget);
+        expect(find.text('Manager Riyadh'), findsOneWidget);
 
-      // Tap Drivers tab
-      await tester.tap(find.byIcon(Icons.delivery_dining_outlined));
-      await tester.pumpAndSettle();
-      expect(find.text('Riders & Drivers'), findsOneWidget);
-      expect(find.text('Driver Mohammed'), findsOneWidget);
+        // Tap Drivers tab
+        await tester.tap(find.byIcon(Icons.delivery_dining_outlined));
+        await tester.pumpAndSettle();
+        expect(find.text('Riders & Drivers'), findsOneWidget);
+        expect(find.text('Driver Mohammed'), findsOneWidget);
 
-      // Tap Orders tab
-      await tester.tap(find.byIcon(Icons.receipt_long_outlined));
-      await tester.pumpAndSettle();
-      expect(find.text('Orders Oversight'), findsOneWidget);
-      expect(find.text('Orders Oversight Architecture'), findsOneWidget);
-    });
+        // Tap Orders tab
+        await tester.tap(find.byIcon(Icons.receipt_long_outlined));
+        await tester.pumpAndSettle();
+        expect(find.text('Orders Oversight'), findsOneWidget);
+        expect(find.text('Orders Oversight Architecture'), findsOneWidget);
+      },
+    );
 
-    testWidgets('logout button invokes logout on AuthRepository', (tester) async {
+    testWidgets('logout button invokes logout on AuthRepository', (
+      tester,
+    ) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();
 

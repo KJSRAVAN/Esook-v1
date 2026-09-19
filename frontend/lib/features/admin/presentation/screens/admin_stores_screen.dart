@@ -13,10 +13,7 @@ import '../widgets/edit_store_dialog.dart';
 class AdminStoresScreen extends StatefulWidget {
   final AdminStoresRepository? storesRepository;
 
-  const AdminStoresScreen({
-    super.key,
-    this.storesRepository,
-  });
+  const AdminStoresScreen({super.key, this.storesRepository});
 
   @override
   State<AdminStoresScreen> createState() => _AdminStoresScreenState();
@@ -54,7 +51,8 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to load stores';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to load stores';
       });
     }
   }
@@ -120,9 +118,7 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
-      body: SafeArea(
-        child: _buildBody(),
-      ),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
@@ -142,16 +138,24 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.error,
+                size: 48,
+              ),
               const SizedBox(height: AppDimensions.spacingSm),
               Text(
                 'Unable to Load Stores',
-                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppDimensions.spacingXs),
               Text(
                 _errorMessage!,
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingMd),
@@ -190,12 +194,16 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
               const SizedBox(height: AppDimensions.spacingMd),
               Text(
                 'No Stores Registered',
-                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppDimensions.spacingXs),
               Text(
                 'Onboard store branches and assign them to delivery areas to start catalog operations.',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingLg),
@@ -219,7 +227,8 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
         80, // Padding for FAB
       ),
       itemCount: _stores.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.spacingSm),
+      separatorBuilder: (_, __) =>
+          const SizedBox(height: AppDimensions.spacingSm),
       itemBuilder: (context, index) {
         final store = _stores[index];
         return Card(
@@ -236,12 +245,18 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: store.isActive ? AppColors.primaryLight : const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                            color: store.isActive
+                                ? AppColors.primaryLight
+                                : const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusSm,
+                            ),
                           ),
                           child: Icon(
                             Icons.storefront_rounded,
-                            color: store.isActive ? AppColors.primaryDark : AppColors.textSecondary,
+                            color: store.isActive
+                                ? AppColors.primaryDark
+                                : AppColors.textSecondary,
                             size: 22,
                           ),
                         ),
@@ -251,7 +266,9 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
                           children: [
                             Text(
                               store.name,
-                              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                              style: AppTextStyles.titleMedium.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             if (store.areaName != null)
                               Text(
@@ -279,12 +296,17 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: store.isActive
                             ? AppColors.success.withValues(alpha: 0.1)
                             : AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusFull,
+                        ),
                         border: Border.all(
                           color: store.isActive
                               ? AppColors.success.withValues(alpha: 0.3)
@@ -296,7 +318,9 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: store.isActive ? AppColors.success : AppColors.error,
+                          color: store.isActive
+                              ? AppColors.success
+                              : AppColors.error,
                         ),
                       ),
                     ),
@@ -304,11 +328,17 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
                     if (store.phone != null && store.phone!.isNotEmpty)
                       Row(
                         children: [
-                          const Icon(Icons.phone_outlined, size: 14, color: AppColors.textSecondary),
+                          const Icon(
+                            Icons.phone_outlined,
+                            size: 14,
+                            color: AppColors.textSecondary,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             store.phone!,
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -318,12 +348,18 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textTertiary),
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: AppColors.textTertiary,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           store.address!,
-                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

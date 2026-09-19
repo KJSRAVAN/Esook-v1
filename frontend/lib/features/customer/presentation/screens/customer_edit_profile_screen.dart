@@ -40,8 +40,7 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
   bool _isSaving = false;
   String? _errorMessage;
 
-  static final RegExp _emailRegex =
-      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  static final RegExp _emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
   AuthRepository get _repository {
     if (widget.authRepository != null) return widget.authRepository!;
@@ -64,10 +63,12 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.currentUser.fullName);
-    _emailController =
-        TextEditingController(text: widget.currentUser.email ?? '');
-    _phoneController =
-        TextEditingController(text: widget.currentUser.phoneNumber);
+    _emailController = TextEditingController(
+      text: widget.currentUser.email ?? '',
+    );
+    _phoneController = TextEditingController(
+      text: widget.currentUser.phoneNumber,
+    );
   }
 
   @override
@@ -170,14 +171,18 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
                         padding: const EdgeInsets.all(AppDimensions.spacingMd),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFEF2F2),
-                          borderRadius:
-                              BorderRadius.circular(AppDimensions.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusMd,
+                          ),
                           border: Border.all(color: const Color(0xFFFECACA)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline,
-                                color: AppColors.error, size: 20),
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppColors.error,
+                              size: 20,
+                            ),
                             const SizedBox(width: AppDimensions.spacingSm),
                             Expanded(
                               child: Text(
@@ -198,8 +203,9 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
                       padding: const EdgeInsets.all(AppDimensions.spacingLg),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusMd),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
                         border: Border.all(color: AppColors.borderSubtle),
                       ),
                       child: Column(
@@ -225,21 +231,28 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
                               fillColor: AppColors.background,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusSm),
+                                  AppDimensions.radiusSm,
+                                ),
                                 borderSide: const BorderSide(
-                                    color: AppColors.borderSubtle),
+                                  color: AppColors.borderSubtle,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusSm),
+                                  AppDimensions.radiusSm,
+                                ),
                                 borderSide: const BorderSide(
-                                    color: AppColors.borderSubtle),
+                                  color: AppColors.borderSubtle,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusSm),
+                                  AppDimensions.radiusSm,
+                                ),
                                 borderSide: const BorderSide(
-                                    color: AppColors.primary, width: 1.5),
+                                  color: AppColors.primary,
+                                  width: 1.5,
+                                ),
                               ),
                             ),
                             validator: (value) {
@@ -280,21 +293,28 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
                               fillColor: AppColors.background,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusSm),
+                                  AppDimensions.radiusSm,
+                                ),
                                 borderSide: const BorderSide(
-                                    color: AppColors.borderSubtle),
+                                  color: AppColors.borderSubtle,
+                                ),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusSm),
+                                  AppDimensions.radiusSm,
+                                ),
                                 borderSide: const BorderSide(
-                                    color: AppColors.borderSubtle),
+                                  color: AppColors.borderSubtle,
+                                ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusSm),
+                                  AppDimensions.radiusSm,
+                                ),
                                 borderSide: const BorderSide(
-                                    color: AppColors.primary, width: 1.5),
+                                  color: AppColors.primary,
+                                  width: 1.5,
+                                ),
                               ),
                             ),
                             validator: (value) {
@@ -323,7 +343,9 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
                               const SizedBox(width: AppDimensions.spacingXs),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFF1F5F9),
                                   borderRadius: BorderRadius.circular(4),
@@ -331,9 +353,11 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
                                 child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.lock_outline,
-                                        size: 11,
-                                        color: AppColors.textTertiary),
+                                    Icon(
+                                      Icons.lock_outline,
+                                      size: 11,
+                                      color: AppColors.textTertiary,
+                                    ),
                                     SizedBox(width: 2),
                                     Text(
                                       'Identity',
@@ -355,10 +379,15 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
                             readOnly: true,
                             enabled: false,
                             decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.phone_outlined,
-                                  color: AppColors.textTertiary),
-                              suffixIcon: const Icon(Icons.lock_outline,
-                                  size: 18, color: AppColors.textTertiary),
+                              prefixIcon: const Icon(
+                                Icons.phone_outlined,
+                                color: AppColors.textTertiary,
+                              ),
+                              suffixIcon: const Icon(
+                                Icons.lock_outline,
+                                size: 18,
+                                color: AppColors.textTertiary,
+                              ),
                               helperText:
                                   'Your registered phone number cannot be changed.',
                               helperStyle: TextStyle(
@@ -369,15 +398,19 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
                               fillColor: const Color(0xFFF8FAFC),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusSm),
+                                  AppDimensions.radiusSm,
+                                ),
                                 borderSide: const BorderSide(
-                                    color: AppColors.borderSubtle),
+                                  color: AppColors.borderSubtle,
+                                ),
                               ),
                               disabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusSm),
+                                  AppDimensions.radiusSm,
+                                ),
                                 borderSide: const BorderSide(
-                                    color: AppColors.borderSubtle),
+                                  color: AppColors.borderSubtle,
+                                ),
                               ),
                             ),
                           ),
@@ -397,8 +430,9 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppDimensions.radiusSm),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusSm,
+                            ),
                           ),
                           elevation: 0,
                         ),
@@ -409,7 +443,8 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : const Text(

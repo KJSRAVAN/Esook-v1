@@ -73,10 +73,7 @@ class CustomerBottomNavigation extends StatelessWidget {
       decoration: const BoxDecoration(
         color: AppColors.surface,
         border: Border(
-          top: BorderSide(
-            color: AppColors.borderSubtle,
-            width: 1.0,
-          ),
+          top: BorderSide(color: AppColors.borderSubtle, width: 1.0),
         ),
       ),
       child: SafeArea(
@@ -138,10 +135,7 @@ class _NavBarItemWidget extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (isCart && cartNotifier != null)
-              CartNavIcon(
-                cartNotifier: cartNotifier!,
-                isSelected: isSelected,
-              )
+              CartNavIcon(cartNotifier: cartNotifier!, isSelected: isSelected)
             else
               Icon(
                 isSelected ? item.activeIcon : item.icon,

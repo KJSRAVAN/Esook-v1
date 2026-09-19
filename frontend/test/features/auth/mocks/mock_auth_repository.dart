@@ -30,6 +30,7 @@ class MockAuthRepository implements AuthRepository {
   String? lastVerifyOtpPhone;
   String? lastVerifyOtpCode;
   String? lastLoginPhone;
+  String? lastLoginEmail;
   String? lastLoginPassword;
   String? lastSignupPhone;
   String? lastSignupName;
@@ -52,7 +53,7 @@ class MockAuthRepository implements AuthRepository {
     lastSendOtpName = name;
 
     if (sendOtpResult != null) return sendOtpResult!;
-    return Result.success('Verification code sent');
+    return Result.success('Mock OTP sent to $phone');
   }
 
   @override
@@ -67,17 +68,15 @@ class MockAuthRepository implements AuthRepository {
     if (verifyOtpResult != null) return verifyOtpResult!;
 
     final user = UserModel(
-      id: 'cust_otp_1',
+      id: 'cust_1',
       phoneNumber: phone,
-      fullName: 'Customer',
+      fullName: 'Customer User',
       role: UserRole.customer,
     );
     currentUser = user;
-    return Result.success(AuthResponseModel(
-      user: user,
-      token: 'mock_otp_jwt_token',
-      refreshToken: 'mock_otp_refresh_token',
-    ));
+    return Result.success(
+      AuthResponseModel(user: user, token: 'mock_jwt_token'),
+    );
   }
 
   @override
@@ -103,34 +102,39 @@ class MockAuthRepository implements AuthRepository {
       address: address,
     );
     currentUser = user;
-    return Result.success(AuthResponseModel(user: user, token: 'mock_jwt_token'));
+    return Result.success(
+      AuthResponseModel(user: user, token: 'mock_jwt_token'),
+    );
   }
 
   @override
   Future<Result<AuthResponseModel>> login({
-    required String phoneNumber,
+    String? phoneNumber,
+    String? email,
     required String password,
   }) async {
     loginCallCount++;
     lastLoginPhone = phoneNumber;
+    lastLoginEmail = email;
     lastLoginPassword = password;
 
     if (loginResult != null) return loginResult!;
 
     final user = UserModel(
       id: 'usr_1',
-      phoneNumber: phoneNumber,
+      phoneNumber: phoneNumber ?? '',
+      email: email,
       fullName: 'Test User',
       role: UserRole.customer,
     );
     currentUser = user;
-    return Result.success(AuthResponseModel(user: user, token: 'mock_jwt_token'));
+    return Result.success(
+      AuthResponseModel(user: user, token: 'mock_jwt_token'),
+    );
   }
 
   @override
-  Future<Result<String>> requestAdminMagicLink({
-    required String email,
-  }) async {
+  Future<Result<String>> requestAdminMagicLink({required String email}) async {
     requestMagicLinkCallCount++;
     lastMagicLinkEmail = email;
 
@@ -155,14 +159,18 @@ class MockAuthRepository implements AuthRepository {
       role: UserRole.superAdmin,
     );
     currentUser = user;
-    return Result.success(AuthResponseModel(user: user, token: 'mock_admin_jwt'));
+    return Result.success(
+      AuthResponseModel(user: user, token: 'mock_admin_jwt'),
+    );
   }
 
   @override
   Future<Result<UserModel>> getCurrentUser() async {
     if (getCurrentUserResult != null) return getCurrentUserResult!;
     if (currentUser != null) return Result.success(currentUser!);
-    return Result.failure(const UnauthorizedFailure(message: 'Not authenticated'));
+    return Result.failure(
+      const UnauthorizedFailure(message: 'Not authenticated'),
+    );
   }
 
   @override
@@ -179,17 +187,21 @@ class MockAuthRepository implements AuthRepository {
   Future<Result<AuthResponseModel>> refreshToken() async {
     refreshTokenCallCount++;
     if (refreshTokenResult != null) return refreshTokenResult!;
-    final user = currentUser ?? const UserModel(
-      id: 'cust_refresh_1',
-      phoneNumber: '+966501234567',
-      fullName: 'Customer',
-      role: UserRole.customer,
+    final user =
+        currentUser ??
+        const UserModel(
+          id: 'cust_refresh_1',
+          phoneNumber: '+966501234567',
+          fullName: 'Customer',
+          role: UserRole.customer,
+        );
+    return Result.success(
+      AuthResponseModel(
+        user: user,
+        token: 'mock_refreshed_jwt_token',
+        refreshToken: 'mock_new_refresh_token',
+      ),
     );
-    return Result.success(AuthResponseModel(
-      user: user,
-      token: 'mock_refreshed_jwt_token',
-      refreshToken: 'mock_new_refresh_token',
-    ));
   }
 
   Result<UserModel>? updateProfileResult;
@@ -198,10 +210,7 @@ class MockAuthRepository implements AuthRepository {
   String? lastUpdateEmail;
 
   @override
-  Future<Result<UserModel>> updateProfile({
-    String? name,
-    String? email,
-  }) async {
+  Future<Result<UserModel>> updateProfile({String? name, String? email}) async {
     updateProfileCallCount++;
     lastUpdateName = name;
     lastUpdateEmail = email;

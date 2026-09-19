@@ -18,10 +18,7 @@ void main() {
     });
 
     test('handles missing fields gracefully', () {
-      final json = {
-        'id': 'area-2',
-        'name': 'Jeddah Corniche',
-      };
+      final json = {'id': 'area-2', 'name': 'Jeddah Corniche'};
 
       final area = AreaModel.fromJson(json);
 
@@ -31,10 +28,7 @@ void main() {
     });
 
     test('serializes to JSON correctly', () {
-      const area = AreaModel(
-        id: 'area-3',
-        name: 'Dammam Port',
-      );
+      const area = AreaModel(id: 'area-3', name: 'Dammam Port');
 
       final json = area.toJson();
 

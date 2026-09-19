@@ -69,19 +69,20 @@ class _StoreShellState extends State<StoreShell> {
       timeout: config.connectTimeout,
     );
 
-    _authRepository = widget.authRepository ??
-        AuthRepositoryImpl(
-          apiClient: apiClient,
-          secureStorage: secureStorage,
-        );
+    _authRepository =
+        widget.authRepository ??
+        AuthRepositoryImpl(apiClient: apiClient, secureStorage: secureStorage);
 
-    _ordersRepository = widget.ordersRepository ??
+    _ordersRepository =
+        widget.ordersRepository ??
         StoreOrdersRepositoryImpl(apiClient: apiClient);
 
-    _productsRepository = widget.productsRepository ??
+    _productsRepository =
+        widget.productsRepository ??
         StoreProductsRepositoryImpl(apiClient: apiClient);
 
-    _categoriesRepository = widget.categoriesRepository ??
+    _categoriesRepository =
+        widget.categoriesRepository ??
         StoreCategoriesRepositoryImpl(apiClient: apiClient);
 
     if (widget.initialUser != null) {
@@ -111,10 +112,9 @@ class _StoreShellState extends State<StoreShell> {
   Future<void> _handleLogout() async {
     await _authRepository.logout();
     if (mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.login,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
     }
   }
 
@@ -184,9 +184,7 @@ class _StoreShellState extends State<StoreShell> {
             categoriesRepository: _categoriesRepository,
             productsRepository: _productsRepository,
           ),
-          StoreAccountScreen(
-            authRepository: _authRepository,
-          ),
+          StoreAccountScreen(authRepository: _authRepository),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -198,27 +196,42 @@ class _StoreShellState extends State<StoreShell> {
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard_rounded, color: AppColors.primaryDark),
+            selectedIcon: Icon(
+              Icons.dashboard_rounded,
+              color: AppColors.primaryDark,
+            ),
             label: 'Dashboard',
           ),
           NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long_rounded, color: AppColors.primaryDark),
+            selectedIcon: Icon(
+              Icons.receipt_long_rounded,
+              color: AppColors.primaryDark,
+            ),
             label: 'Orders',
           ),
           NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2_rounded, color: AppColors.primaryDark),
+            selectedIcon: Icon(
+              Icons.inventory_2_rounded,
+              color: AppColors.primaryDark,
+            ),
             label: 'Products',
           ),
           NavigationDestination(
             icon: Icon(Icons.category_outlined),
-            selectedIcon: Icon(Icons.category_rounded, color: AppColors.primaryDark),
+            selectedIcon: Icon(
+              Icons.category_rounded,
+              color: AppColors.primaryDark,
+            ),
             label: 'Categories',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded, color: AppColors.primaryDark),
+            selectedIcon: Icon(
+              Icons.person_rounded,
+              color: AppColors.primaryDark,
+            ),
             label: 'Account',
           ),
         ],
@@ -269,7 +282,10 @@ class _StoreShellState extends State<StoreShell> {
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: IconButton(
                     key: const Key('store_rail_logout_btn'),
-                    icon: const Icon(Icons.logout_rounded, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.logout_rounded,
+                      color: AppColors.textSecondary,
+                    ),
                     tooltip: 'Sign Out',
                     onPressed: _handleLogout,
                   ),
@@ -279,27 +295,42 @@ class _StoreShellState extends State<StoreShell> {
             destinations: const [
               NavigationRailDestination(
                 icon: Icon(Icons.dashboard_outlined),
-                selectedIcon: Icon(Icons.dashboard_rounded, color: AppColors.primaryDark),
+                selectedIcon: Icon(
+                  Icons.dashboard_rounded,
+                  color: AppColors.primaryDark,
+                ),
                 label: Text('Dashboard'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.receipt_long_outlined),
-                selectedIcon: Icon(Icons.receipt_long_rounded, color: AppColors.primaryDark),
+                selectedIcon: Icon(
+                  Icons.receipt_long_rounded,
+                  color: AppColors.primaryDark,
+                ),
                 label: Text('Orders'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.inventory_2_outlined),
-                selectedIcon: Icon(Icons.inventory_2_rounded, color: AppColors.primaryDark),
+                selectedIcon: Icon(
+                  Icons.inventory_2_rounded,
+                  color: AppColors.primaryDark,
+                ),
                 label: Text('Products'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.category_outlined),
-                selectedIcon: Icon(Icons.category_rounded, color: AppColors.primaryDark),
+                selectedIcon: Icon(
+                  Icons.category_rounded,
+                  color: AppColors.primaryDark,
+                ),
                 label: Text('Categories'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.person_outline_rounded),
-                selectedIcon: Icon(Icons.person_rounded, color: AppColors.primaryDark),
+                selectedIcon: Icon(
+                  Icons.person_rounded,
+                  color: AppColors.primaryDark,
+                ),
                 label: Text('Account'),
               ),
             ],
@@ -329,9 +360,7 @@ class _StoreShellState extends State<StoreShell> {
                   categoriesRepository: _categoriesRepository,
                   productsRepository: _productsRepository,
                 ),
-                StoreAccountScreen(
-                  authRepository: _authRepository,
-                ),
+                StoreAccountScreen(authRepository: _authRepository),
               ],
             ),
           ),

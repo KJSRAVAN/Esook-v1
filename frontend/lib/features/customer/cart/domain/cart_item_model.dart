@@ -21,10 +21,10 @@ class CartItemModel {
     this.isAvailable = true,
     this.loyaltyPointsPerUnit = 0,
     double? itemSubtotal,
-  })  : itemId = itemId ?? productId ?? '',
-        productId = productId ?? itemId ?? '',
-        name = name ?? productName ?? '',
-        price = price ?? unitPrice ?? 0.0;
+  }) : itemId = itemId ?? productId ?? '',
+       productId = productId ?? itemId ?? '',
+       name = name ?? productName ?? '',
+       price = price ?? unitPrice ?? 0.0;
 
   /// Alias for name for backwards compatibility with UI components.
   String get productName => name;
@@ -52,22 +52,28 @@ class CartItemModel {
     }
 
     final rawItemId = json['item_id'] as String? ?? json['itemId'] as String?;
-    final rawProdId = json['product_id'] as String? ?? json['productId'] as String?;
+    final rawProdId =
+        json['product_id'] as String? ?? json['productId'] as String?;
     final resolvedProdId = rawProdId ?? rawItemId ?? '';
     final resolvedItemId = rawItemId ?? rawProdId ?? '';
 
     return CartItemModel(
       itemId: resolvedItemId,
       productId: resolvedProdId,
-      name: json['name'] as String? ??
+      name:
+          json['name'] as String? ??
           json['productName'] as String? ??
           json['product_name'] as String? ??
           '',
-      price: parsePrice(json['price'] ?? json['unitPrice'] ?? json['unit_price']),
+      price: parsePrice(
+        json['price'] ?? json['unitPrice'] ?? json['unit_price'],
+      ),
       quantity: parseQuantity(json['quantity']),
       imageUrl: json['imageUrl'] as String? ?? json['image_url'] as String?,
-      isAvailable: json['isAvailable'] as bool? ?? json['is_available'] as bool? ?? true,
-      loyaltyPointsPerUnit: (json['loyaltyPointsPerUnit'] as num?)?.toInt() ??
+      isAvailable:
+          json['isAvailable'] as bool? ?? json['is_available'] as bool? ?? true,
+      loyaltyPointsPerUnit:
+          (json['loyaltyPointsPerUnit'] as num?)?.toInt() ??
           (json['loyalty_points_per_unit'] as num?)?.toInt() ??
           0,
     );

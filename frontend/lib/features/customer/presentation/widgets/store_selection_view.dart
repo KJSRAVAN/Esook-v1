@@ -61,7 +61,8 @@ class _StoreSelectionViewState extends State<StoreSelectionView> {
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to load stores';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to load stores';
       });
     }
   }
@@ -135,12 +136,17 @@ class _StoreSelectionViewState extends State<StoreSelectionView> {
                 children: [
                   CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
                   ),
                   SizedBox(height: AppDimensions.spacingMd),
                   Text(
                     'Finding nearby stores...',
-                    style: TextStyle(color: AppColors.textTertiary, fontSize: 13),
+                    style: TextStyle(
+                      color: AppColors.textTertiary,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
@@ -158,10 +164,7 @@ class _StoreSelectionViewState extends State<StoreSelectionView> {
                   color: AppColors.error,
                 ),
                 const SizedBox(height: AppDimensions.spacingSm),
-                Text(
-                  'Could Not Load Stores',
-                  style: AppTextStyles.titleMedium,
-                ),
+                Text('Could Not Load Stores', style: AppTextStyles.titleMedium),
                 const SizedBox(height: AppDimensions.spacingXs),
                 Text(
                   _errorMessage!,
@@ -208,7 +211,8 @@ class _StoreSelectionViewState extends State<StoreSelectionView> {
               shrinkWrap: true,
               padding: const EdgeInsets.all(AppDimensions.spacingMd),
               itemCount: _stores.length,
-              separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.spacingSm),
+              separatorBuilder: (_, __) =>
+                  const SizedBox(height: AppDimensions.spacingSm),
               itemBuilder: (context, index) {
                 final store = _stores[index];
                 final isSelected = widget.currentSelectedStore?.id == store.id;

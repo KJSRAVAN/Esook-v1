@@ -24,9 +24,12 @@ void main() {
     return MaterialApp(
       theme: AppTheme.lightTheme,
       routes: {
-        AppRoutes.login: (_) => const Scaffold(body: Text('Login Screen Shell')),
-        AppRoutes.signup: (_) => CustomerSignupScreen(authRepository: effectiveRepo),
-        AppRoutes.customerHome: (_) => const Scaffold(body: Text('Customer Home Shell')),
+        AppRoutes.login: (_) =>
+            const Scaffold(body: Text('Login Screen Shell')),
+        AppRoutes.signup: (_) =>
+            CustomerSignupScreen(authRepository: effectiveRepo),
+        AppRoutes.customerHome: (_) =>
+            const Scaffold(body: Text('Customer Home Shell')),
       },
       home: AuthScope(
         repository: effectiveRepo,
@@ -36,23 +39,33 @@ void main() {
   }
 
   group('CustomerSignupScreen', () {
-    testWidgets('renders all required signup fields and labels', (tester) async {
+    testWidgets('renders all required signup fields and labels', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWidget());
 
       expect(find.text('Create Account'), findsNWidgets(2));
-      expect(find.text('Join eSOuQ for fast delivery of fresh essentials'), findsOneWidget);
+      expect(
+        find.text('Join eSOuQ for fast delivery of fresh essentials'),
+        findsOneWidget,
+      );
       expect(find.text('Full Name'), findsOneWidget);
       expect(find.text('Phone Number'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
       expect(find.text('Delivery Address (Optional)'), findsOneWidget);
-      expect(find.widgetWithText(ElevatedButton, 'Create Account'), findsOneWidget);
+      expect(
+        find.widgetWithText(ElevatedButton, 'Create Account'),
+        findsOneWidget,
+      );
       expect(find.text('Sign In'), findsOneWidget);
     });
 
     testWidgets('validates required fields on empty submit', (tester) async {
       await tester.pumpWidget(buildTestWidget());
 
-      await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'Create Account'));
+      await tester.ensureVisible(
+        find.widgetWithText(ElevatedButton, 'Create Account'),
+      );
       await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
       await tester.pumpAndSettle();
 
@@ -70,66 +83,86 @@ void main() {
       await tester.enterText(textFields.at(1), '+96898765432');
       await tester.enterText(textFields.at(2), 'short'); // 5 chars
 
-      await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'Create Account'));
+      await tester.ensureVisible(
+        find.widgetWithText(ElevatedButton, 'Create Account'),
+      );
       await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Password must be at least 8 characters'), findsOneWidget);
+      expect(
+        find.text('Password must be at least 8 characters'),
+        findsOneWidget,
+      );
       expect(mockRepo.signupCallCount, equals(0));
     });
 
-    testWidgets('successfully signs up customer and navigates to customerHome', (tester) async {
-      mockRepo.signupResult = Result.success(
-        AuthResponseModel(
-          user: const UserModel(
-            id: 'cust_99',
-            phoneNumber: '+96898765432',
-            fullName: 'Fatima Al-Balushi',
-            role: UserRole.customer,
-            address: 'Villa 12, Muscat',
+    testWidgets(
+      'successfully signs up customer and navigates to customerHome',
+      (tester) async {
+        mockRepo.signupResult = Result.success(
+          AuthResponseModel(
+            user: const UserModel(
+              id: 'cust_99',
+              phoneNumber: '+96898765432',
+              fullName: 'Fatima Al-Balushi',
+              role: UserRole.customer,
+              address: 'Villa 12, Muscat',
+            ),
+            token: 'signup_jwt_token',
           ),
-          token: 'signup_jwt_token',
-        ),
-      );
+        );
 
-      await tester.pumpWidget(buildTestWidget());
+        await tester.pumpWidget(buildTestWidget());
 
-      final textFields = find.byType(TextFormField);
-      await tester.enterText(textFields.at(0), 'Fatima Al-Balushi');
-      await tester.enterText(textFields.at(1), '+96898765432');
-      await tester.enterText(textFields.at(2), 'SecurePass123');
-      await tester.enterText(textFields.at(3), 'Villa 12, Muscat');
+        final textFields = find.byType(TextFormField);
+        await tester.enterText(textFields.at(0), 'Fatima Al-Balushi');
+        await tester.enterText(textFields.at(1), '+96898765432');
+        await tester.enterText(textFields.at(2), 'SecurePass123');
+        await tester.enterText(textFields.at(3), 'Villa 12, Muscat');
 
-      await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'Create Account'));
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
-      await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.widgetWithText(ElevatedButton, 'Create Account'),
+        );
+        await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
+        await tester.pumpAndSettle();
 
-      expect(mockRepo.signupCallCount, equals(1));
-      expect(mockRepo.lastSignupName, equals('Fatima Al-Balushi'));
-      expect(mockRepo.lastSignupPhone, equals('+96898765432'));
-      expect(mockRepo.lastSignupPassword, equals('SecurePass123'));
-      expect(mockRepo.lastSignupAddress, equals('Villa 12, Muscat'));
-      expect(find.text('Customer Home Shell'), findsOneWidget);
-    });
+        expect(mockRepo.signupCallCount, equals(1));
+        expect(mockRepo.lastSignupName, equals('Fatima Al-Balushi'));
+        expect(mockRepo.lastSignupPhone, equals('+96898765432'));
+        expect(mockRepo.lastSignupPassword, equals('SecurePass123'));
+        expect(mockRepo.lastSignupAddress, equals('Villa 12, Muscat'));
+        expect(find.text('Customer Home Shell'), findsOneWidget);
+      },
+    );
 
-    testWidgets('displays conflict error banner when phone is already registered', (tester) async {
-      mockRepo.signupResult = Result.failure(
-        const ConflictFailure(message: 'A user with this phone number already exists.'),
-      );
+    testWidgets(
+      'displays conflict error banner when phone is already registered',
+      (tester) async {
+        mockRepo.signupResult = Result.failure(
+          const ConflictFailure(
+            message: 'A user with this phone number already exists.',
+          ),
+        );
 
-      await tester.pumpWidget(buildTestWidget());
+        await tester.pumpWidget(buildTestWidget());
 
-      final textFields = find.byType(TextFormField);
-      await tester.enterText(textFields.at(0), 'Fatima Al-Balushi');
-      await tester.enterText(textFields.at(1), '+96898765432');
-      await tester.enterText(textFields.at(2), 'SecurePass123');
+        final textFields = find.byType(TextFormField);
+        await tester.enterText(textFields.at(0), 'Fatima Al-Balushi');
+        await tester.enterText(textFields.at(1), '+96898765432');
+        await tester.enterText(textFields.at(2), 'SecurePass123');
 
-      await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'Create Account'));
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
-      await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.widgetWithText(ElevatedButton, 'Create Account'),
+        );
+        await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
+        await tester.pumpAndSettle();
 
-      expect(mockRepo.signupCallCount, equals(1));
-      expect(find.text('A user with this phone number already exists.'), findsOneWidget);
-    });
+        expect(mockRepo.signupCallCount, equals(1));
+        expect(
+          find.text('A user with this phone number already exists.'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

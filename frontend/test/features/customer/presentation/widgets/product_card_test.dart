@@ -29,13 +29,13 @@ void main() {
     loyaltyPointsPerUnit: 0,
   );
 
-  testWidgets('ProductCard renders default currency from AppConstants', (tester) async {
+  testWidgets('ProductCard renders default currency from AppConstants', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.lightTheme,
-        home: const Scaffold(
-          body: ProductCard(product: testProduct),
-        ),
+        home: const Scaffold(body: ProductCard(product: testProduct)),
       ),
     );
 
@@ -44,15 +44,14 @@ void main() {
     expect(find.text('+5 pts'), findsOneWidget);
   });
 
-  testWidgets('ProductCard renders custom currency when provided', (tester) async {
+  testWidgets('ProductCard renders custom currency when provided', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.lightTheme,
         home: const Scaffold(
-          body: ProductCard(
-            product: testProduct,
-            currency: 'AED',
-          ),
+          body: ProductCard(product: testProduct, currency: 'AED'),
         ),
       ),
     );
@@ -60,53 +59,57 @@ void main() {
     expect(find.text('1.25 AED'), findsOneWidget);
   });
 
-  testWidgets('ProductCard shows Add button and calls CartNotifier.addItem when tapped', (tester) async {
-    final mockRepo = MockCartRepository();
-    final notifier = CartNotifier(cartRepository: mockRepo);
-    await notifier.loadForStore('store-1');
+  testWidgets(
+    'ProductCard shows Add button and calls CartNotifier.addItem when tapped',
+    (tester) async {
+      final mockRepo = MockCartRepository();
+      final notifier = CartNotifier(cartRepository: mockRepo);
+      await notifier.loadForStore('store-1');
 
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.lightTheme,
-        home: Scaffold(
-          body: ProductCard(
-            product: const ProductModel(
-              id: 'prod-new',
-              storeId: 'store-1',
-              name: 'Fresh Apples 1kg',
-              price: 1.50,
-              isAvailable: true,
-              loyaltyPointsPerUnit: 2,
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: ProductCard(
+              product: const ProductModel(
+                id: 'prod-new',
+                storeId: 'store-1',
+                name: 'Fresh Apples 1kg',
+                price: 1.50,
+                isAvailable: true,
+                loyaltyPointsPerUnit: 2,
+              ),
+              cartNotifier: notifier,
             ),
-            cartNotifier: notifier,
           ),
         ),
-      ),
-    );
+      );
 
-    expect(find.byKey(const Key('add_to_cart_prod-new')), findsOneWidget);
-    expect(find.text('Add'), findsOneWidget);
+      expect(find.byKey(const Key('add_to_cart_prod-new')), findsOneWidget);
+      expect(find.text('Add'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('add_to_cart_prod-new')));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('add_to_cart_prod-new')));
+      await tester.pumpAndSettle();
 
-    expect(mockRepo.addItemCallCount, equals(1));
-    expect(mockRepo.lastProductIdParam, equals('prod-new'));
-  });
+      expect(mockRepo.addItemCallCount, equals(1));
+      expect(mockRepo.lastProductIdParam, equals('prod-new'));
+    },
+  );
 
-  testWidgets('ProductCard shows stepper when item is already in cart', (tester) async {
+  testWidgets('ProductCard shows stepper when item is already in cart', (
+    tester,
+  ) async {
     final mockRepo = MockCartRepository();
     final notifier = CartNotifier(cartRepository: mockRepo);
-    await notifier.loadForStore('store-1'); // default cart has prod-1 with qty 2
+    await notifier.loadForStore(
+      'store-1',
+    ); // default cart has prod-1 with qty 2
 
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.lightTheme,
         home: Scaffold(
-          body: ProductCard(
-            product: testProduct,
-            cartNotifier: notifier,
-          ),
+          body: ProductCard(product: testProduct, cartNotifier: notifier),
         ),
       ),
     );
@@ -122,7 +125,9 @@ void main() {
     expect(mockRepo.lastQuantityParam, equals(3));
   });
 
-  testWidgets('ProductCard disables Add button when product is unavailable', (tester) async {
+  testWidgets('ProductCard disables Add button when product is unavailable', (
+    tester,
+  ) async {
     final mockRepo = MockCartRepository();
     final notifier = CartNotifier(cartRepository: mockRepo);
     await notifier.loadForStore('store-1');

@@ -13,10 +13,7 @@ import '../widgets/order_details_sheet.dart';
 class CustomerOrdersScreen extends StatefulWidget {
   final OrderRepository? orderRepository;
 
-  const CustomerOrdersScreen({
-    super.key,
-    this.orderRepository,
-  });
+  const CustomerOrdersScreen({super.key, this.orderRepository});
 
   @override
   State<CustomerOrdersScreen> createState() => _CustomerOrdersScreenState();
@@ -33,7 +30,9 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isInitialized) {
-      _repository = widget.orderRepository ?? CustomerScope.maybeOf(context)?.orderRepository;
+      _repository =
+          widget.orderRepository ??
+          CustomerScope.maybeOf(context)?.orderRepository;
       _isInitialized = true;
       if (_repository != null) {
         _loadOrders();
@@ -42,7 +41,10 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
   }
 
   Future<void> _loadOrders() async {
-    final repo = _repository ?? widget.orderRepository ?? CustomerScope.maybeOf(context)?.orderRepository;
+    final repo =
+        _repository ??
+        widget.orderRepository ??
+        CustomerScope.maybeOf(context)?.orderRepository;
     if (repo == null) return;
 
     setState(() {
@@ -85,9 +87,7 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: _buildBody(),
-      ),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
@@ -107,16 +107,24 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 48.0, color: AppColors.error),
+              const Icon(
+                Icons.error_outline,
+                size: 48.0,
+                color: AppColors.error,
+              ),
               const SizedBox(height: AppDimensions.spacingMd),
               Text(
                 'Unable to load orders',
-                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppDimensions.spacingXs),
               Text(
                 _errorMessage!,
-                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingLg),
@@ -153,7 +161,9 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                       height: 64,
                       decoration: BoxDecoration(
                         color: AppColors.primaryLight,
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusLg,
+                        ),
                       ),
                       child: const Icon(
                         Icons.receipt_long_outlined,
@@ -184,7 +194,10 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
       );
     }
 
-    final repo = _repository ?? widget.orderRepository ?? CustomerScope.maybeOf(context)?.orderRepository;
+    final repo =
+        _repository ??
+        widget.orderRepository ??
+        CustomerScope.maybeOf(context)?.orderRepository;
 
     return RefreshIndicator(
       onRefresh: _loadOrders,

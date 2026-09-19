@@ -5,10 +5,7 @@ void main() {
   group('OrderItemModel & OrderItemInput', () {
     test('OrderItemInput serializes to JSON correctly', () {
       const input = OrderItemInput(itemId: 'item-1', quantity: 3);
-      expect(input.toJson(), equals({
-        'itemId': 'item-1',
-        'quantity': 3,
-      }));
+      expect(input.toJson(), equals({'itemId': 'item-1', 'quantity': 3}));
     });
 
     test('OrderItemModel parses camelCase JSON with full fields', () {
@@ -41,29 +38,32 @@ void main() {
       expect(item.name, equals('Fresh Whole Milk 1L'));
     });
 
-    test('OrderItemModel parses snake_case JSON with string prices gracefully', () {
-      final json = {
-        'id': 'line-2',
-        'order_id': 'ord-101',
-        'product_id': 'prod-2',
-        'product_name': 'Organic Bananas 1kg',
-        'unit_price': '0.85',
-        'quantity': '3',
-        'points_per_unit': '2',
-      };
+    test(
+      'OrderItemModel parses snake_case JSON with string prices gracefully',
+      () {
+        final json = {
+          'id': 'line-2',
+          'order_id': 'ord-101',
+          'product_id': 'prod-2',
+          'product_name': 'Organic Bananas 1kg',
+          'unit_price': '0.85',
+          'quantity': '3',
+          'points_per_unit': '2',
+        };
 
-      final item = OrderItemModel.fromJson(json);
+        final item = OrderItemModel.fromJson(json);
 
-      expect(item.id, equals('line-2'));
-      expect(item.orderId, equals('ord-101'));
-      expect(item.itemId, equals('prod-2'));
-      expect(item.itemName, equals('Organic Bananas 1kg'));
-      expect(item.itemPrice, equals(0.85));
-      expect(item.quantity, equals(3));
-      expect(item.subtotal, closeTo(2.55, 0.001));
-      expect(item.loyaltyPointsPerUnit, equals(2));
-      expect(item.subtotalPoints, equals(6));
-    });
+        expect(item.id, equals('line-2'));
+        expect(item.orderId, equals('ord-101'));
+        expect(item.itemId, equals('prod-2'));
+        expect(item.itemName, equals('Organic Bananas 1kg'));
+        expect(item.itemPrice, equals(0.85));
+        expect(item.quantity, equals(3));
+        expect(item.subtotal, closeTo(2.55, 0.001));
+        expect(item.loyaltyPointsPerUnit, equals(2));
+        expect(item.subtotalPoints, equals(6));
+      },
+    );
 
     test('OrderItemModel toJson returns serialized map', () {
       const item = OrderItemModel(

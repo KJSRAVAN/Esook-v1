@@ -48,7 +48,8 @@ class AuthScaffold extends StatelessWidget {
                 elevation: 0,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                  onPressed: onBackPressed ?? () => Navigator.of(context).maybePop(),
+                  onPressed:
+                      onBackPressed ?? () => Navigator.of(context).maybePop(),
                   tooltip: 'Back',
                 ),
               )
@@ -69,7 +70,9 @@ class AuthScaffold extends StatelessWidget {
                   decoration: isDesktop
                       ? BoxDecoration(
                           color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusLg,
+                          ),
                           border: Border.all(color: AppColors.borderSubtle),
                           boxShadow: const [
                             BoxShadow(
@@ -95,7 +98,9 @@ class AuthScaffold extends StatelessWidget {
                             height: 56,
                             decoration: BoxDecoration(
                               color: AppColors.primaryLight,
-                              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusMd,
+                              ),
                             ),
                             child: const Icon(
                               Icons.shopping_bag_outlined,

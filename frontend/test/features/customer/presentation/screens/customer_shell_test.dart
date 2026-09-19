@@ -37,22 +37,20 @@ void main() {
     mockOrderRepository.ordersToReturn = [];
   });
 
-  Widget buildCustomerShell({
-    int initialIndex = 0,
-    StoreModel? initialStore,
-  }) {
+  Widget buildCustomerShell({int initialIndex = 0, StoreModel? initialStore}) {
     return MaterialApp(
       theme: AppTheme.lightTheme,
       routes: {
-        AppRoutes.login: (_) => const Scaffold(body: Text('Customer Login Screen')),
+        AppRoutes.login: (_) =>
+            const Scaffold(body: Text('Customer Login Screen')),
         AppRoutes.customerHome: (_) => CustomerShell(
-              authRepository: mockAuthRepository,
-              storeRepository: mockStoreRepository,
-              productRepository: mockProductRepository,
-              cartRepository: mockCartRepository,
-              orderRepository: mockOrderRepository,
-              initialSelectedStore: initialStore,
-            ),
+          authRepository: mockAuthRepository,
+          storeRepository: mockStoreRepository,
+          productRepository: mockProductRepository,
+          cartRepository: mockCartRepository,
+          orderRepository: mockOrderRepository,
+          initialSelectedStore: initialStore,
+        ),
       },
       home: AuthScope(
         repository: mockAuthRepository,
@@ -70,26 +68,29 @@ void main() {
   }
 
   group('CustomerShell', () {
-    testWidgets('renders all 5 bottom navigation tabs and defaults to Market tab', (tester) async {
-      await tester.pumpWidget(buildCustomerShell());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'renders all 5 bottom navigation tabs and defaults to Market tab',
+      (tester) async {
+        await tester.pumpWidget(buildCustomerShell());
+        await tester.pumpAndSettle();
 
-      expect(find.byType(CustomerBottomNavigation), findsOneWidget);
-      expect(find.byKey(const Key('customer_nav_market')), findsOneWidget);
-      expect(find.byKey(const Key('customer_nav_chat')), findsOneWidget);
-      expect(find.byKey(const Key('customer_nav_cart')), findsOneWidget);
-      expect(find.byKey(const Key('customer_nav_orders')), findsOneWidget);
-      expect(find.byKey(const Key('customer_nav_account')), findsOneWidget);
+        expect(find.byType(CustomerBottomNavigation), findsOneWidget);
+        expect(find.byKey(const Key('customer_nav_market')), findsOneWidget);
+        expect(find.byKey(const Key('customer_nav_chat')), findsOneWidget);
+        expect(find.byKey(const Key('customer_nav_cart')), findsOneWidget);
+        expect(find.byKey(const Key('customer_nav_orders')), findsOneWidget);
+        expect(find.byKey(const Key('customer_nav_account')), findsOneWidget);
 
-      expect(find.text('Market'), findsWidgets);
-      expect(find.text('Chat'), findsOneWidget);
-      expect(find.text('Cart'), findsOneWidget);
-      expect(find.text('Orders'), findsOneWidget);
-      expect(find.text('Account'), findsOneWidget);
+        expect(find.text('Market'), findsWidgets);
+        expect(find.text('Chat'), findsOneWidget);
+        expect(find.text('Cart'), findsOneWidget);
+        expect(find.text('Orders'), findsOneWidget);
+        expect(find.text('Account'), findsOneWidget);
 
-      // Verify Market screen is loaded
-      expect(find.byType(CustomerMarketScreen), findsOneWidget);
-    });
+        // Verify Market screen is loaded
+        expect(find.byType(CustomerMarketScreen), findsOneWidget);
+      },
+    );
 
     testWidgets('switches to Chat tab when tapped', (tester) async {
       await tester.pumpWidget(buildCustomerShell());
@@ -101,7 +102,9 @@ void main() {
       expect(find.byType(CustomerChatScreen), findsOneWidget);
       expect(find.text('No Active Messages'), findsOneWidget);
       expect(
-        find.text('Direct messaging with store staff and delivery riders will be available during active orders.'),
+        find.text(
+          'Direct messaging with store staff and delivery riders will be available during active orders.',
+        ),
         findsOneWidget,
       );
     });
@@ -127,7 +130,9 @@ void main() {
       expect(find.byType(CustomerOrdersScreen), findsOneWidget);
       expect(find.text('No Orders Yet'), findsOneWidget);
       expect(
-        find.text('Track active deliveries and view past grocery order history here.'),
+        find.text(
+          'Track active deliveries and view past grocery order history here.',
+        ),
         findsOneWidget,
       );
     });
@@ -144,89 +149,128 @@ void main() {
       expect(find.byKey(const Key('account_signout_button')), findsOneWidget);
     });
 
-    testWidgets('selected navigation state updates correctly across tab switches', (tester) async {
-      await tester.pumpWidget(buildCustomerShell());
-      await tester.pumpAndSettle();
+    testWidgets(
+      'selected navigation state updates correctly across tab switches',
+      (tester) async {
+        await tester.pumpWidget(buildCustomerShell());
+        await tester.pumpAndSettle();
 
-      // Initially Market is selected
-      expect(
-        tester.widget<Semantics>(find.ancestor(
-          of: find.byKey(const Key('customer_nav_market')),
-          matching: find.byType(Semantics),
-        ).first).properties.selected,
-        isTrue,
-      );
+        // Initially Market is selected
+        expect(
+          tester
+              .widget<Semantics>(
+                find
+                    .ancestor(
+                      of: find.byKey(const Key('customer_nav_market')),
+                      matching: find.byType(Semantics),
+                    )
+                    .first,
+              )
+              .properties
+              .selected,
+          isTrue,
+        );
 
-      // Tap Orders
-      await tester.tap(find.byKey(const Key('customer_nav_orders')));
-      await tester.pumpAndSettle();
+        // Tap Orders
+        await tester.tap(find.byKey(const Key('customer_nav_orders')));
+        await tester.pumpAndSettle();
 
-      expect(
-        tester.widget<Semantics>(find.ancestor(
-          of: find.byKey(const Key('customer_nav_orders')),
-          matching: find.byType(Semantics),
-        ).first).properties.selected,
-        isTrue,
-      );
-      expect(
-        tester.widget<Semantics>(find.ancestor(
-          of: find.byKey(const Key('customer_nav_market')),
-          matching: find.byType(Semantics),
-        ).first).properties.selected,
-        isFalse,
-      );
-    });
+        expect(
+          tester
+              .widget<Semantics>(
+                find
+                    .ancestor(
+                      of: find.byKey(const Key('customer_nav_orders')),
+                      matching: find.byType(Semantics),
+                    )
+                    .first,
+              )
+              .properties
+              .selected,
+          isTrue,
+        );
+        expect(
+          tester
+              .widget<Semantics>(
+                find
+                    .ancestor(
+                      of: find.byKey(const Key('customer_nav_market')),
+                      matching: find.byType(Semantics),
+                    )
+                    .first,
+              )
+              .properties
+              .selected,
+          isFalse,
+        );
+      },
+    );
 
-    testWidgets('logout from Account screen calls auth repository and routes back to login', (tester) async {
-      await tester.pumpWidget(buildCustomerShell(initialIndex: 4));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'logout from Account screen calls auth repository and routes back to login',
+      (tester) async {
+        await tester.pumpWidget(buildCustomerShell(initialIndex: 4));
+        await tester.pumpAndSettle();
 
-      expect(find.byType(CustomerAccountScreen), findsOneWidget);
+        expect(find.byType(CustomerAccountScreen), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('account_signout_button')));
-      await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('account_signout_button')));
+        await tester.pumpAndSettle();
 
-      expect(mockAuthRepository.logoutCallCount, equals(1));
-      expect(find.text('Customer Login Screen'), findsOneWidget);
-    });
+        expect(mockAuthRepository.logoutCallCount, equals(1));
+        expect(find.text('Customer Login Screen'), findsOneWidget);
+      },
+    );
 
-    testWidgets('Customer role routing destination maps to customerHome and resolves CustomerShell in AppRouter', (tester) async {
-      final destination = RoleRouting.getDestinationRoute(UserRole.customer);
-      expect(destination, equals(AppRoutes.customerHome));
+    testWidgets(
+      'Customer role routing destination maps to customerHome and resolves CustomerShell in AppRouter',
+      (tester) async {
+        final destination = RoleRouting.getDestinationRoute(UserRole.customer);
+        expect(destination, equals(AppRoutes.customerHome));
 
-      final route = AppRouter.onGenerateRoute(
-        RouteSettings(name: destination),
-      );
+        final route = AppRouter.onGenerateRoute(
+          RouteSettings(name: destination),
+        );
 
-      expect(route, isA<MaterialPageRoute<void>>());
-      final materialRoute = route as MaterialPageRoute<void>;
-      expect(materialRoute.builder(tester.element(find.byType(Container))), isA<CustomerShell>());
-    });
+        expect(route, isA<MaterialPageRoute<void>>());
+        final materialRoute = route as MaterialPageRoute<void>;
+        expect(
+          materialRoute.builder(tester.element(find.byType(Container))),
+          isA<CustomerShell>(),
+        );
+      },
+    );
 
-    testWidgets('renders cleanly on standard mobile viewport (390x844) with zero overflow', (tester) async {
-      tester.view.physicalSize = const Size(390 * 2, 844 * 2);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets(
+      'renders cleanly on standard mobile viewport (390x844) with zero overflow',
+      (tester) async {
+        tester.view.physicalSize = const Size(390 * 2, 844 * 2);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
 
-      final store = mockStoreRepository.defaultStores.first;
-      await tester.pumpWidget(buildCustomerShell(initialStore: store));
-      await tester.pumpAndSettle();
+        final store = mockStoreRepository.defaultStores.first;
+        await tester.pumpWidget(buildCustomerShell(initialStore: store));
+        await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-      expect(find.byType(CustomerShell), findsOneWidget);
-    });
+        expect(tester.takeException(), isNull);
+        expect(find.byType(CustomerShell), findsOneWidget);
+      },
+    );
 
-    testWidgets('renders cleanly on wide desktop viewport (1200x800) with zero overflow', (tester) async {
-      tester.view.physicalSize = const Size(1200, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets(
+      'renders cleanly on wide desktop viewport (1200x800) with zero overflow',
+      (tester) async {
+        tester.view.physicalSize = const Size(1200, 800);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
 
-      final store = mockStoreRepository.defaultStores.first;
-      await tester.pumpWidget(buildCustomerShell(initialStore: store));
-      await tester.pumpAndSettle();
+        final store = mockStoreRepository.defaultStores.first;
+        await tester.pumpWidget(buildCustomerShell(initialStore: store));
+        await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-      expect(find.byType(CustomerShell), findsOneWidget);
-    });
+        expect(tester.takeException(), isNull);
+        expect(find.byType(CustomerShell), findsOneWidget);
+      },
+    );
   });
 }

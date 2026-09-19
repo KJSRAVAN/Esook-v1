@@ -9,23 +9,24 @@ import '../../domain/repositories/store_products_repository.dart';
 class StoreProductsRepositoryImpl implements StoreProductsRepository {
   final ApiClient _apiClient;
 
-  const StoreProductsRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
+  const StoreProductsRepositoryImpl({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
   @override
   Future<Result<List<ProductModel>>> getStoreProducts(String storeId) async {
     try {
-      final response = await _apiClient.get<dynamic>('/products/store/$storeId');
+      final response = await _apiClient.get<dynamic>('/stores/$storeId/items');
 
       final dynamic rawData = response.data;
       final List<dynamic> rawList;
 
       if (rawData is Map<String, dynamic>) {
-        if (rawData['products'] is List) {
-          rawList = rawData['products'] as List;
+        if (rawData['data'] is List) {
+          rawList = rawData['data'] as List;
         } else if (rawData['items'] is List) {
           rawList = rawData['items'] as List;
-        } else if (rawData['data'] is List) {
-          rawList = rawData['data'] as List;
+        } else if (rawData['products'] is List) {
+          rawList = rawData['products'] as List;
         } else {
           rawList = const [];
         }
@@ -44,7 +45,9 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch store items: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch store items: $e'),
+      );
     }
   }
 
@@ -60,22 +63,20 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     int? sortOrder,
   }) async {
     try {
-      final catString = category ?? categoryId;
       final body = <String, dynamic>{
-        'store_id': storeId,
         'name': name.trim(),
         'price': price,
         if (description != null && description.trim().isNotEmpty)
           'description': description.trim(),
-        if (catString != null && catString.trim().isNotEmpty)
-          'category': catString.trim(),
+        if (categoryId != null && categoryId.trim().isNotEmpty)
+          'categoryId': categoryId.trim(),
         if (imageUrl != null && imageUrl.trim().isNotEmpty)
-          'image_url': imageUrl.trim(),
-        'is_available': true,
+          'imageUrl': imageUrl.trim(),
+        if (sortOrder != null) 'sortOrder': sortOrder,
       };
 
       final response = await _apiClient.post<dynamic>(
-        '/products',
+        '/stores/$storeId/items',
         body: body,
       );
 
@@ -83,12 +84,12 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
       final Map<String, dynamic> rawItem;
 
       if (rawData is Map<String, dynamic>) {
-        if (rawData['product'] is Map<String, dynamic>) {
-          rawItem = rawData['product'] as Map<String, dynamic>;
+        if (rawData['data'] is Map<String, dynamic>) {
+          rawItem = rawData['data'] as Map<String, dynamic>;
         } else if (rawData['item'] is Map<String, dynamic>) {
           rawItem = rawData['item'] as Map<String, dynamic>;
-        } else if (rawData['data'] is Map<String, dynamic>) {
-          rawItem = rawData['data'] as Map<String, dynamic>;
+        } else if (rawData['product'] is Map<String, dynamic>) {
+          rawItem = rawData['product'] as Map<String, dynamic>;
         } else {
           rawItem = rawData;
         }
@@ -101,7 +102,9 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to create item: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to create item: $e'),
+      );
     }
   }
 
@@ -119,21 +122,19 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     bool? isAvailable,
   }) async {
     try {
-      final catString = category ?? categoryId;
       final body = <String, dynamic>{
         if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
         if (description != null) 'description': description.trim(),
         if (price != null) 'price': price,
-        if (catString != null && catString.trim().isNotEmpty)
-          'category': catString.trim(),
-        if (imageUrl != null)
-          'image_url': imageUrl.trim(),
-        if (isAvailable != null)
-          'is_available': isAvailable,
+        if (categoryId != null && categoryId.trim().isNotEmpty)
+          'categoryId': categoryId.trim(),
+        if (imageUrl != null) 'imageUrl': imageUrl.trim(),
+        if (isAvailable != null) 'isAvailable': isAvailable,
+        if (sortOrder != null) 'sortOrder': sortOrder,
       };
 
       final response = await _apiClient.patch<dynamic>(
-        '/products/$productId',
+        '/stores/$storeId/items/$productId',
         body: body,
       );
 
@@ -141,12 +142,12 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
       final Map<String, dynamic> rawItem;
 
       if (rawData is Map<String, dynamic>) {
-        if (rawData['product'] is Map<String, dynamic>) {
-          rawItem = rawData['product'] as Map<String, dynamic>;
+        if (rawData['data'] is Map<String, dynamic>) {
+          rawItem = rawData['data'] as Map<String, dynamic>;
         } else if (rawData['item'] is Map<String, dynamic>) {
           rawItem = rawData['item'] as Map<String, dynamic>;
-        } else if (rawData['data'] is Map<String, dynamic>) {
-          rawItem = rawData['data'] as Map<String, dynamic>;
+        } else if (rawData['product'] is Map<String, dynamic>) {
+          rawItem = rawData['product'] as Map<String, dynamic>;
         } else {
           rawItem = rawData;
         }
@@ -159,7 +160,9 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to update item: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to update item: $e'),
+      );
     }
   }
 
@@ -182,12 +185,14 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     required String productId,
   }) async {
     try {
-      await _apiClient.delete<dynamic>('/products/$productId');
+      await _apiClient.delete<dynamic>('/stores/$storeId/items/$productId');
       return Result.success(null);
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to delete item: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to delete item: $e'),
+      );
     }
   }
 }

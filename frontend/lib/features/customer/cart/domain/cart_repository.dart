@@ -5,9 +5,7 @@ import 'cart_model.dart';
 /// Contract for customer cart data operations matching backend endpoints.
 abstract interface class CartRepository {
   /// Fetches the authenticated customer's active cart (GET /cart).
-  Future<Result<CartModel>> getCart({
-    String? storeId,
-  });
+  Future<Result<CartModel>> getCart({String? storeId});
 
   /// Adds an item to the customer's cart (POST /cart/items).
   /// Enforces single-store rule on backend.
@@ -35,7 +33,5 @@ abstract interface class CartRepository {
   });
 
   /// Clears all items from the customer's cart (DELETE /cart).
-  Future<Result<CartModel>> clearCart({
-    String? storeId,
-  });
+  Future<Result<CartModel>> clearCart({String? storeId});
 }

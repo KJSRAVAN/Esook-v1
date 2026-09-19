@@ -64,14 +64,12 @@ class _RiderShellState extends State<RiderShell> {
       timeout: config.connectTimeout,
     );
 
-    _authRepository = widget.authRepository ??
-        AuthRepositoryImpl(
-          apiClient: apiClient,
-          secureStorage: secureStorage,
-        );
+    _authRepository =
+        widget.authRepository ??
+        AuthRepositoryImpl(apiClient: apiClient, secureStorage: secureStorage);
 
-    _riderRepository = widget.riderRepository ??
-        RiderRepositoryImpl(apiClient: apiClient);
+    _riderRepository =
+        widget.riderRepository ?? RiderRepositoryImpl(apiClient: apiClient);
 
     if (widget.initialUser != null) {
       _currentUser = widget.initialUser;
@@ -100,10 +98,9 @@ class _RiderShellState extends State<RiderShell> {
   Future<void> _handleLogout() async {
     await _authRepository.logout();
     if (mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.login,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
     }
   }
 
@@ -141,10 +138,7 @@ class _RiderShellState extends State<RiderShell> {
   Widget _buildMobileLayout() {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _buildScreens(),
-      ),
+      body: IndexedStack(index: _currentIndex, children: _buildScreens()),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: _onTabSelected,
@@ -154,12 +148,18 @@ class _RiderShellState extends State<RiderShell> {
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.delivery_dining_outlined),
-            selectedIcon: Icon(Icons.delivery_dining_rounded, color: Color(0xFFEA580C)),
+            selectedIcon: Icon(
+              Icons.delivery_dining_rounded,
+              color: Color(0xFFEA580C),
+            ),
             label: 'Active',
           ),
           NavigationDestination(
             icon: Icon(Icons.list_alt_outlined),
-            selectedIcon: Icon(Icons.list_alt_rounded, color: Color(0xFFEA580C)),
+            selectedIcon: Icon(
+              Icons.list_alt_rounded,
+              color: Color(0xFFEA580C),
+            ),
             label: 'Available',
           ),
           NavigationDestination(
@@ -216,7 +216,10 @@ class _RiderShellState extends State<RiderShell> {
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: IconButton(
                     key: const Key('rider_rail_logout_btn'),
-                    icon: const Icon(Icons.logout_rounded, color: AppColors.textSecondary),
+                    icon: const Icon(
+                      Icons.logout_rounded,
+                      color: AppColors.textSecondary,
+                    ),
                     tooltip: 'Sign Out',
                     onPressed: _handleLogout,
                   ),
@@ -226,17 +229,26 @@ class _RiderShellState extends State<RiderShell> {
             destinations: const [
               NavigationRailDestination(
                 icon: Icon(Icons.delivery_dining_outlined),
-                selectedIcon: Icon(Icons.delivery_dining_rounded, color: Color(0xFFEA580C)),
+                selectedIcon: Icon(
+                  Icons.delivery_dining_rounded,
+                  color: Color(0xFFEA580C),
+                ),
                 label: Text('Active'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.list_alt_outlined),
-                selectedIcon: Icon(Icons.list_alt_rounded, color: Color(0xFFEA580C)),
+                selectedIcon: Icon(
+                  Icons.list_alt_rounded,
+                  color: Color(0xFFEA580C),
+                ),
                 label: Text('Available'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.person_outline_rounded),
-                selectedIcon: Icon(Icons.person_rounded, color: Color(0xFFEA580C)),
+                selectedIcon: Icon(
+                  Icons.person_rounded,
+                  color: Color(0xFFEA580C),
+                ),
                 label: Text('Account'),
               ),
             ],

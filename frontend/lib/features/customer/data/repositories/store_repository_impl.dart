@@ -9,7 +9,8 @@ import '../../domain/repositories/store_repository.dart';
 class StoreRepositoryImpl implements StoreRepository {
   final ApiClient _apiClient;
 
-  const StoreRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
+  const StoreRepositoryImpl({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
   @override
   Future<Result<List<StoreModel>>> getStores() async {
@@ -20,7 +21,8 @@ class StoreRepositoryImpl implements StoreRepository {
       if (rawData is List) {
         rawList = rawData;
       } else if (rawData is Map<String, dynamic>) {
-        rawList = (rawData['stores'] ?? rawData['data']) as List<dynamic>? ?? [];
+        rawList =
+            (rawData['stores'] ?? rawData['data']) as List<dynamic>? ?? [];
       } else {
         rawList = [];
       }
@@ -33,7 +35,9 @@ class StoreRepositoryImpl implements StoreRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch stores: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch stores: $e'),
+      );
     }
   }
 
@@ -59,7 +63,9 @@ class StoreRepositoryImpl implements StoreRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch delivery areas: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch delivery areas: $e'),
+      );
     }
   }
 
@@ -86,7 +92,9 @@ class StoreRepositoryImpl implements StoreRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch store $id: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch store $id: $e'),
+      );
     }
   }
 }

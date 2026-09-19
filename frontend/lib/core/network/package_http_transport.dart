@@ -13,7 +13,8 @@ import 'http_transport.dart';
 class PackageHttpTransport implements HttpTransport {
   final http.Client _client;
 
-  PackageHttpTransport({http.Client? client}) : _client = client ?? http.Client();
+  PackageHttpTransport({http.Client? client})
+    : _client = client ?? http.Client();
 
   @override
   Future<HttpResponseData> send({
@@ -36,7 +37,8 @@ class PackageHttpTransport implements HttpTransport {
           ? await streamedResponseFuture.timeout(
               timeout,
               onTimeout: () => throw const NetworkException(
-                message: 'Connection timed out while waiting for server response',
+                message:
+                    'Connection timed out while waiting for server response',
               ),
             )
           : await streamedResponseFuture;
@@ -57,22 +59,17 @@ class PackageHttpTransport implements HttpTransport {
         headers: response.headers,
       );
     } on http.ClientException catch (e) {
-      throw NetworkException(
-        message: 'Network connection error: ${e.message}',
-      );
+      throw NetworkException(message: 'Network connection error: ${e.message}');
     } on TimeoutException catch (e) {
       throw NetworkException(
-        message: 'Request timed out: ${e.message ?? 'Server took too long to respond'}',
+        message:
+            'Request timed out: ${e.message ?? 'Server took too long to respond'}',
       );
     } on FormatException catch (e) {
-      throw NetworkException(
-        message: 'Invalid response format: ${e.message}',
-      );
+      throw NetworkException(message: 'Invalid response format: ${e.message}');
     } catch (e) {
       if (e is AppException) rethrow;
-      throw NetworkException(
-        message: 'Unexpected network error: $e',
-      );
+      throw NetworkException(message: 'Unexpected network error: $e');
     }
   }
 }

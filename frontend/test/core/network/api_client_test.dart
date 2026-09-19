@@ -50,16 +50,28 @@ void main() {
       );
     });
 
-    test('injects Authorization Bearer token and JSON headers automatically', () async {
-      mockTransport.responseBody = jsonEncode({'success': true});
+    test(
+      'injects Authorization Bearer token and JSON headers automatically',
+      () async {
+        mockTransport.responseBody = jsonEncode({'success': true});
 
-      final response = await apiClient.get<Map<String, dynamic>>('/test');
+        final response = await apiClient.get<Map<String, dynamic>>('/test');
 
-      expect(response.statusCode, equals(200));
-      expect(mockTransport.lastHeaders?['Authorization'], equals('Bearer test_token_123'));
-      expect(mockTransport.lastHeaders?['Content-Type'], equals('application/json'));
-      expect(mockTransport.lastHeaders?['Accept'], equals('application/json'));
-    });
+        expect(response.statusCode, equals(200));
+        expect(
+          mockTransport.lastHeaders?['Authorization'],
+          equals('Bearer test_token_123'),
+        );
+        expect(
+          mockTransport.lastHeaders?['Content-Type'],
+          equals('application/json'),
+        );
+        expect(
+          mockTransport.lastHeaders?['Accept'],
+          equals('application/json'),
+        );
+      },
+    );
 
     test('handles query parameters properly', () async {
       mockTransport.responseBody = jsonEncode({'items': []});
@@ -69,7 +81,10 @@ void main() {
         queryParameters: {'category': 'tech', 'limit': 10},
       );
 
-      expect(mockTransport.lastUri?.queryParameters['category'], equals('tech'));
+      expect(
+        mockTransport.lastUri?.queryParameters['category'],
+        equals('tech'),
+      );
       expect(mockTransport.lastUri?.queryParameters['limit'], equals('10'));
     });
 
@@ -89,7 +104,10 @@ void main() {
 
     test('serializes PATCH body to JSON and handles request', () async {
       mockTransport.statusCode = 200;
-      mockTransport.responseBody = jsonEncode({'id': 'item_1', 'status': 'updated'});
+      mockTransport.responseBody = jsonEncode({
+        'id': 'item_1',
+        'status': 'updated',
+      });
 
       final response = await apiClient.patch<Map<String, dynamic>>(
         '/orders/item_1',
@@ -124,38 +142,49 @@ void main() {
 
     test('throws UnauthorizedException on 401 response', () async {
       mockTransport.statusCode = 401;
-      mockTransport.responseBody = jsonEncode({'message': 'Invalid credentials'});
-
-      expect(
-        () => apiClient.get<dynamic>('/protected'),
-        throwsA(isA<UnauthorizedException>().having(
-          (e) => e.message,
-          'message',
-          contains('Invalid credentials'),
-        )),
-      );
-    });
-
-    test('throws ValidationException on 400 response with error details', () async {
-      mockTransport.statusCode = 400;
       mockTransport.responseBody = jsonEncode({
-        'message': 'Validation failed',
-        'errors': {'email': 'Invalid email format'},
+        'message': 'Invalid credentials',
       });
 
       expect(
-        () => apiClient.post<dynamic>('/register', body: {}),
-        throwsA(isA<ValidationException>().having(
-          (e) => e.validationErrors?['email'],
-          'email error',
-          equals('Invalid email format'),
-        )),
+        () => apiClient.get<dynamic>('/protected'),
+        throwsA(
+          isA<UnauthorizedException>().having(
+            (e) => e.message,
+            'message',
+            contains('Invalid credentials'),
+          ),
+        ),
       );
     });
 
+    test(
+      'throws ValidationException on 400 response with error details',
+      () async {
+        mockTransport.statusCode = 400;
+        mockTransport.responseBody = jsonEncode({
+          'message': 'Validation failed',
+          'errors': {'email': 'Invalid email format'},
+        });
+
+        expect(
+          () => apiClient.post<dynamic>('/register', body: {}),
+          throwsA(
+            isA<ValidationException>().having(
+              (e) => e.validationErrors?['email'],
+              'email error',
+              equals('Invalid email format'),
+            ),
+          ),
+        );
+      },
+    );
+
     test('throws NotFoundException on 404 response', () async {
       mockTransport.statusCode = 404;
-      mockTransport.responseBody = jsonEncode({'message': 'Resource not found'});
+      mockTransport.responseBody = jsonEncode({
+        'message': 'Resource not found',
+      });
 
       expect(
         () => apiClient.get<dynamic>('/not-found'),
@@ -165,7 +194,9 @@ void main() {
 
     test('throws ServerException on 500 response', () async {
       mockTransport.statusCode = 500;
-      mockTransport.responseBody = jsonEncode({'message': 'Internal database error'});
+      mockTransport.responseBody = jsonEncode({
+        'message': 'Internal database error',
+      });
 
       expect(
         () => apiClient.get<dynamic>('/error'),

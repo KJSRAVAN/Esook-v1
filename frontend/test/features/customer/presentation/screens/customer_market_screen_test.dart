@@ -43,7 +43,9 @@ void main() {
   }
 
   group('CustomerMarketScreen', () {
-    testWidgets('renders StoreSelectionView when no store is selected', (tester) async {
+    testWidgets('renders StoreSelectionView when no store is selected', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildWidget(initialStore: null));
       await tester.pumpAndSettle();
 
@@ -51,7 +53,9 @@ void main() {
       expect(find.text('eSOuQ Olaya Flagship'), findsOneWidget);
     });
 
-    testWidgets('loads catalog and renders products when a store is selected', (tester) async {
+    testWidgets('loads catalog and renders products when a store is selected', (
+      tester,
+    ) async {
       final store = mockStoreRepo.defaultStores.first;
       await tester.pumpWidget(buildWidget(initialStore: store));
       await tester.pumpAndSettle();
@@ -67,8 +71,14 @@ void main() {
       expect(find.byKey(const Key('market_search_text_field')), findsOneWidget);
       expect(find.byType(CategoryFilterBar), findsOneWidget);
       expect(find.byKey(const Key('category_chip_All')), findsOneWidget);
-      expect(find.byKey(const Key('category_chip_Dairy & Eggs')), findsOneWidget);
-      expect(find.byKey(const Key('category_chip_Fresh Produce')), findsOneWidget);
+      expect(
+        find.byKey(const Key('category_chip_Dairy & Eggs')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('category_chip_Fresh Produce')),
+        findsOneWidget,
+      );
 
       // Product cards
       expect(find.byType(ProductCard), findsNWidgets(3));
@@ -104,7 +114,9 @@ void main() {
       expect(find.byType(ProductCard), findsNWidgets(3));
     });
 
-    testWidgets('filters products locally by in-memory search query', (tester) async {
+    testWidgets('filters products locally by in-memory search query', (
+      tester,
+    ) async {
       final store = mockStoreRepo.defaultStores.first;
       await tester.pumpWidget(buildWidget(initialStore: store));
       await tester.pumpAndSettle();
@@ -120,7 +132,9 @@ void main() {
       expect(find.text('Organic Bananas 1kg'), findsNothing);
     });
 
-    testWidgets('shows empty search result and allows clearing search', (tester) async {
+    testWidgets('shows empty search result and allows clearing search', (
+      tester,
+    ) async {
       final store = mockStoreRepo.defaultStores.first;
       await tester.pumpWidget(buildWidget(initialStore: store));
       await tester.pumpAndSettle();
@@ -154,14 +168,18 @@ void main() {
       expect(find.byKey(const Key('market_retry_button')), findsOneWidget);
 
       // Now set success and tap retry
-      mockProductRepo.getProductsByStoreResult = Result.success(mockProductRepo.defaultProducts);
+      mockProductRepo.getProductsByStoreResult = Result.success(
+        mockProductRepo.defaultProducts,
+      );
       await tester.tap(find.byKey(const Key('market_retry_button')));
       await tester.pumpAndSettle();
 
       expect(find.byType(ProductCard), findsNWidgets(3));
     });
 
-    testWidgets('shows empty store catalog message when store has 0 products', (tester) async {
+    testWidgets('shows empty store catalog message when store has 0 products', (
+      tester,
+    ) async {
       final store = mockStoreRepo.defaultStores.first;
       mockProductRepo.getProductsByStoreResult = Result.success([]);
 
@@ -171,7 +189,9 @@ void main() {
       expect(find.text('No Products in this Store'), findsOneWidget);
     });
 
-    testWidgets('opens store switcher sheet when tapping store header', (tester) async {
+    testWidgets('opens store switcher sheet when tapping store header', (
+      tester,
+    ) async {
       final store = mockStoreRepo.defaultStores.first;
       await tester.pumpWidget(buildWidget(initialStore: store));
       await tester.pumpAndSettle();

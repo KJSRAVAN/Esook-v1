@@ -20,7 +20,10 @@ void main() {
     });
 
     test('Failure stores failure and reports isFailure', () {
-      const failure = NetworkFailure(message: 'Connection failed', statusCode: null);
+      const failure = NetworkFailure(
+        message: 'Connection failed',
+        statusCode: null,
+      );
       final result = Result<String>.failure(failure);
 
       expect(result.isSuccess, isFalse);

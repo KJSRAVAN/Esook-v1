@@ -27,12 +27,16 @@ class CategoryFilterBar extends StatelessWidget {
       height: 38.0,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingMd),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.spacingMd,
+        ),
         itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppDimensions.spacingSm),
+        separatorBuilder: (_, __) =>
+            const SizedBox(width: AppDimensions.spacingSm),
         itemBuilder: (context, index) {
           final category = categories[index];
-          final isSelected = category.toLowerCase() == selectedCategory.toLowerCase();
+          final isSelected =
+              category.toLowerCase() == selectedCategory.toLowerCase();
 
           return InkWell(
             key: Key('category_chip_$category'),
@@ -48,7 +52,9 @@ class CategoryFilterBar extends StatelessWidget {
                 color: isSelected ? AppColors.primary : AppColors.surface,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
                 border: Border.all(
-                  color: isSelected ? AppColors.primary : AppColors.borderSubtle,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.borderSubtle,
                   width: 1.0,
                 ),
               ),

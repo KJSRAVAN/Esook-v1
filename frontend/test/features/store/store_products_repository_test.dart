@@ -48,19 +48,19 @@ void main() {
       productsRepository = StoreProductsRepositoryImpl(apiClient: apiClient);
     });
 
-    test('getStoreProducts queries GET /products/store/:storeId', () async {
+    test('getStoreProducts queries GET /stores/:storeId/items', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
-        'products': [
+        'data': [
           {
             'id': 'prod-1',
-            'store_id': 'store-1',
+            'storeId': 'store-1',
             'name': 'Fresh Apples 1kg',
             'price': '8.50',
             'category': 'Fresh Fruits',
-            'is_available': true,
-          }
-        ]
+            'isAvailable': true,
+          },
+        ],
       });
 
       final result = await productsRepository.getStoreProducts('store-1');
@@ -71,99 +71,110 @@ void main() {
       expect(products.first.name, 'Fresh Apples 1kg');
       expect(products.first.price, 8.50);
       expect(products.first.isAvailable, isTrue);
-      expect(mockTransport.lastUri?.path, '/products/store/store-1');
+      expect(mockTransport.lastUri?.path, '/stores/store-1/items');
       expect(mockTransport.lastMethod, HttpMethod.get);
     });
 
-    test('createProduct sends POST /products with backend body', () async {
-      mockTransport.statusCode = 201;
-      mockTransport.responseBody = jsonEncode({
-        'product': {
-          'id': 'prod-2',
-          'store_id': 'store-1',
-          'name': 'Organic Bananas 1kg',
-          'price': '6.00',
-          'category': 'Fresh Fruits',
-          'is_available': true,
-        }
-      });
+    test(
+      'createProduct sends POST /stores/:storeId/items with backend body',
+      () async {
+        mockTransport.statusCode = 201;
+        mockTransport.responseBody = jsonEncode({
+          'data': {
+            'id': 'prod-2',
+            'storeId': 'store-1',
+            'name': 'Organic Bananas 1kg',
+            'price': '6.00',
+            'category': 'Fresh Fruits',
+            'isAvailable': true,
+          },
+        });
 
-      final result = await productsRepository.createProduct(
-        storeId: 'store-1',
-        name: 'Organic Bananas 1kg',
-        price: 6.00,
-        category: 'Fresh Fruits',
-      );
+        final result = await productsRepository.createProduct(
+          storeId: 'store-1',
+          name: 'Organic Bananas 1kg',
+          price: 6.00,
+          categoryId: 'cat-1',
+        );
 
-      expect(result.isSuccess, isTrue);
-      final product = result.dataOrNull!;
-      expect(product.id, 'prod-2');
-      expect(product.name, 'Organic Bananas 1kg');
-      expect(mockTransport.lastUri?.path, '/products');
-      expect(mockTransport.lastMethod, HttpMethod.post);
-      expect(mockTransport.lastBody, contains('"store_id":"store-1"'));
-      expect(mockTransport.lastBody, contains('"name":"Organic Bananas 1kg"'));
-      expect(mockTransport.lastBody, contains('"category":"Fresh Fruits"'));
-      expect(mockTransport.lastBody, isNot(contains('category_id')));
-      expect(mockTransport.lastBody, isNot(contains('sort_order')));
-    });
+        expect(result.isSuccess, isTrue);
+        final product = result.dataOrNull!;
+        expect(product.id, 'prod-2');
+        expect(product.name, 'Organic Bananas 1kg');
+        expect(mockTransport.lastUri?.path, '/stores/store-1/items');
+        expect(mockTransport.lastMethod, HttpMethod.post);
+        expect(
+          mockTransport.lastBody,
+          contains('"name":"Organic Bananas 1kg"'),
+        );
+        expect(mockTransport.lastBody, contains('"categoryId":"cat-1"'));
+        expect(mockTransport.lastBody, isNot(contains('store_id')));
+      },
+    );
 
-    test('updateProduct sends PATCH /products/:id with backend body', () async {
+    test(
+      'updateProduct sends PATCH /stores/:storeId/items/:itemId with backend body',
+      () async {
+        mockTransport.statusCode = 200;
+        mockTransport.responseBody = jsonEncode({
+          'data': {
+            'id': 'prod-2',
+            'storeId': 'store-1',
+            'name': 'Organic Bananas 1kg (Sale)',
+            'price': '5.50',
+            'isAvailable': true,
+          },
+        });
+
+        final result = await productsRepository.updateProduct(
+          storeId: 'store-1',
+          productId: 'prod-2',
+          name: 'Organic Bananas 1kg (Sale)',
+          price: 5.50,
+        );
+
+        expect(result.isSuccess, isTrue);
+        final product = result.dataOrNull!;
+        expect(product.price, 5.50);
+        expect(mockTransport.lastUri?.path, '/stores/store-1/items/prod-2');
+        expect(mockTransport.lastMethod, HttpMethod.patch);
+        expect(mockTransport.lastBody, isNot(contains('store_id')));
+      },
+    );
+
+    test(
+      'toggleAvailability updates isAvailable via PATCH /stores/:storeId/items/:itemId',
+      () async {
+        mockTransport.statusCode = 200;
+        mockTransport.responseBody = jsonEncode({
+          'data': {
+            'id': 'prod-2',
+            'storeId': 'store-1',
+            'name': 'Organic Bananas 1kg',
+            'price': '6.00',
+            'isAvailable': false,
+          },
+        });
+
+        final result = await productsRepository.toggleAvailability(
+          storeId: 'store-1',
+          productId: 'prod-2',
+          isAvailable: false,
+        );
+
+        expect(result.isSuccess, isTrue);
+        final product = result.dataOrNull!;
+        expect(product.isAvailable, isFalse);
+        expect(mockTransport.lastUri?.path, '/stores/store-1/items/prod-2');
+        expect(mockTransport.lastBody, contains('"isAvailable":false'));
+      },
+    );
+
+    test('deleteProduct sends DELETE /stores/:storeId/items/:itemId', () async {
       mockTransport.statusCode = 200;
       mockTransport.responseBody = jsonEncode({
-        'product': {
-          'id': 'prod-2',
-          'store_id': 'store-1',
-          'name': 'Organic Bananas 1kg (Sale)',
-          'price': '5.50',
-          'is_available': true,
-        }
+        'message': 'Product deleted successfully',
       });
-
-      final result = await productsRepository.updateProduct(
-        storeId: 'store-1',
-        productId: 'prod-2',
-        name: 'Organic Bananas 1kg (Sale)',
-        price: 5.50,
-      );
-
-      expect(result.isSuccess, isTrue);
-      final product = result.dataOrNull!;
-      expect(product.price, 5.50);
-      expect(mockTransport.lastUri?.path, '/products/prod-2');
-      expect(mockTransport.lastMethod, HttpMethod.patch);
-      expect(mockTransport.lastBody, isNot(contains('category_id')));
-      expect(mockTransport.lastBody, isNot(contains('sort_order')));
-    });
-
-    test('toggleAvailability updates is_available via PATCH /products/:id', () async {
-      mockTransport.statusCode = 200;
-      mockTransport.responseBody = jsonEncode({
-        'product': {
-          'id': 'prod-2',
-          'store_id': 'store-1',
-          'name': 'Organic Bananas 1kg',
-          'price': '6.00',
-          'is_available': false,
-        }
-      });
-
-      final result = await productsRepository.toggleAvailability(
-        storeId: 'store-1',
-        productId: 'prod-2',
-        isAvailable: false,
-      );
-
-      expect(result.isSuccess, isTrue);
-      final product = result.dataOrNull!;
-      expect(product.isAvailable, isFalse);
-      expect(mockTransport.lastUri?.path, '/products/prod-2');
-      expect(mockTransport.lastBody, contains('"is_available":false'));
-    });
-
-    test('deleteProduct sends DELETE /products/:id', () async {
-      mockTransport.statusCode = 200;
-      mockTransport.responseBody = jsonEncode({'message': 'Product deleted successfully'});
 
       final result = await productsRepository.deleteProduct(
         storeId: 'store-1',
@@ -171,7 +182,7 @@ void main() {
       );
 
       expect(result.isSuccess, isTrue);
-      expect(mockTransport.lastUri?.path, '/products/prod-2');
+      expect(mockTransport.lastUri?.path, '/stores/store-1/items/prod-2');
       expect(mockTransport.lastMethod, HttpMethod.delete);
     });
   });

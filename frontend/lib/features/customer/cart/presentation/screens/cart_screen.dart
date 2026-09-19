@@ -81,10 +81,7 @@ class CartScreen extends StatelessWidget {
         // 1. No store selected state
         if (storeId == null || storeId.isEmpty) {
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('My Cart'),
-              centerTitle: false,
-            ),
+            appBar: AppBar(title: const Text('My Cart'), centerTitle: false),
             body: CartEmptyState(
               storeName: null,
               onExploreMarket: onExploreMarket,
@@ -95,10 +92,7 @@ class CartScreen extends StatelessWidget {
         // 2. Initial loading state (no cart loaded yet)
         if (isLoading && cart == null) {
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('My Cart'),
-              centerTitle: false,
-            ),
+            appBar: AppBar(title: const Text('My Cart'), centerTitle: false),
             body: const Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
@@ -110,26 +104,31 @@ class CartScreen extends StatelessWidget {
         // 3. Initial error state (no cart loaded yet)
         if (error != null && cart == null) {
           return Scaffold(
-            appBar: AppBar(
-              title: const Text('My Cart'),
-              centerTitle: false,
-            ),
+            appBar: AppBar(title: const Text('My Cart'), centerTitle: false),
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(AppDimensions.spacingLg),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48.0, color: AppColors.error),
+                    const Icon(
+                      Icons.error_outline,
+                      size: 48.0,
+                      color: AppColors.error,
+                    ),
                     const SizedBox(height: AppDimensions.spacingMd),
                     Text(
                       'Unable to load cart',
-                      style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                      style: AppTextStyles.titleMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: AppDimensions.spacingXs),
                     Text(
                       error.message,
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppDimensions.spacingLg),
@@ -204,7 +203,11 @@ class CartScreen extends StatelessWidget {
                 onPressed: cartNotifier.isClearing
                     ? null
                     : () => _showClearConfirmationDialog(context),
-                icon: const Icon(Icons.delete_sweep_outlined, size: 18.0, color: AppColors.error),
+                icon: const Icon(
+                  Icons.delete_sweep_outlined,
+                  size: 18.0,
+                  color: AppColors.error,
+                ),
                 label: Text(
                   'Clear',
                   style: AppTextStyles.bodySmall.copyWith(
@@ -220,7 +223,9 @@ class CartScreen extends StatelessWidget {
               if (cart.hasUnavailableItems) const CartUnavailableBanner(),
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingSm),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppDimensions.spacingSm,
+                  ),
                   itemCount: cart.items.length,
                   itemBuilder: (context, index) {
                     final item = cart.items[index];
@@ -242,11 +247,15 @@ class CartScreen extends StatelessWidget {
             cart: cart,
             currency: currency,
             onProceed: () async {
-              final repo = orderRepository ?? CustomerScope.maybeOf(context)?.orderRepository;
+              final repo =
+                  orderRepository ??
+                  CustomerScope.maybeOf(context)?.orderRepository;
               if (repo == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Unable to initialize checkout. Please try again.'),
+                    content: Text(
+                      'Unable to initialize checkout. Please try again.',
+                    ),
                     duration: Duration(seconds: 2),
                   ),
                 );
@@ -269,7 +278,9 @@ class CartScreen extends StatelessWidget {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Order #${order.orderNumber ?? order.id} placed successfully!'),
+                        content: Text(
+                          'Order #${order.orderNumber ?? order.id} placed successfully!',
+                        ),
                         backgroundColor: AppColors.success,
                         duration: const Duration(seconds: 3),
                       ),

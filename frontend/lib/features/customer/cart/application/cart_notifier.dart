@@ -20,7 +20,7 @@ class CartNotifier extends ChangeNotifier {
   Future<void> _mutationQueue = Future.value();
 
   CartNotifier({required CartRepository cartRepository})
-      : _cartRepository = cartRepository;
+    : _cartRepository = cartRepository;
 
   CartModel? get cart => _cart;
   bool get isLoading => _isLoading;
@@ -38,7 +38,8 @@ class CartNotifier extends ChangeNotifier {
   bool get hasUnavailableItems => _cart?.hasUnavailableItems ?? false;
 
   /// Returns whether a mutation is currently in-flight for a specific product.
-  bool isProductPending(String productId) => _pendingProductIds.contains(productId);
+  bool isProductPending(String productId) =>
+      _pendingProductIds.contains(productId);
 
   /// Helper to get the quantity of a specific product currently in the cart.
   int quantityForProduct(String productId) {

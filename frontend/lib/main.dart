@@ -32,12 +32,14 @@ void main() {
     secureStorage: secureStorage,
   );
 
-  runApp(EsouqApp(
-    config: config,
-    secureStorage: secureStorage,
-    apiClient: apiClient,
-    authRepository: authRepository,
-  ));
+  runApp(
+    EsouqApp(
+      config: config,
+      secureStorage: secureStorage,
+      apiClient: apiClient,
+      authRepository: authRepository,
+    ),
+  );
 }
 
 /// Root widget for eSOuQ application.
@@ -57,11 +59,9 @@ class EsouqApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveAuthRepository = authRepository ??
-        AuthRepositoryImpl(
-          apiClient: apiClient,
-          secureStorage: secureStorage,
-        );
+    final effectiveAuthRepository =
+        authRepository ??
+        AuthRepositoryImpl(apiClient: apiClient, secureStorage: secureStorage);
 
     return AuthScope(
       repository: effectiveAuthRepository,

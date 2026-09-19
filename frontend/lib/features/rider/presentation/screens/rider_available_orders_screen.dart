@@ -119,10 +119,7 @@ class _RiderAvailableOrdersScreenState
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text(message), backgroundColor: AppColors.error),
         );
 
         // Refresh the list if the order was unavailable
@@ -172,14 +169,18 @@ class _RiderAvailableOrdersScreenState
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline_rounded,
-                  size: 48, color: AppColors.error),
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: AppColors.error,
+              ),
               const SizedBox(height: AppDimensions.spacingMd),
               Text(
                 _failure!.message,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: AppColors.textSecondary),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
               const SizedBox(height: AppDimensions.spacingMd),
               OutlinedButton.icon(
@@ -205,8 +206,7 @@ class _RiderAvailableOrdersScreenState
                 height: 80,
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEF3C7),
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.radiusXl),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
                 ),
                 child: const Icon(
                   Icons.inbox_rounded,
@@ -263,8 +263,7 @@ class _RiderAvailableOrdersScreenState
           }
 
           final order = _orders[index - 1];
-          final isThisAccepting =
-              _isAccepting && _acceptingOrderId == order.id;
+          final isThisAccepting = _isAccepting && _acceptingOrderId == order.id;
 
           return RiderOrderCard(
             key: Key('rider_available_card_${order.id}'),

@@ -56,8 +56,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('prefills name, email, and read-only phone fields correctly',
-        (tester) async {
+    testWidgets('prefills name, email, and read-only phone fields correctly', (
+      tester,
+    ) async {
       await openEditScreen(tester);
 
       final nameField = find.byKey(const Key('edit_profile_name_field'));
@@ -82,32 +83,35 @@ void main() {
       expect(phoneTextField.enabled, isFalse);
     });
 
-    testWidgets('shows validation error when name is empty or shorter than 2 characters',
-        (tester) async {
-      await openEditScreen(tester);
+    testWidgets(
+      'shows validation error when name is empty or shorter than 2 characters',
+      (tester) async {
+        await openEditScreen(tester);
 
-      final nameField = find.byKey(const Key('edit_profile_name_field'));
-      final saveBtn = find.byKey(const Key('edit_profile_save_button'));
+        final nameField = find.byKey(const Key('edit_profile_name_field'));
+        final saveBtn = find.byKey(const Key('edit_profile_save_button'));
 
-      // Test empty name
-      await tester.enterText(nameField, '');
-      await tester.tap(saveBtn);
-      await tester.pumpAndSettle();
+        // Test empty name
+        await tester.enterText(nameField, '');
+        await tester.tap(saveBtn);
+        await tester.pumpAndSettle();
 
-      expect(find.text('Please enter your name'), findsOneWidget);
-      expect(mockAuthRepository.updateProfileCallCount, equals(0));
+        expect(find.text('Please enter your name'), findsOneWidget);
+        expect(mockAuthRepository.updateProfileCallCount, equals(0));
 
-      // Test 1 character name
-      await tester.enterText(nameField, 'A');
-      await tester.tap(saveBtn);
-      await tester.pumpAndSettle();
+        // Test 1 character name
+        await tester.enterText(nameField, 'A');
+        await tester.tap(saveBtn);
+        await tester.pumpAndSettle();
 
-      expect(find.text('Name must be at least 2 characters'), findsOneWidget);
-      expect(mockAuthRepository.updateProfileCallCount, equals(0));
-    });
+        expect(find.text('Name must be at least 2 characters'), findsOneWidget);
+        expect(mockAuthRepository.updateProfileCallCount, equals(0));
+      },
+    );
 
-    testWidgets('shows validation error when email format is invalid',
-        (tester) async {
+    testWidgets('shows validation error when email format is invalid', (
+      tester,
+    ) async {
       await openEditScreen(tester);
 
       final emailField = find.byKey(const Key('edit_profile_email_field'));
@@ -121,8 +125,9 @@ void main() {
       expect(mockAuthRepository.updateProfileCallCount, equals(0));
     });
 
-    testWidgets('handles no changes cleanly without triggering API call',
-        (tester) async {
+    testWidgets('handles no changes cleanly without triggering API call', (
+      tester,
+    ) async {
       await openEditScreen(tester);
 
       final saveBtn = find.byKey(const Key('edit_profile_save_button'));
@@ -134,30 +139,33 @@ void main() {
       expect(find.text('No changes to save'), findsOneWidget);
     });
 
-    testWidgets('calls updateProfile with modified name and email on save and returns to Account',
-        (tester) async {
-      await openEditScreen(tester);
+    testWidgets(
+      'calls updateProfile with modified name and email on save and returns to Account',
+      (tester) async {
+        await openEditScreen(tester);
 
-      final nameField = find.byKey(const Key('edit_profile_name_field'));
-      final emailField = find.byKey(const Key('edit_profile_email_field'));
-      final saveBtn = find.byKey(const Key('edit_profile_save_button'));
+        final nameField = find.byKey(const Key('edit_profile_name_field'));
+        final emailField = find.byKey(const Key('edit_profile_email_field'));
+        final saveBtn = find.byKey(const Key('edit_profile_save_button'));
 
-      await tester.enterText(nameField, 'New Name');
-      await tester.enterText(emailField, 'new@esouq.com');
-      await tester.tap(saveBtn);
-      await tester.pump();
+        await tester.enterText(nameField, 'New Name');
+        await tester.enterText(emailField, 'new@esouq.com');
+        await tester.tap(saveBtn);
+        await tester.pump();
 
-      expect(mockAuthRepository.updateProfileCallCount, equals(1));
-      expect(mockAuthRepository.lastUpdateName, equals('New Name'));
-      expect(mockAuthRepository.lastUpdateEmail, equals('new@esouq.com'));
+        expect(mockAuthRepository.updateProfileCallCount, equals(1));
+        expect(mockAuthRepository.lastUpdateName, equals('New Name'));
+        expect(mockAuthRepository.lastUpdateEmail, equals('new@esouq.com'));
 
-      await tester.pumpAndSettle();
-      expect(find.text('Profile updated successfully'), findsOneWidget);
-      expect(find.byType(CustomerEditProfileScreen), findsNothing);
-    });
+        await tester.pumpAndSettle();
+        expect(find.text('Profile updated successfully'), findsOneWidget);
+        expect(find.byType(CustomerEditProfileScreen), findsNothing);
+      },
+    );
 
-    testWidgets('remains on screen and displays error when API update fails',
-        (tester) async {
+    testWidgets('remains on screen and displays error when API update fails', (
+      tester,
+    ) async {
       mockAuthRepository.updateProfileResult = Result.failure(
         const ValidationFailure(message: 'Email already registered'),
       );

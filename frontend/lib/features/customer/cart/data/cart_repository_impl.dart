@@ -8,18 +8,13 @@ import 'package:esouq/features/customer/cart/domain/cart_repository.dart';
 class CartRepositoryImpl implements CartRepository {
   final ApiClient _apiClient;
 
-  const CartRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
+  const CartRepositoryImpl({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
   @override
   Future<Result<CartModel>> getCart({String? storeId}) async {
     try {
-      final queryParams = <String, dynamic>{
-        if (storeId != null && storeId.isNotEmpty) 'store_id': storeId,
-      };
-      final response = await _apiClient.get<dynamic>(
-        '/cart',
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
-      );
+      final response = await _apiClient.get<dynamic>('/cart');
       final dynamic rawData = response.data;
       final Map<String, dynamic> rawCart;
       if (rawData is Map<String, dynamic>) {
@@ -39,7 +34,9 @@ class CartRepositoryImpl implements CartRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch cart: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch cart: $e'),
+      );
     }
   }
 
@@ -51,12 +48,9 @@ class CartRepositoryImpl implements CartRepository {
     String? productId,
   }) async {
     try {
-      final resolvedProductId = (productId != null && productId.isNotEmpty)
-          ? productId
-          : itemId;
+      final resolvedItemId = (itemId.isNotEmpty) ? itemId : (productId ?? '');
       final body = <String, dynamic>{
-        if (storeId != null && storeId.isNotEmpty) 'store_id': storeId,
-        'product_id': resolvedProductId,
+        'itemId': resolvedItemId,
         'quantity': quantity,
       };
       final response = await _apiClient.post<dynamic>(
@@ -82,7 +76,9 @@ class CartRepositoryImpl implements CartRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to add item to cart: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to add item to cart: $e'),
+      );
     }
   }
 
@@ -94,22 +90,17 @@ class CartRepositoryImpl implements CartRepository {
     String? productId,
   }) async {
     try {
-      final resolvedProductId = (productId != null && productId.isNotEmpty)
-          ? productId
-          : itemId;
+      final resolvedItemId = (itemId.isNotEmpty) ? itemId : (productId ?? '');
       if (quantity <= 0) {
         return removeItem(
-          itemId: resolvedProductId,
+          itemId: resolvedItemId,
           storeId: storeId,
-          productId: resolvedProductId,
+          productId: resolvedItemId,
         );
       }
-      final body = <String, dynamic>{
-        if (storeId != null && storeId.isNotEmpty) 'store_id': storeId,
-        'quantity': quantity,
-      };
+      final body = <String, dynamic>{'quantity': quantity};
       final response = await _apiClient.patch<dynamic>(
-        '/cart/items/$resolvedProductId',
+        '/cart/items/$resolvedItemId',
         body: body,
       );
       final dynamic rawData = response.data;
@@ -131,7 +122,9 @@ class CartRepositoryImpl implements CartRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to update item quantity: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to update item quantity: $e'),
+      );
     }
   }
 
@@ -142,15 +135,10 @@ class CartRepositoryImpl implements CartRepository {
     String? productId,
   }) async {
     try {
-      final resolvedProductId = (productId != null && productId.isNotEmpty)
-          ? productId
-          : itemId;
-      final queryParams = <String, dynamic>{
-        if (storeId != null && storeId.isNotEmpty) 'store_id': storeId,
-      };
-      final response = await _apiClient.delete<dynamic>(
-        '/cart/items/$resolvedProductId',
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      final resolvedItemId = (itemId.isNotEmpty) ? itemId : (productId ?? '');
+      final response = await _apiClient.patch<dynamic>(
+        '/cart/items/$resolvedItemId',
+        body: {'quantity': 0},
       );
       final dynamic rawData = response.data;
       final Map<String, dynamic> rawCart;
@@ -171,25 +159,23 @@ class CartRepositoryImpl implements CartRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to remove item from cart: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to remove item from cart: $e'),
+      );
     }
   }
 
   @override
   Future<Result<CartModel>> clearCart({String? storeId}) async {
     try {
-      final queryParams = <String, dynamic>{
-        if (storeId != null && storeId.isNotEmpty) 'store_id': storeId,
-      };
-      await _apiClient.delete<dynamic>(
-        '/cart',
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
-      );
+      await _apiClient.delete<dynamic>('/cart');
       return Result.success(CartModel.empty(storeId: storeId));
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to clear cart: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to clear cart: $e'),
+      );
     }
   }
 }

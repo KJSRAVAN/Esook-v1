@@ -8,12 +8,13 @@ abstract interface class AdminStoresRepository {
   /// Backend endpoint: `GET /stores`
   Future<Result<List<AdminStoreModel>>> getStores();
 
-  /// List delivery areas (kept for backward compatibility; backend stores area as string on stores).
+  /// List delivery areas.
+  /// Backend endpoint: `GET /stores/areas`
   Future<Result<List<AdminAreaModel>>> getAreas();
 
   /// Create a new store.
   /// Backend endpoint: `POST /stores`
-  /// Payload: `{ name, area, address?, phone_number?, is_active? }`
+  /// Payload: `{ name, areaId, address?, phone? }`
   Future<Result<AdminStoreModel>> createStore({
     required String name,
     String? area,
@@ -25,7 +26,7 @@ abstract interface class AdminStoresRepository {
 
   /// Update existing store details.
   /// Backend endpoint: `PATCH /stores/:storeId`
-  /// Payload: `{ name?, area?, address?, phone_number?, is_active? }`
+  /// Payload: `{ name?, areaId?, address?, phone?, isActive? }`
   Future<Result<AdminStoreModel>> updateStore({
     required String storeId,
     String? name,

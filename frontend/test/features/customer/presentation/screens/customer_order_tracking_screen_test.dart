@@ -90,8 +90,9 @@ void main() {
       );
     }
 
-    testWidgets('1. initial order renders immediately without loading screen',
-        (tester) async {
+    testWidgets('1. initial order renders immediately without loading screen', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTrackingScreen(initialOrder: baseDeliveryOrder),
       );
@@ -119,8 +120,9 @@ void main() {
       expect(find.text('Accepted'), findsOneWidget);
     });
 
-    testWidgets('3. loading state is displayed when initialOrder is null',
-        (tester) async {
+    testWidgets('3. loading state is displayed when initialOrder is null', (
+      tester,
+    ) async {
       mockOrderRepository.customGetOrderByIdHandler = (orderId) async {
         // Slow async response
         return Result.success(baseDeliveryOrder);
@@ -133,22 +135,26 @@ void main() {
       expect(find.text('Order #ESK-TRK-001'), findsOneWidget);
     });
 
-    testWidgets('4. fetch error state displays message when initial fetch fails',
-        (tester) async {
-      mockOrderRepository.failureToReturn =
-          const ServerFailure(message: 'Network connection lost');
+    testWidgets(
+      '4. fetch error state displays message when initial fetch fails',
+      (tester) async {
+        mockOrderRepository.failureToReturn = const ServerFailure(
+          message: 'Network connection lost',
+        );
 
-      await tester.pumpWidget(buildTrackingScreen(initialOrder: null));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildTrackingScreen(initialOrder: null));
+        await tester.pumpAndSettle();
 
-      expect(find.text('Unable to load order details'), findsOneWidget);
-      expect(find.text('Network connection lost'), findsOneWidget);
-      expect(find.byKey(const Key('tracking_retry_button')), findsOneWidget);
-    });
+        expect(find.text('Unable to load order details'), findsOneWidget);
+        expect(find.text('Network connection lost'), findsOneWidget);
+        expect(find.byKey(const Key('tracking_retry_button')), findsOneWidget);
+      },
+    );
 
     testWidgets('5. retry button re-triggers fetch on error', (tester) async {
-      mockOrderRepository.failureToReturn =
-          const ServerFailure(message: 'Timeout');
+      mockOrderRepository.failureToReturn = const ServerFailure(
+        message: 'Timeout',
+      );
 
       await tester.pumpWidget(buildTrackingScreen(initialOrder: null));
       await tester.pumpAndSettle();
@@ -166,8 +172,9 @@ void main() {
       expect(find.text('Unable to load order details'), findsNothing);
     });
 
-    testWidgets('6. DELIVERY timeline renders 6 delivery milestones',
-        (tester) async {
+    testWidgets('6. DELIVERY timeline renders 6 delivery milestones', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTrackingScreen(initialOrder: baseDeliveryOrder),
       );
@@ -181,29 +188,32 @@ void main() {
       expect(find.text('Delivered'), findsOneWidget);
     });
 
-    testWidgets('7. PICKUP timeline renders pickup milestones without Out for Delivery',
-        (tester) async {
-      mockOrderRepository.orderToReturn = basePickupOrder;
+    testWidgets(
+      '7. PICKUP timeline renders pickup milestones without Out for Delivery',
+      (tester) async {
+        mockOrderRepository.orderToReturn = basePickupOrder;
 
-      await tester.pumpWidget(
-        buildTrackingScreen(
-          orderId: 'ord-track-2',
-          initialOrder: basePickupOrder,
-        ),
-      );
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          buildTrackingScreen(
+            orderId: 'ord-track-2',
+            initialOrder: basePickupOrder,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Order Placed'), findsOneWidget);
-      expect(find.text('Order Accepted'), findsOneWidget);
-      expect(find.text('Preparing'), findsOneWidget);
-      expect(find.text('Ready for Pickup'), findsOneWidget);
-      expect(find.text('Completed'), findsOneWidget);
-      expect(find.text('Out for Delivery'), findsNothing);
-    });
+        expect(find.text('Order Placed'), findsOneWidget);
+        expect(find.text('Order Accepted'), findsOneWidget);
+        expect(find.text('Preparing'), findsOneWidget);
+        expect(find.text('Ready for Pickup'), findsOneWidget);
+        expect(find.text('Completed'), findsOneWidget);
+        expect(find.text('Out for Delivery'), findsNothing);
+      },
+    );
 
     testWidgets('8. PENDING state renders live status badge', (tester) async {
-      mockOrderRepository.orderToReturn =
-          baseDeliveryOrder.copyWith(status: OrderStatus.pending);
+      mockOrderRepository.orderToReturn = baseDeliveryOrder.copyWith(
+        status: OrderStatus.pending,
+      );
 
       await tester.pumpWidget(
         buildTrackingScreen(initialOrder: mockOrderRepository.orderToReturn),
@@ -215,8 +225,9 @@ void main() {
     });
 
     testWidgets('9. ACCEPTED state renders active milestone', (tester) async {
-      mockOrderRepository.orderToReturn =
-          baseDeliveryOrder.copyWith(status: OrderStatus.accepted);
+      mockOrderRepository.orderToReturn = baseDeliveryOrder.copyWith(
+        status: OrderStatus.accepted,
+      );
 
       await tester.pumpWidget(
         buildTrackingScreen(initialOrder: mockOrderRepository.orderToReturn),
@@ -226,10 +237,12 @@ void main() {
       expect(find.text('Accepted'), findsOneWidget);
     });
 
-    testWidgets('10. PREPARING state renders preparing milestone',
-        (tester) async {
-      mockOrderRepository.orderToReturn =
-          baseDeliveryOrder.copyWith(status: OrderStatus.preparing);
+    testWidgets('10. PREPARING state renders preparing milestone', (
+      tester,
+    ) async {
+      mockOrderRepository.orderToReturn = baseDeliveryOrder.copyWith(
+        status: OrderStatus.preparing,
+      );
 
       await tester.pumpWidget(
         buildTrackingScreen(initialOrder: mockOrderRepository.orderToReturn),
@@ -240,8 +253,9 @@ void main() {
     });
 
     testWidgets('11. READY state renders ready milestone', (tester) async {
-      mockOrderRepository.orderToReturn =
-          baseDeliveryOrder.copyWith(status: OrderStatus.ready);
+      mockOrderRepository.orderToReturn = baseDeliveryOrder.copyWith(
+        status: OrderStatus.ready,
+      );
 
       await tester.pumpWidget(
         buildTrackingScreen(initialOrder: mockOrderRepository.orderToReturn),
@@ -251,23 +265,28 @@ void main() {
       expect(find.text('Ready'), findsOneWidget);
     });
 
-    testWidgets('12. OUT_FOR_DELIVERY state renders out for delivery milestone',
-        (tester) async {
-      mockOrderRepository.orderToReturn =
-          baseDeliveryOrder.copyWith(status: OrderStatus.outForDelivery);
+    testWidgets(
+      '12. OUT_FOR_DELIVERY state renders out for delivery milestone',
+      (tester) async {
+        mockOrderRepository.orderToReturn = baseDeliveryOrder.copyWith(
+          status: OrderStatus.outForDelivery,
+        );
 
-      await tester.pumpWidget(
-        buildTrackingScreen(initialOrder: mockOrderRepository.orderToReturn),
+        await tester.pumpWidget(
+          buildTrackingScreen(initialOrder: mockOrderRepository.orderToReturn),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Out for Delivery'), findsAtLeastNWidgets(1));
+      },
+    );
+
+    testWidgets('13. DELIVERED terminal state stops live updates banner', (
+      tester,
+    ) async {
+      mockOrderRepository.orderToReturn = baseDeliveryOrder.copyWith(
+        status: OrderStatus.delivered,
       );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Out for Delivery'), findsAtLeastNWidgets(1));
-    });
-
-    testWidgets('13. DELIVERED terminal state stops live updates banner',
-        (tester) async {
-      mockOrderRepository.orderToReturn =
-          baseDeliveryOrder.copyWith(status: OrderStatus.delivered);
 
       await tester.pumpWidget(
         buildTrackingScreen(initialOrder: mockOrderRepository.orderToReturn),
@@ -278,27 +297,30 @@ void main() {
       expect(find.text('Live Updates'), findsNothing);
     });
 
-    testWidgets('14. REJECTED state displays rejection banner with reason',
-        (tester) async {
+    testWidgets('14. REJECTED state displays rejection banner with reason', (
+      tester,
+    ) async {
       final rejectedOrder = baseDeliveryOrder.copyWith(
         status: OrderStatus.rejected,
         rejectedReason: 'Items requested are out of stock',
       );
       mockOrderRepository.orderToReturn = rejectedOrder;
 
-      await tester.pumpWidget(
-        buildTrackingScreen(initialOrder: rejectedOrder),
-      );
+      await tester.pumpWidget(buildTrackingScreen(initialOrder: rejectedOrder));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('tracking_rejection_banner')), findsOneWidget);
+      expect(
+        find.byKey(const Key('tracking_rejection_banner')),
+        findsOneWidget,
+      );
       expect(find.text('Order Rejected'), findsOneWidget);
       expect(find.text('Items requested are out of stock'), findsOneWidget);
       expect(find.text('Live Updates'), findsNothing);
     });
 
-    testWidgets('15. CANCELLED state displays cancellation banner',
-        (tester) async {
+    testWidgets('15. CANCELLED state displays cancellation banner', (
+      tester,
+    ) async {
       final cancelledOrder = baseDeliveryOrder.copyWith(
         status: OrderStatus.cancelled,
       );
@@ -309,13 +331,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('tracking_cancelled_banner')), findsOneWidget);
+      expect(
+        find.byKey(const Key('tracking_cancelled_banner')),
+        findsOneWidget,
+      );
       expect(find.text('Order Cancelled'), findsOneWidget);
       expect(find.text('Live Updates'), findsNothing);
     });
 
-    testWidgets('16. manual refresh button triggers getOrderById',
-        (tester) async {
+    testWidgets('16. manual refresh button triggers getOrderById', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTrackingScreen(initialOrder: baseDeliveryOrder),
       );
@@ -329,11 +355,15 @@ void main() {
       await tester.tap(refreshBtn);
       await tester.pumpAndSettle();
 
-      expect(mockOrderRepository.getOrderByIdCallCount, equals(initialCalls + 1));
+      expect(
+        mockOrderRepository.getOrderByIdCallCount,
+        equals(initialCalls + 1),
+      );
     });
 
-    testWidgets('17. periodic polling updates active order status',
-        (tester) async {
+    testWidgets('17. periodic polling updates active order status', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTrackingScreen(initialOrder: baseDeliveryOrder),
       );
@@ -342,8 +372,9 @@ void main() {
       expect(find.text('Pending'), findsOneWidget);
 
       // Change repo return to OUT_FOR_DELIVERY and advance timer by 10 seconds
-      mockOrderRepository.orderToReturn =
-          baseDeliveryOrder.copyWith(status: OrderStatus.outForDelivery);
+      mockOrderRepository.orderToReturn = baseDeliveryOrder.copyWith(
+        status: OrderStatus.outForDelivery,
+      );
 
       await tester.pump(const Duration(seconds: 10));
       await tester.pumpAndSettle();
@@ -351,58 +382,72 @@ void main() {
       expect(find.text('Out for Delivery'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('17b. background polling failure preserves current order and surfaces SnackBar',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTrackingScreen(initialOrder: baseDeliveryOrder),
-      );
-      await tester.pumpAndSettle();
+    testWidgets(
+      '17b. background polling failure preserves current order and surfaces SnackBar',
+      (tester) async {
+        await tester.pumpWidget(
+          buildTrackingScreen(initialOrder: baseDeliveryOrder),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('Order #ESK-TRK-001'), findsOneWidget);
-      expect(find.text('Pending'), findsOneWidget);
+        expect(find.text('Order #ESK-TRK-001'), findsOneWidget);
+        expect(find.text('Pending'), findsOneWidget);
 
-      // Simulate a network failure during background poll
-      mockOrderRepository.failureToReturn =
-          const ServerFailure(message: 'Periodic network timeout');
+        // Simulate a network failure during background poll
+        mockOrderRepository.failureToReturn = const ServerFailure(
+          message: 'Periodic network timeout',
+        );
 
-      await tester.pump(const Duration(seconds: 10));
-      await tester.pump();
+        await tester.pump(const Duration(seconds: 10));
+        await tester.pump();
 
-      // Verify currently displayed order is preserved on screen (not replaced with error state)
-      expect(find.text('Order #ESK-TRK-001'), findsOneWidget);
-      expect(find.text('Pending'), findsOneWidget);
-      expect(find.text('Unable to load order details'), findsNothing);
+        // Verify currently displayed order is preserved on screen (not replaced with error state)
+        expect(find.text('Order #ESK-TRK-001'), findsOneWidget);
+        expect(find.text('Pending'), findsOneWidget);
+        expect(find.text('Unable to load order details'), findsNothing);
 
-      // Verify non-destructive SnackBar is surfaced
-      expect(find.textContaining('Failed to update tracking: Periodic network timeout'),
-          findsOneWidget);
-    });
+        // Verify non-destructive SnackBar is surfaced
+        expect(
+          find.textContaining(
+            'Failed to update tracking: Periodic network timeout',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
 
-    testWidgets('18. polling stops when order transitions to terminal DELIVERED state',
-        (tester) async {
-      await tester.pumpWidget(
-        buildTrackingScreen(initialOrder: baseDeliveryOrder),
-      );
-      await tester.pumpAndSettle();
+    testWidgets(
+      '18. polling stops when order transitions to terminal DELIVERED state',
+      (tester) async {
+        await tester.pumpWidget(
+          buildTrackingScreen(initialOrder: baseDeliveryOrder),
+        );
+        await tester.pumpAndSettle();
 
-      // Transition to DELIVERED
-      mockOrderRepository.orderToReturn =
-          baseDeliveryOrder.copyWith(status: OrderStatus.delivered);
+        // Transition to DELIVERED
+        mockOrderRepository.orderToReturn = baseDeliveryOrder.copyWith(
+          status: OrderStatus.delivered,
+        );
 
-      await tester.pump(const Duration(seconds: 10));
-      await tester.pumpAndSettle();
+        await tester.pump(const Duration(seconds: 10));
+        await tester.pumpAndSettle();
 
-      final callsAtDelivered = mockOrderRepository.getOrderByIdCallCount;
+        final callsAtDelivered = mockOrderRepository.getOrderByIdCallCount;
 
-      // Advance by another 20 seconds; no additional polls should occur
-      await tester.pump(const Duration(seconds: 20));
-      await tester.pumpAndSettle();
+        // Advance by another 20 seconds; no additional polls should occur
+        await tester.pump(const Duration(seconds: 20));
+        await tester.pumpAndSettle();
 
-      expect(mockOrderRepository.getOrderByIdCallCount, equals(callsAtDelivered));
-    });
+        expect(
+          mockOrderRepository.getOrderByIdCallCount,
+          equals(callsAtDelivered),
+        );
+      },
+    );
 
-    testWidgets('19. timer is cleanly disposed when widget is unmounted',
-        (tester) async {
+    testWidgets('19. timer is cleanly disposed when widget is unmounted', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         buildTrackingScreen(initialOrder: baseDeliveryOrder),
       );
@@ -423,44 +468,47 @@ void main() {
       expect(mockOrderRepository.getOrderByIdCallCount, equals(callsAtDispose));
     });
 
-    testWidgets('20. OrderDetailsSheet Track Order button navigates to CustomerOrderTrackingScreen',
-        (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: AppTheme.lightTheme,
-          home: Scaffold(
-            body: Builder(
-              builder: (context) => ElevatedButton(
-                key: const Key('open_sheet_button'),
-                onPressed: () {
-                  OrderDetailsSheet.show(
-                    context,
-                    order: baseDeliveryOrder,
-                    orderRepository: mockOrderRepository,
-                  );
-                },
-                child: const Text('Open Sheet'),
+    testWidgets(
+      '20. OrderDetailsSheet Track Order button navigates to CustomerOrderTrackingScreen',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  key: const Key('open_sheet_button'),
+                  onPressed: () {
+                    OrderDetailsSheet.show(
+                      context,
+                      order: baseDeliveryOrder,
+                      orderRepository: mockOrderRepository,
+                    );
+                  },
+                  child: const Text('Open Sheet'),
+                ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Open sheet
-      await tester.tap(find.byKey(const Key('open_sheet_button')));
-      await tester.pumpAndSettle();
+        // Open sheet
+        await tester.tap(find.byKey(const Key('open_sheet_button')));
+        await tester.pumpAndSettle();
 
-      final trackOrderBtn =
-          find.byKey(const Key('order_details_track_order_button'));
-      expect(trackOrderBtn, findsOneWidget);
+        final trackOrderBtn = find.byKey(
+          const Key('order_details_track_order_button'),
+        );
+        expect(trackOrderBtn, findsOneWidget);
 
-      await tester.tap(trackOrderBtn);
-      await tester.pumpAndSettle();
+        await tester.tap(trackOrderBtn);
+        await tester.pumpAndSettle();
 
-      expect(find.byType(CustomerOrderTrackingScreen), findsOneWidget);
-      expect(find.text('Track Order'), findsOneWidget);
-    });
+        expect(find.byType(CustomerOrderTrackingScreen), findsOneWidget);
+        expect(find.text('Track Order'), findsOneWidget);
+      },
+    );
 
     testWidgets('21. does NOT render GPS/map/ETA UI elements', (tester) async {
       await tester.pumpWidget(

@@ -85,7 +85,8 @@ class _AdminMagicLinkPendingScreenState
     if (result.isSuccess) {
       setState(() {
         _isResending = false;
-        _successNotification = 'A fresh login link has been sent to your email.';
+        _successNotification =
+            'A fresh login link has been sent to your email.';
       });
       _startCooldown();
     } else {
@@ -140,7 +141,11 @@ class _AdminMagicLinkPendingScreenState
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle_outline, color: AppColors.success, size: 20),
+                  const Icon(
+                    Icons.check_circle_outline,
+                    color: AppColors.success,
+                    size: 20,
+                  ),
                   const SizedBox(width: AppDimensions.spacingSm),
                   Expanded(
                     child: Text(
@@ -199,10 +204,14 @@ class _AdminMagicLinkPendingScreenState
           SizedBox(
             height: AppDimensions.buttonHeight,
             child: OutlinedButton(
-              onPressed: _cooldownRemaining > 0 || _isResending ? null : _handleResend,
+              onPressed: _cooldownRemaining > 0 || _isResending
+                  ? null
+                  : _handleResend,
               style: OutlinedButton.styleFrom(
                 side: BorderSide(
-                  color: _cooldownRemaining > 0 ? AppColors.borderSubtle : AppColors.primary,
+                  color: _cooldownRemaining > 0
+                      ? AppColors.borderSubtle
+                      : AppColors.primary,
                 ),
                 foregroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
@@ -233,7 +242,9 @@ class _AdminMagicLinkPendingScreenState
           // Return to change email
           TextButton(
             onPressed: () {
-              Navigator.of(context).pushReplacementNamed(AppRoutes.adminMagicLink);
+              Navigator.of(
+                context,
+              ).pushReplacementNamed(AppRoutes.adminMagicLink);
             },
             child: const Text('Use a different email address'),
           ),

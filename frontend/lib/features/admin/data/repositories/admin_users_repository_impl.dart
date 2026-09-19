@@ -9,7 +9,8 @@ import '../../domain/repositories/admin_users_repository.dart';
 class AdminUsersRepositoryImpl implements AdminUsersRepository {
   final ApiClient _apiClient;
 
-  const AdminUsersRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
+  const AdminUsersRepositoryImpl({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
   @override
   Future<Result<AdminUsersPage>> getUsers({
@@ -20,26 +21,27 @@ class AdminUsersRepositoryImpl implements AdminUsersRepository {
     try {
       String? backendRole;
       if (role != null && role.isNotEmpty && role.toUpperCase() != 'ALL') {
-        final normalized = role.trim().toLowerCase();
+        final normalized = role.trim().toUpperCase();
         switch (normalized) {
-          case 'customer':
-            backendRole = 'customer';
+          case 'CUSTOMER':
+            backendRole = 'CUSTOMER';
             break;
-          case 'staff':
-          case 'store_staff':
-            backendRole = 'store_staff';
+          case 'STAFF':
+          case 'STORE_STAFF':
+            backendRole = 'STAFF';
             break;
-          case 'manager':
-          case 'store_manager':
-            backendRole = 'store_manager';
+          case 'MANAGER':
+          case 'STORE_MANAGER':
+            backendRole = 'MANAGER';
             break;
-          case 'driver':
-          case 'delivery_rider':
-            backendRole = 'delivery_rider';
+          case 'SUPER_ADMIN':
+          case 'ADMIN':
+            backendRole = 'SUPER_ADMIN';
             break;
-          case 'super_admin':
-          case 'admin':
-            backendRole = 'super_admin';
+          case 'DRIVER':
+          case 'DELIVERY_RIDER':
+            // Railway /users role query does not support DRIVER
+            backendRole = null;
             break;
           default:
             backendRole = normalized;
@@ -47,22 +49,31 @@ class AdminUsersRepositoryImpl implements AdminUsersRepository {
       }
 
       final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
         if (backendRole != null) 'role': backendRole,
       };
 
       final response = await _apiClient.get<dynamic>(
         '/users',
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+        queryParameters: queryParams,
       );
 
       final dynamic rawData = response.data;
       final List<dynamic> rawList;
+      int? serverTotal;
 
       if (rawData is Map<String, dynamic>) {
-        if (rawData['users'] is List) {
-          rawList = rawData['users'] as List;
-        } else if (rawData['data'] is List) {
+        if (rawData['data'] is List) {
           rawList = rawData['data'] as List;
+          if (rawData['total'] is int) {
+            serverTotal = rawData['total'] as int;
+          }
+        } else if (rawData['users'] is List) {
+          rawList = rawData['users'] as List;
+          if (rawData['total'] is int) {
+            serverTotal = rawData['total'] as int;
+          }
         } else {
           rawList = const [];
         }
@@ -77,22 +88,27 @@ class AdminUsersRepositoryImpl implements AdminUsersRepository {
           .map(AdminUserModel.fromJson)
           .toList();
 
-      final total = allUsers.length;
-      final startIndex = (page - 1) * limit;
-      final paginatedUsers = (startIndex < total)
-          ? allUsers.skip(startIndex).take(limit).toList()
-          : <AdminUserModel>[];
+      final total = serverTotal ?? allUsers.length;
+      final paginatedUsers = serverTotal != null
+          ? allUsers
+          : ((page - 1) * limit < total
+                ? allUsers.skip((page - 1) * limit).take(limit).toList()
+                : <AdminUserModel>[]);
 
-      return Result.success(AdminUsersPage(
-        users: paginatedUsers.isNotEmpty ? paginatedUsers : allUsers,
-        total: total,
-        page: page,
-        limit: limit,
-      ));
+      return Result.success(
+        AdminUsersPage(
+          users: paginatedUsers,
+          total: total,
+          page: page,
+          limit: limit,
+        ),
+      );
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch users: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch users: $e'),
+      );
     }
   }
 }

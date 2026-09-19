@@ -17,15 +17,18 @@ class MockOrderRepository implements OrderRepository {
     String? notes,
     required List<OrderItemInput> items,
     String? idempotencyKey,
-  })? customCreateOrderHandler;
+  })?
+  customCreateOrderHandler;
 
   Future<Result<List<OrderModel>>> Function({
     int? page,
     int? limit,
     OrderStatus? status,
-  })? customGetMyOrdersHandler;
+  })?
+  customGetMyOrdersHandler;
 
-  Future<Result<OrderModel>> Function(String orderId)? customGetOrderByIdHandler;
+  Future<Result<OrderModel>> Function(String orderId)?
+  customGetOrderByIdHandler;
 
   int createOrderCallCount = 0;
   int getMyOrdersCallCount = 0;
@@ -45,48 +48,48 @@ class MockOrderRepository implements OrderRepository {
   String? lastOrderIdParam;
 
   OrderModel get defaultOrder => OrderModel(
-        id: 'ord-123',
-        orderNumber: 'ESK-2026-001',
-        customerId: 'usr-123',
-        storeId: 'store-1',
-        storeName: 'eSOuQ Olaya Flagship',
-        status: OrderStatus.pending,
-        fulfillment: FulfillmentType.delivery,
-        deliveryAddress: 'Building 4B, King Fahd Rd, Riyadh',
-        couponCode: null,
-        notes: 'Leave at front door',
-        subtotal: 3.35,
-        discount: 0.0,
-        deliveryFee: 1.50,
-        total: 4.85,
-        pointsEarned: 7,
-        items: const [
-          OrderItemModel(
-            id: 'item-1',
-            orderId: 'ord-123',
-            itemId: 'prod-1',
-            itemName: 'Fresh Whole Milk 1L',
-            itemPrice: 1.25,
-            quantity: 2,
-            subtotal: 2.50,
-            loyaltyPointsPerUnit: 5,
-            subtotalPoints: 10,
-          ),
-          OrderItemModel(
-            id: 'item-2',
-            orderId: 'ord-123',
-            itemId: 'prod-2',
-            itemName: 'Organic Bananas 1kg',
-            itemPrice: 0.85,
-            quantity: 1,
-            subtotal: 0.85,
-            loyaltyPointsPerUnit: 2,
-            subtotalPoints: 2,
-          ),
-        ],
-        createdAt: DateTime.parse('2026-09-15T10:00:00Z'),
-        updatedAt: DateTime.parse('2026-09-15T10:00:00Z'),
-      );
+    id: 'ord-123',
+    orderNumber: 'ESK-2026-001',
+    customerId: 'usr-123',
+    storeId: 'store-1',
+    storeName: 'eSOuQ Olaya Flagship',
+    status: OrderStatus.pending,
+    fulfillment: FulfillmentType.delivery,
+    deliveryAddress: 'Building 4B, King Fahd Rd, Riyadh',
+    couponCode: null,
+    notes: 'Leave at front door',
+    subtotal: 3.35,
+    discount: 0.0,
+    deliveryFee: 1.50,
+    total: 4.85,
+    pointsEarned: 7,
+    items: const [
+      OrderItemModel(
+        id: 'item-1',
+        orderId: 'ord-123',
+        itemId: 'prod-1',
+        itemName: 'Fresh Whole Milk 1L',
+        itemPrice: 1.25,
+        quantity: 2,
+        subtotal: 2.50,
+        loyaltyPointsPerUnit: 5,
+        subtotalPoints: 10,
+      ),
+      OrderItemModel(
+        id: 'item-2',
+        orderId: 'ord-123',
+        itemId: 'prod-2',
+        itemName: 'Organic Bananas 1kg',
+        itemPrice: 0.85,
+        quantity: 1,
+        subtotal: 0.85,
+        loyaltyPointsPerUnit: 2,
+        subtotalPoints: 2,
+      ),
+    ],
+    createdAt: DateTime.parse('2026-09-15T10:00:00Z'),
+    updatedAt: DateTime.parse('2026-09-15T10:00:00Z'),
+  );
 
   @override
   Future<Result<OrderModel>> createOrder({

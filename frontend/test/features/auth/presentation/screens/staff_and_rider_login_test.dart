@@ -24,8 +24,10 @@ void main() {
     return MaterialApp(
       theme: AppTheme.lightTheme,
       routes: {
-        AppRoutes.login: (_) => const Scaffold(body: Text('Customer Login Shell')),
-        AppRoutes.storeHome: (_) => const Scaffold(body: Text('Store Home Shell')),
+        AppRoutes.login: (_) =>
+            const Scaffold(body: Text('Customer Login Shell')),
+        AppRoutes.storeHome: (_) =>
+            const Scaffold(body: Text('Store Home Shell')),
       },
       home: AuthScope(
         repository: mockRepo,
@@ -38,8 +40,10 @@ void main() {
     return MaterialApp(
       theme: AppTheme.lightTheme,
       routes: {
-        AppRoutes.login: (_) => const Scaffold(body: Text('Customer Login Shell')),
-        AppRoutes.riderHome: (_) => const Scaffold(body: Text('Rider Home Shell')),
+        AppRoutes.login: (_) =>
+            const Scaffold(body: Text('Customer Login Shell')),
+        AppRoutes.riderHome: (_) =>
+            const Scaffold(body: Text('Rider Home Shell')),
       },
       home: AuthScope(
         repository: mockRepo,
@@ -49,17 +53,29 @@ void main() {
   }
 
   group('StaffLoginScreen', () {
-    testWidgets('renders staff portal branding and form fields', (tester) async {
+    testWidgets('renders staff portal branding and form fields', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildStaffWidget());
 
       expect(find.text('Store Operations'), findsOneWidget);
-      expect(find.text('Staff & Store Manager sign-in for orders, stock & inventory'), findsOneWidget);
+      expect(
+        find.text(
+          'Staff & Store Manager sign-in for orders, stock & inventory',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Staff Phone Number'), findsOneWidget);
-      expect(find.widgetWithText(ElevatedButton, 'Staff Login'), findsOneWidget);
+      expect(
+        find.widgetWithText(ElevatedButton, 'Staff Login'),
+        findsOneWidget,
+      );
       expect(find.text('Return to Customer App'), findsOneWidget);
     });
 
-    testWidgets('authenticates store staff and navigates to storeHome', (tester) async {
+    testWidgets('authenticates store staff and navigates to storeHome', (
+      tester,
+    ) async {
       mockRepo.loginResult = Result.success(
         AuthResponseModel(
           user: const UserModel(
@@ -86,7 +102,9 @@ void main() {
       expect(find.text('Store Home Shell'), findsOneWidget);
     });
 
-    testWidgets('authenticates store manager and navigates to storeHome', (tester) async {
+    testWidgets('authenticates store manager and navigates to storeHome', (
+      tester,
+    ) async {
       mockRepo.loginResult = Result.success(
         AuthResponseModel(
           user: const UserModel(
@@ -115,17 +133,27 @@ void main() {
   });
 
   group('RiderLoginScreen', () {
-    testWidgets('renders rider portal branding and form fields', (tester) async {
+    testWidgets('renders rider portal branding and form fields', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildRiderWidget());
 
       expect(find.text('Rider Partner Portal'), findsOneWidget);
-      expect(find.text('Sign in to accept delivery batches and navigate routes'), findsOneWidget);
+      expect(
+        find.text('Sign in to accept delivery batches and navigate routes'),
+        findsOneWidget,
+      );
       expect(find.text('Rider Phone Number'), findsOneWidget);
-      expect(find.widgetWithText(ElevatedButton, 'Rider Login'), findsOneWidget);
+      expect(
+        find.widgetWithText(ElevatedButton, 'Rider Login'),
+        findsOneWidget,
+      );
       expect(find.text('Return to Customer App'), findsOneWidget);
     });
 
-    testWidgets('authenticates rider and navigates to riderHome', (tester) async {
+    testWidgets('authenticates rider and navigates to riderHome', (
+      tester,
+    ) async {
       mockRepo.loginResult = Result.success(
         AuthResponseModel(
           user: const UserModel(

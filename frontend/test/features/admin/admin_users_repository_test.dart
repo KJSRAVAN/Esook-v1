@@ -51,57 +51,77 @@ void main() {
       usersRepository = AdminUsersRepositoryImpl(apiClient: apiClient);
     });
 
-    test('getUsers parses unpaginated/paginated user list from GET /users with lowercase role mapping', () async {
-      mockTransport.statusCode = 200;
-      mockTransport.responseBody = jsonEncode([
-        {
-          'id': 'u-1',
-          'full_name': 'Ahmed Ali',
-          'email': 'ahmed@example.com',
-          'phone_number': '+966501234567',
-          'role': 'customer',
-          'store_id': null,
-          'is_active': true,
-          'created_at': '2026-09-01T10:00:00.000Z',
-        },
-        {
-          'id': 'u-2',
-          'full_name': 'Staff Riyadh',
-          'email': 'staff@esook.store',
-          'phone_number': '+966509876543',
-          'role': 'store_staff',
-          'store_id': 'store-1',
-          'is_active': false,
-        }
-      ]);
+    test(
+      'getUsers parses user list from GET /users with uppercase Railway role mapping',
+      () async {
+        mockTransport.statusCode = 200;
+        mockTransport.responseBody = jsonEncode({
+          'data': [
+            {
+              'id': 'u-1',
+              'name': 'Ahmed Ali',
+              'email': 'ahmed@example.com',
+              'phone': '+966501234567',
+              'role': 'CUSTOMER',
+              'storeId': null,
+              'isActive': true,
+              'createdAt': '2026-09-01T10:00:00.000Z',
+            },
+            {
+              'id': 'u-2',
+              'name': 'Staff Riyadh',
+              'email': 'staff@esook.store',
+              'phone': '+966509876543',
+              'role': 'STAFF',
+              'storeId': 'store-1',
+              'isActive': false,
+            },
+          ],
+          'total': 2,
+          'page': 1,
+          'limit': 50,
+        });
 
-      final result = await usersRepository.getUsers(page: 1, limit: 50, role: 'STAFF');
+        final result = await usersRepository.getUsers(
+          page: 1,
+          limit: 50,
+          role: 'STAFF',
+        );
 
-      expect(result.isSuccess, isTrue);
-      final page = result.dataOrNull!;
-      expect(page.total, 2);
-      expect(page.users.length, 2);
-      expect(page.users[0].name, 'Ahmed Ali');
-      expect(page.users[0].role, UserRole.customer);
-      expect(page.users[0].isActive, isTrue);
-      expect(page.users[1].name, 'Staff Riyadh');
-      expect(page.users[1].role, UserRole.storeStaff);
-      expect(page.users[1].storeId, 'store-1');
-      expect(page.users[1].isActive, isFalse);
+        expect(result.isSuccess, isTrue);
+        final page = result.dataOrNull!;
+        expect(page.total, 2);
+        expect(page.users.length, 2);
+        expect(page.users[0].name, 'Ahmed Ali');
+        expect(page.users[0].role, UserRole.customer);
+        expect(page.users[0].isActive, isTrue);
+        expect(page.users[1].name, 'Staff Riyadh');
+        expect(page.users[1].role, UserRole.storeStaff);
+        expect(page.users[1].storeId, 'store-1');
+        expect(page.users[1].isActive, isFalse);
 
-      expect(mockTransport.lastUri?.path, '/users');
-      expect(mockTransport.lastUri?.queryParameters['role'], 'store_staff');
-    });
+        expect(mockTransport.lastUri?.path, '/users');
+        expect(mockTransport.lastUri?.queryParameters['role'], 'STAFF');
+        expect(mockTransport.lastUri?.queryParameters['page'], '1');
+        expect(mockTransport.lastUri?.queryParameters['limit'], '50');
+      },
+    );
 
-    test('getUsers correctly maps DRIVER role filter to delivery_rider', () async {
-      mockTransport.statusCode = 200;
-      mockTransport.responseBody = jsonEncode([]);
+    test(
+      'getUsers does not send role filter for DRIVER as Railway does not support it on /users',
+      () async {
+        mockTransport.statusCode = 200;
+        mockTransport.responseBody = jsonEncode({'data': [], 'total': 0});
 
-      await usersRepository.getUsers(role: 'DRIVER');
+        await usersRepository.getUsers(role: 'DRIVER');
 
-      expect(mockTransport.lastUri?.path, '/users');
-      expect(mockTransport.lastUri?.queryParameters['role'], 'delivery_rider');
-    });
+        expect(mockTransport.lastUri?.path, '/users');
+        expect(
+          mockTransport.lastUri?.queryParameters.containsKey('role'),
+          isFalse,
+        );
+      },
+    );
 
     test('AdminUserModel.fromJson maps is_active false correctly', () {
       final user = AdminUserModel.fromJson({
@@ -119,7 +139,9 @@ void main() {
 
     test('getUsers handles network/API error gracefully', () async {
       mockTransport.statusCode = 500;
-      mockTransport.responseBody = jsonEncode({'error': 'Internal server error'});
+      mockTransport.responseBody = jsonEncode({
+        'error': 'Internal server error',
+      });
 
       final result = await usersRepository.getUsers();
 

@@ -12,10 +12,7 @@ import '../widgets/admin_scope.dart';
 class AdminUsersScreen extends StatefulWidget {
   final AdminUsersRepository? usersRepository;
 
-  const AdminUsersScreen({
-    super.key,
-    this.usersRepository,
-  });
+  const AdminUsersScreen({super.key, this.usersRepository});
 
   @override
   State<AdminUsersScreen> createState() => _AdminUsersScreenState();
@@ -36,7 +33,6 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     'CUSTOMER',
     'STAFF',
     'MANAGER',
-    'DRIVER',
     'SUPER_ADMIN',
   ];
 
@@ -74,7 +70,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to load user directory';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to load user directory';
       });
     }
   }
@@ -172,16 +169,24 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.error,
+                size: 48,
+              ),
               const SizedBox(height: AppDimensions.spacingSm),
               Text(
                 'Unable to Load Users',
-                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                style: AppTextStyles.titleMedium.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppDimensions.spacingXs),
               Text(
                 _errorMessage!,
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.spacingMd),
@@ -204,16 +209,19 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.people_outline_rounded, color: AppColors.textTertiary, size: 48),
-              const SizedBox(height: AppDimensions.spacingSm),
-              Text(
-                'No Users Found',
-                style: AppTextStyles.titleMedium,
+              const Icon(
+                Icons.people_outline_rounded,
+                color: AppColors.textTertiary,
+                size: 48,
               ),
+              const SizedBox(height: AppDimensions.spacingSm),
+              Text('No Users Found', style: AppTextStyles.titleMedium),
               const SizedBox(height: AppDimensions.spacingXs),
               Text(
                 'No registered accounts match the selected role filter.',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -224,7 +232,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     return ListView.separated(
       padding: const EdgeInsets.all(AppDimensions.spacingMd),
       itemCount: _users.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.spacingSm),
+      separatorBuilder: (_, __) =>
+          const SizedBox(height: AppDimensions.spacingSm),
       itemBuilder: (context, index) {
         final user = _users[index];
         return _buildUserTile(user);
@@ -259,18 +268,27 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                       Flexible(
                         child: Text(
                           user.name,
-                          style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w600),
+                          style: AppTextStyles.titleMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: AppDimensions.spacingSm),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: roleColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-                          border: Border.all(color: roleColor.withValues(alpha: 0.3)),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusFull,
+                          ),
+                          border: Border.all(
+                            color: roleColor.withValues(alpha: 0.3),
+                          ),
                         ),
                         child: Text(
                           user.rawRole ?? user.role.value,
@@ -283,12 +301,25 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                       ),
                       const SizedBox(width: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: (user.isActive ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                          color:
+                              (user.isActive
+                                      ? AppColors.success
+                                      : AppColors.error)
+                                  .withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusFull,
+                          ),
                           border: Border.all(
-                            color: (user.isActive ? AppColors.success : AppColors.error).withValues(alpha: 0.3),
+                            color:
+                                (user.isActive
+                                        ? AppColors.success
+                                        : AppColors.error)
+                                    .withValues(alpha: 0.3),
                           ),
                         ),
                         child: Text(
@@ -296,7 +327,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: user.isActive ? AppColors.success : AppColors.error,
+                            color: user.isActive
+                                ? AppColors.success
+                                : AppColors.error,
                           ),
                         ),
                       ),
@@ -306,23 +339,35 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   if (user.phone != null && user.phone!.isNotEmpty)
                     Row(
                       children: [
-                        const Icon(Icons.phone_outlined, size: 14, color: AppColors.textSecondary),
+                        const Icon(
+                          Icons.phone_outlined,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           user.phone!,
-                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ],
                     ),
                   if (user.email != null && user.email!.isNotEmpty)
                     Row(
                       children: [
-                        const Icon(Icons.email_outlined, size: 14, color: AppColors.textSecondary),
+                        const Icon(
+                          Icons.email_outlined,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             user.email!,
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -332,7 +377,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        const Icon(Icons.storefront_outlined, size: 14, color: AppColors.textTertiary),
+                        const Icon(
+                          Icons.storefront_outlined,
+                          size: 14,
+                          color: AppColors.textTertiary,
+                        ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
@@ -370,17 +419,23 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
         children: [
           Text(
             'Page $_currentPage of $totalPages ($_totalUsers total)',
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
           Row(
             children: [
               IconButton(
                 icon: const Icon(Icons.chevron_left_rounded),
-                onPressed: _currentPage > 1 ? () => _loadUsers(page: _currentPage - 1) : null,
+                onPressed: _currentPage > 1
+                    ? () => _loadUsers(page: _currentPage - 1)
+                    : null,
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right_rounded),
-                onPressed: _currentPage < totalPages ? () => _loadUsers(page: _currentPage + 1) : null,
+                onPressed: _currentPage < totalPages
+                    ? () => _loadUsers(page: _currentPage + 1)
+                    : null,
               ),
             ],
           ),

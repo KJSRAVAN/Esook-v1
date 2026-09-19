@@ -13,10 +13,7 @@ import '../../domain/repositories/admin_drivers_repository.dart';
 class CreateDriverDialog extends StatefulWidget {
   final AdminDriversRepository driversRepository;
 
-  const CreateDriverDialog({
-    super.key,
-    required this.driversRepository,
-  });
+  const CreateDriverDialog({super.key, required this.driversRepository});
 
   static Future<AdminUserModel?> show(
     BuildContext context, {
@@ -25,7 +22,8 @@ class CreateDriverDialog extends StatefulWidget {
     return showDialog<AdminUserModel>(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => CreateDriverDialog(driversRepository: driversRepository),
+      builder: (ctx) =>
+          CreateDriverDialog(driversRepository: driversRepository),
     );
   }
 
@@ -79,7 +77,8 @@ class _CreateDriverDialogState extends State<CreateDriverDialog> {
     } else {
       setState(() {
         _isSubmitting = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to register driver';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to register driver';
       });
     }
   }
@@ -110,7 +109,9 @@ class _CreateDriverDialogState extends State<CreateDriverDialog> {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: const Color(0xFFFFF7ED),
-                              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusSm,
+                              ),
                             ),
                             child: const Icon(
                               Icons.delivery_dining_rounded,
@@ -129,29 +130,41 @@ class _CreateDriverDialogState extends State<CreateDriverDialog> {
                       ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded, size: 20),
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                       ),
                     ],
                   ),
                   const SizedBox(height: AppDimensions.spacingSm),
                   Text(
                     'Create credentials for a new delivery driver partner. The driver can immediately sign in with phone & password.',
-                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: AppDimensions.spacingMd),
 
                   if (_errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(AppDimensions.spacingSm),
-                      margin: const EdgeInsets.only(bottom: AppDimensions.spacingSm),
+                      margin: const EdgeInsets.only(
+                        bottom: AppDimensions.spacingSm,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSm,
+                        ),
+                        border: Border.all(
+                          color: AppColors.error.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.error,
+                        ),
                       ),
                     ),
 
@@ -164,8 +177,12 @@ class _CreateDriverDialogState extends State<CreateDriverDialog> {
                     prefixIcon: Icons.person_outline_rounded,
                     enabled: !_isSubmitting,
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) return 'Please enter driver name';
-                      if (val.trim().length < 2) return 'Name must be at least 2 characters';
+                      if (val == null || val.trim().isEmpty) {
+                        return 'Please enter driver name';
+                      }
+                      if (val.trim().length < 2) {
+                        return 'Name must be at least 2 characters';
+                      }
                       return null;
                     },
                   ),
@@ -181,8 +198,12 @@ class _CreateDriverDialogState extends State<CreateDriverDialog> {
                     keyboardType: TextInputType.phone,
                     enabled: !_isSubmitting,
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) return 'Please enter phone number';
-                      if (val.trim().length < 8) return 'Please enter a valid phone number';
+                      if (val == null || val.trim().isEmpty) {
+                        return 'Please enter phone number';
+                      }
+                      if (val.trim().length < 8) {
+                        return 'Please enter a valid phone number';
+                      }
                       return null;
                     },
                   ),
@@ -196,8 +217,12 @@ class _CreateDriverDialogState extends State<CreateDriverDialog> {
                     hintText: 'Min 8 characters',
                     enabled: !_isSubmitting,
                     validator: (val) {
-                      if (val == null || val.isEmpty) return 'Please enter a password';
-                      if (val.length < 8) return 'Password must be at least 8 characters';
+                      if (val == null || val.isEmpty) {
+                        return 'Please enter a password';
+                      }
+                      if (val.length < 8) {
+                        return 'Password must be at least 8 characters';
+                      }
                       return null;
                     },
                   ),
@@ -211,7 +236,9 @@ class _CreateDriverDialogState extends State<CreateDriverDialog> {
                     hintText: 'Re-type password',
                     enabled: !_isSubmitting,
                     validator: (val) {
-                      if (val != _passwordController.text) return 'Passwords do not match';
+                      if (val != _passwordController.text) {
+                        return 'Passwords do not match';
+                      }
                       return null;
                     },
                   ),
@@ -221,7 +248,9 @@ class _CreateDriverDialogState extends State<CreateDriverDialog> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                         child: const Text('Cancel'),
                       ),
                       const SizedBox(width: AppDimensions.spacingSm),

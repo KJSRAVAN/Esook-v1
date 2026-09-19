@@ -57,13 +57,20 @@ class _AdminShellState extends State<AdminShell> {
     final config = AppConfig.fromEnvironment();
     final apiClient = DefaultApiClient(
       baseUrl: config.apiBaseUrl,
-      tokenProvider: () => const FlutterSecureStorageImpl().read(key: StorageKeys.authToken),
+      tokenProvider: () =>
+          const FlutterSecureStorageImpl().read(key: StorageKeys.authToken),
       timeout: config.connectTimeout,
     );
 
-    _usersRepository = widget.usersRepository ?? AdminUsersRepositoryImpl(apiClient: apiClient);
-    _driversRepository = widget.driversRepository ?? AdminDriversRepositoryImpl(apiClient: apiClient);
-    _storesRepository = widget.storesRepository ?? AdminStoresRepositoryImpl(apiClient: apiClient);
+    _usersRepository =
+        widget.usersRepository ??
+        AdminUsersRepositoryImpl(apiClient: apiClient);
+    _driversRepository =
+        widget.driversRepository ??
+        AdminDriversRepositoryImpl(apiClient: apiClient);
+    _storesRepository =
+        widget.storesRepository ??
+        AdminStoresRepositoryImpl(apiClient: apiClient);
   }
 
   void _onTabSelected(int index) {
@@ -76,10 +83,9 @@ class _AdminShellState extends State<AdminShell> {
     final authRepo = widget.authRepository ?? AuthScope.of(context);
     await authRepo.logout();
     if (mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.login,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
     }
   }
 
@@ -145,27 +151,42 @@ class _AdminShellState extends State<AdminShell> {
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.dashboard_outlined),
-              selectedIcon: Icon(Icons.dashboard_rounded, color: AppColors.primaryDark),
+              selectedIcon: Icon(
+                Icons.dashboard_rounded,
+                color: AppColors.primaryDark,
+              ),
               label: 'Dashboard',
             ),
             NavigationDestination(
               icon: Icon(Icons.storefront_outlined),
-              selectedIcon: Icon(Icons.storefront_rounded, color: AppColors.primaryDark),
+              selectedIcon: Icon(
+                Icons.storefront_rounded,
+                color: AppColors.primaryDark,
+              ),
               label: 'Stores',
             ),
             NavigationDestination(
               icon: Icon(Icons.people_outline_rounded),
-              selectedIcon: Icon(Icons.people_alt_rounded, color: AppColors.primaryDark),
+              selectedIcon: Icon(
+                Icons.people_alt_rounded,
+                color: AppColors.primaryDark,
+              ),
               label: 'Users',
             ),
             NavigationDestination(
               icon: Icon(Icons.delivery_dining_outlined),
-              selectedIcon: Icon(Icons.delivery_dining_rounded, color: AppColors.primaryDark),
+              selectedIcon: Icon(
+                Icons.delivery_dining_rounded,
+                color: AppColors.primaryDark,
+              ),
               label: 'Drivers',
             ),
             NavigationDestination(
               icon: Icon(Icons.receipt_long_outlined),
-              selectedIcon: Icon(Icons.receipt_long_rounded, color: AppColors.primaryDark),
+              selectedIcon: Icon(
+                Icons.receipt_long_rounded,
+                color: AppColors.primaryDark,
+              ),
               label: 'Orders',
             ),
           ],

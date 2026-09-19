@@ -12,10 +12,7 @@ import '../widgets/store_scope.dart';
 class StoreAccountScreen extends StatefulWidget {
   final AuthRepository? authRepository;
 
-  const StoreAccountScreen({
-    super.key,
-    this.authRepository,
-  });
+  const StoreAccountScreen({super.key, this.authRepository});
 
   @override
   State<StoreAccountScreen> createState() => _StoreAccountScreenState();
@@ -59,7 +56,9 @@ class _StoreAccountScreenState extends State<StoreAccountScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out of the store portal?'),
+        content: const Text(
+          'Are you sure you want to sign out of the store portal?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -82,10 +81,9 @@ class _StoreAccountScreenState extends State<StoreAccountScreen> {
     await _authRepo.logout();
 
     if (mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.login,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
     }
   }
 
@@ -93,9 +91,7 @@ class _StoreAccountScreenState extends State<StoreAccountScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Staff Account'),
-      ),
+      appBar: AppBar(title: const Text('Staff Account')),
       body: SafeArea(
         child: _isLoadingUser
             ? const Center(child: CircularProgressIndicator())
@@ -123,14 +119,21 @@ class _StoreAccountScreenState extends State<StoreAccountScreen> {
                             const SizedBox(height: AppDimensions.spacingSm),
                             Text(
                               _currentUser?.fullName ?? 'Store Staff',
-                              style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.w700),
+                              style: AppTextStyles.headlineSmall.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFEFF6FF),
-                                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusFull,
+                                ),
                               ),
                               child: Text(
                                 _currentUser?.role.isStoreManager == true
@@ -153,21 +156,31 @@ class _StoreAccountScreenState extends State<StoreAccountScreen> {
                       child: Column(
                         children: [
                           ListTile(
-                            leading: const Icon(Icons.phone_outlined, color: AppColors.textSecondary),
+                            leading: const Icon(
+                              Icons.phone_outlined,
+                              color: AppColors.textSecondary,
+                            ),
                             title: const Text('Phone Number'),
                             subtitle: Text(_currentUser?.phoneNumber ?? 'N/A'),
                           ),
-                          if (_currentUser?.email != null && _currentUser!.email!.isNotEmpty) ...[
+                          if (_currentUser?.email != null &&
+                              _currentUser!.email!.isNotEmpty) ...[
                             const Divider(height: 1),
                             ListTile(
-                              leading: const Icon(Icons.email_outlined, color: AppColors.textSecondary),
+                              leading: const Icon(
+                                Icons.email_outlined,
+                                color: AppColors.textSecondary,
+                              ),
                               title: const Text('Email Address'),
                               subtitle: Text(_currentUser!.email!),
                             ),
                           ],
                           const Divider(height: 1),
                           ListTile(
-                            leading: const Icon(Icons.storefront_outlined, color: AppColors.textSecondary),
+                            leading: const Icon(
+                              Icons.storefront_outlined,
+                              color: AppColors.textSecondary,
+                            ),
                             title: const Text('Assigned Store ID'),
                             subtitle: Text(_currentUser?.storeId ?? 'None'),
                           ),
@@ -184,7 +197,10 @@ class _StoreAccountScreenState extends State<StoreAccountScreen> {
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                           : const Icon(Icons.logout_rounded, size: 18),
                       label: const Text('Sign Out'),

@@ -32,10 +32,7 @@ class ProductCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        side: const BorderSide(
-          color: AppColors.borderSubtle,
-          width: 1.0,
-        ),
+        side: const BorderSide(color: AppColors.borderSubtle, width: 1.0),
       ),
       child: InkWell(
         onTap: onTap,
@@ -50,7 +47,8 @@ class ProductCard extends StatelessWidget {
                 children: [
                   Container(
                     color: AppColors.background,
-                    child: product.imageUrl != null && product.imageUrl!.isNotEmpty
+                    child:
+                        product.imageUrl != null && product.imageUrl!.isNotEmpty
                         ? Image.network(
                             product.imageUrl!,
                             fit: BoxFit.cover,
@@ -63,13 +61,18 @@ class ProductCard extends StatelessWidget {
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    value: loadingProgress.expectedTotalBytes != null
-                                        ? loadingProgress.cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
+                                    value:
+                                        loadingProgress.expectedTotalBytes !=
+                                            null
+                                        ? loadingProgress
+                                                  .cumulativeBytesLoaded /
+                                              loadingProgress
+                                                  .expectedTotalBytes!
                                         : null,
-                                    valueColor: const AlwaysStoppedAnimation<Color>(
-                                      AppColors.primary,
-                                    ),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                          AppColors.primary,
+                                        ),
                                   ),
                                 ),
                               );
@@ -90,7 +93,9 @@ class ProductCard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.primaryLight,
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusFull,
+                          ),
                           border: Border.all(
                             color: AppColors.primary.withAlpha(80),
                           ),
@@ -129,7 +134,9 @@ class ProductCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusSm,
+                            ),
                           ),
                           child: Text(
                             'Unavailable',
@@ -158,7 +165,8 @@ class ProductCard extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (product.category != null && product.category!.isNotEmpty)
+                        if (product.category != null &&
+                            product.category!.isNotEmpty)
                           Text(
                             product.category!,
                             style: AppTextStyles.bodySmall.copyWith(
@@ -198,7 +206,8 @@ class ProductCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        if (effectiveCartNotifier != null && product.isAvailable)
+                        if (effectiveCartNotifier != null &&
+                            product.isAvailable)
                           _buildCartControl(effectiveCartNotifier),
                       ],
                     ),
@@ -236,7 +245,10 @@ class ProductCard extends StatelessWidget {
             onTap: () => notifier.addItem(product.id, 1),
             borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6.0,
+                vertical: 3.0,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
@@ -275,7 +287,11 @@ class ProductCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                  child: Icon(Icons.remove, size: 12, color: AppColors.textPrimary),
+                  child: Icon(
+                    Icons.remove,
+                    size: 12,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
               Padding(
@@ -295,7 +311,11 @@ class ProductCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
                 child: const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                  child: Icon(Icons.add, size: 12, color: AppColors.textPrimary),
+                  child: Icon(
+                    Icons.add,
+                    size: 12,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ],

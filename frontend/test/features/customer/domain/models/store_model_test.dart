@@ -3,39 +3,40 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('StoreModel', () {
-    test('parses backend Prisma JSON response with nested area and _count correctly', () {
-      final json = {
-        'id': 's-123',
-        'name': 'eSOuQ Olaya',
-        'areaId': 'area-1',
-        'address': 'King Fahd Road',
-        'phone': '+966112345678',
-        'isActive': true,
-        'area': {
-          'id': 'area-1',
-          'name': 'Riyadh - Olaya',
-          'createdAt': '2026-09-07T19:06:18.000Z',
-        },
-        '_count': {
-          'items': 42,
-        },
-        'createdAt': '2026-09-10T12:00:00.000Z',
-        'updatedAt': '2026-09-10T13:00:00.000Z',
-      };
+    test(
+      'parses backend Prisma JSON response with nested area and _count correctly',
+      () {
+        final json = {
+          'id': 's-123',
+          'name': 'eSOuQ Olaya',
+          'areaId': 'area-1',
+          'address': 'King Fahd Road',
+          'phone': '+966112345678',
+          'isActive': true,
+          'area': {
+            'id': 'area-1',
+            'name': 'Riyadh - Olaya',
+            'createdAt': '2026-09-07T19:06:18.000Z',
+          },
+          '_count': {'items': 42},
+          'createdAt': '2026-09-10T12:00:00.000Z',
+          'updatedAt': '2026-09-10T13:00:00.000Z',
+        };
 
-      final store = StoreModel.fromJson(json);
+        final store = StoreModel.fromJson(json);
 
-      expect(store.id, equals('s-123'));
-      expect(store.name, equals('eSOuQ Olaya'));
-      expect(store.area, equals('Riyadh - Olaya'));
-      expect(store.areaId, equals('area-1'));
-      expect(store.address, equals('King Fahd Road'));
-      expect(store.phoneNumber, equals('+966112345678'));
-      expect(store.isActive, isTrue);
-      expect(store.itemCount, equals(42));
-      expect(store.createdAt, isNotNull);
-      expect(store.updatedAt, isNotNull);
-    });
+        expect(store.id, equals('s-123'));
+        expect(store.name, equals('eSOuQ Olaya'));
+        expect(store.area, equals('Riyadh - Olaya'));
+        expect(store.areaId, equals('area-1'));
+        expect(store.address, equals('King Fahd Road'));
+        expect(store.phoneNumber, equals('+966112345678'));
+        expect(store.isActive, isTrue);
+        expect(store.itemCount, equals(42));
+        expect(store.createdAt, isNotNull);
+        expect(store.updatedAt, isNotNull);
+      },
+    );
 
     test('parses flat legacy JSON format correctly', () {
       final json = {

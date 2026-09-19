@@ -37,7 +37,8 @@ class StoreCategoryModel {
       name: json['name'] as String? ?? '',
       sortOrder: parseInt(json['sortOrder'] ?? json['sort_order']),
       createdAt: parseDate(json['createdAt'] ?? json['created_at']),
-      productCount: json['productCount'] != null || json['product_count'] != null
+      productCount:
+          json['productCount'] != null || json['product_count'] != null
           ? parseInt(json['productCount'] ?? json['product_count'])
           : null,
     );
@@ -70,5 +71,6 @@ class StoreCategoryModel {
   int get hashCode => id.hashCode ^ name.hashCode;
 
   @override
-  String toString() => 'StoreCategoryModel(id: $id, storeId: $storeId, name: $name)';
+  String toString() =>
+      'StoreCategoryModel(id: $id, storeId: $storeId, name: $name)';
 }

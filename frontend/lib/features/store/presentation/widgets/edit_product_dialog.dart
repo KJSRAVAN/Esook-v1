@@ -66,10 +66,18 @@ class _EditProductDialogState extends State<EditProductDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.product.name);
-    _descriptionController = TextEditingController(text: widget.product.description ?? '');
-    _priceController = TextEditingController(text: widget.product.price.toStringAsFixed(2));
-    _imageUrlController = TextEditingController(text: widget.product.imageUrl ?? '');
-    _sortOrderController = TextEditingController(text: widget.product.sortOrder.toString());
+    _descriptionController = TextEditingController(
+      text: widget.product.description ?? '',
+    );
+    _priceController = TextEditingController(
+      text: widget.product.price.toStringAsFixed(2),
+    );
+    _imageUrlController = TextEditingController(
+      text: widget.product.imageUrl ?? '',
+    );
+    _sortOrderController = TextEditingController(
+      text: widget.product.sortOrder.toString(),
+    );
     _isAvailable = widget.product.isAvailable;
     _selectedCategoryId = widget.product.category ?? widget.product.categoryId;
     _loadCategories();
@@ -98,14 +106,19 @@ class _EditProductDialogState extends State<EditProductDialog> {
           .cast<String>()
           .toSet();
 
-      if (widget.product.category != null && widget.product.category!.trim().isNotEmpty) {
+      if (widget.product.category != null &&
+          widget.product.category!.trim().isNotEmpty) {
         uniqueCats.add(widget.product.category!.trim());
       }
 
-      final categoryModels = uniqueCats
-          .map((c) => StoreCategoryModel(id: c, name: c, storeId: widget.storeId))
-          .toList()
-        ..sort((a, b) => a.name.compareTo(b.name));
+      final categoryModels =
+          uniqueCats
+              .map(
+                (c) =>
+                    StoreCategoryModel(id: c, name: c, storeId: widget.storeId),
+              )
+              .toList()
+            ..sort((a, b) => a.name.compareTo(b.name));
 
       setState(() {
         _categories = categoryModels;
@@ -132,10 +145,14 @@ class _EditProductDialogState extends State<EditProductDialog> {
       storeId: widget.storeId,
       productId: widget.product.id,
       name: _nameController.text.trim(),
-      description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+      description: _descriptionController.text.trim().isEmpty
+          ? null
+          : _descriptionController.text.trim(),
       price: price,
       category: _selectedCategoryId,
-      imageUrl: _imageUrlController.text.trim().isEmpty ? null : _imageUrlController.text.trim(),
+      imageUrl: _imageUrlController.text.trim().isEmpty
+          ? null
+          : _imageUrlController.text.trim(),
       isAvailable: _isAvailable,
     );
 
@@ -146,7 +163,8 @@ class _EditProductDialogState extends State<EditProductDialog> {
     } else {
       setState(() {
         _isSubmitting = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to update product';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to update product';
       });
     }
   }
@@ -154,7 +172,9 @@ class _EditProductDialogState extends State<EditProductDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusLg)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+      ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 500),
         child: Padding(
@@ -171,11 +191,15 @@ class _EditProductDialogState extends State<EditProductDialog> {
                     children: [
                       Text(
                         'Edit Store Item',
-                        style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.w700),
+                        style: AppTextStyles.headlineSmall.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded),
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                       ),
                     ],
                   ),
@@ -185,14 +209,20 @@ class _EditProductDialogState extends State<EditProductDialog> {
                   if (_errorMessage != null) ...[
                     Container(
                       padding: const EdgeInsets.all(AppDimensions.spacingSm),
-                      margin: const EdgeInsets.only(bottom: AppDimensions.spacingSm),
+                      margin: const EdgeInsets.only(
+                        bottom: AppDimensions.spacingSm,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFEE2E2),
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSm,
+                        ),
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.error,
+                        ),
                       ),
                     ),
                   ],
@@ -200,10 +230,17 @@ class _EditProductDialogState extends State<EditProductDialog> {
                   // Availability Switch
                   SwitchListTile.adaptive(
                     key: const Key('edit_product_availability_switch'),
-                    title: const Text('Item Available in Catalog', style: TextStyle(fontWeight: FontWeight.w600)),
+                    title: const Text(
+                      'Item Available in Catalog',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     subtitle: Text(
-                      _isAvailable ? 'Customers can view and order this item' : 'Item is hidden / unavailable for orders',
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                      _isAvailable
+                          ? 'Customers can view and order this item'
+                          : 'Item is hidden / unavailable for orders',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     value: _isAvailable,
                     activeColor: AppColors.primary,
@@ -232,7 +269,9 @@ class _EditProductDialogState extends State<EditProductDialog> {
                   TextFormField(
                     key: const Key('edit_product_price_input'),
                     controller: _priceController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: const InputDecoration(
                       labelText: 'Price (AED) *',
                       prefixText: 'AED ',
@@ -260,9 +299,7 @@ class _EditProductDialogState extends State<EditProductDialog> {
                     DropdownButtonFormField<String>(
                       key: const Key('edit_product_category_dropdown'),
                       value: _selectedCategoryId,
-                      decoration: const InputDecoration(
-                        labelText: 'Category',
-                      ),
+                      decoration: const InputDecoration(labelText: 'Category'),
                       items: [
                         const DropdownMenuItem<String>(
                           value: null,
@@ -275,7 +312,8 @@ class _EditProductDialogState extends State<EditProductDialog> {
                           ),
                         ),
                       ],
-                      onChanged: (val) => setState(() => _selectedCategoryId = val),
+                      onChanged: (val) =>
+                          setState(() => _selectedCategoryId = val),
                     ),
                   const SizedBox(height: AppDimensions.spacingSm),
 
@@ -284,9 +322,7 @@ class _EditProductDialogState extends State<EditProductDialog> {
                     key: const Key('edit_product_description_input'),
                     controller: _descriptionController,
                     maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: 'Description',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Description'),
                   ),
                   const SizedBox(height: AppDimensions.spacingSm),
 
@@ -294,9 +330,7 @@ class _EditProductDialogState extends State<EditProductDialog> {
                   TextFormField(
                     key: const Key('edit_product_image_input'),
                     controller: _imageUrlController,
-                    decoration: const InputDecoration(
-                      labelText: 'Image URL',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Image URL'),
                   ),
                   const SizedBox(height: AppDimensions.spacingSm),
 
@@ -316,7 +350,9 @@ class _EditProductDialogState extends State<EditProductDialog> {
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                         child: const Text('Cancel'),
                       ),
                       const SizedBox(width: AppDimensions.spacingSm),
@@ -327,7 +363,10 @@ class _EditProductDialogState extends State<EditProductDialog> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : const Text('Save Changes'),
                       ),

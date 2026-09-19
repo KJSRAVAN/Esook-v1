@@ -125,9 +125,7 @@ Widget buildTestWidget({
       riderRepository: riderRepository,
       initialUser: _testUser,
     ),
-    routes: {
-      '/auth/login': (_) => const Scaffold(body: Text('Login Screen')),
-    },
+    routes: {'/auth/login': (_) => const Scaffold(body: Text('Login Screen'))},
   );
 }
 
@@ -146,7 +144,8 @@ void main() {
     });
 
     testWidgets('shows loading indicator while loading user', (tester) async {
-      final slowAuth = FakeAuthRepository(); // currentUser is null, no initialUser
+      final slowAuth =
+          FakeAuthRepository(); // currentUser is null, no initialUser
 
       await tester.pumpWidget(
         MaterialApp(
@@ -166,10 +165,9 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      await tester.pumpWidget(buildTestWidget(
-        authRepository: fakeAuth,
-        riderRepository: fakeRider,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(authRepository: fakeAuth, riderRepository: fakeRider),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Active'), findsOneWidget);
@@ -182,25 +180,24 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      await tester.pumpWidget(buildTestWidget(
-        authRepository: fakeAuth,
-        riderRepository: fakeRider,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(authRepository: fakeAuth, riderRepository: fakeRider),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(NavigationRail), findsOneWidget);
     });
 
-    testWidgets('shows Active Delivery tab by default with empty state',
-        (tester) async {
+    testWidgets('shows Active Delivery tab by default with empty state', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      await tester.pumpWidget(buildTestWidget(
-        authRepository: fakeAuth,
-        riderRepository: fakeRider,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(authRepository: fakeAuth, riderRepository: fakeRider),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('No Active Delivery'), findsOneWidget);
@@ -217,10 +214,9 @@ void main() {
 
       fakeRider.activeOrder = _sampleActiveOrder;
 
-      await tester.pumpWidget(buildTestWidget(
-        authRepository: fakeAuth,
-        riderRepository: fakeRider,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(authRepository: fakeAuth, riderRepository: fakeRider),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Delivery In Progress'), findsOneWidget);
@@ -233,10 +229,9 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      await tester.pumpWidget(buildTestWidget(
-        authRepository: fakeAuth,
-        riderRepository: fakeRider,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(authRepository: fakeAuth, riderRepository: fakeRider),
+      );
       await tester.pumpAndSettle();
 
       // Tap Available tab
@@ -253,11 +248,13 @@ void main() {
 
       fakeRider.availableOrders = [_sampleAvailableOrder];
 
-      await tester.pumpWidget(buildTestWidget(
-        authRepository: fakeAuth,
-        riderRepository: fakeRider,
-        initialIndex: 1,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(
+          authRepository: fakeAuth,
+          riderRepository: fakeRider,
+          initialIndex: 1,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('1 order available'), findsOneWidget);
@@ -269,27 +266,32 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      await tester.pumpWidget(buildTestWidget(
-        authRepository: fakeAuth,
-        riderRepository: fakeRider,
-        initialIndex: 1,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(
+          authRepository: fakeAuth,
+          riderRepository: fakeRider,
+          initialIndex: 1,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('No Orders Available'), findsOneWidget);
     });
 
-    testWidgets('navigates to Account tab and shows rider info',
-        (tester) async {
+    testWidgets('navigates to Account tab and shows rider info', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      await tester.pumpWidget(buildTestWidget(
-        authRepository: fakeAuth,
-        riderRepository: fakeRider,
-        initialIndex: 2,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(
+          authRepository: fakeAuth,
+          riderRepository: fakeRider,
+          initialIndex: 2,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Test Rider'), findsOneWidget);
@@ -297,17 +299,20 @@ void main() {
       expect(find.text('Delivery Rider'), findsOneWidget);
     });
 
-    testWidgets('Account logout triggers auth repository logout',
-        (tester) async {
+    testWidgets('Account logout triggers auth repository logout', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
 
-      await tester.pumpWidget(buildTestWidget(
-        authRepository: fakeAuth,
-        riderRepository: fakeRider,
-        initialIndex: 2,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(
+          authRepository: fakeAuth,
+          riderRepository: fakeRider,
+          initialIndex: 2,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Find and tap logout
@@ -339,10 +344,9 @@ void main() {
 
       fakeRider.activeOrder = _sampleActiveOrder;
 
-      await tester.pumpWidget(buildTestWidget(
-        authRepository: fakeAuth,
-        riderRepository: fakeRider,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(authRepository: fakeAuth, riderRepository: fakeRider),
+      );
       await tester.pumpAndSettle();
 
       // Tap Mark as Delivered

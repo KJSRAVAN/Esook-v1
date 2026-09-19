@@ -16,10 +16,7 @@ abstract interface class ProductRepository {
   });
 
   /// Fetches a specific item by its unique [id] and optional [storeId] (GET /stores/:storeId/items/:itemId).
-  Future<Result<ProductModel>> getProductById(
-    String id, {
-    String? storeId,
-  });
+  Future<Result<ProductModel>> getProductById(String id, {String? storeId});
 
   /// Fetches categories for a specific [storeId] (GET /stores/:storeId/categories).
   Future<Result<List<CategoryModel>>> getCategories(String storeId);

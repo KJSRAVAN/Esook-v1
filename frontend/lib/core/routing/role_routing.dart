@@ -36,10 +36,9 @@ abstract final class RoleRouting {
   }) {
     final destination = getDestinationRoute(role);
     if (clearStack) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        destination,
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(destination, (route) => false);
     } else {
       Navigator.of(context).pushReplacementNamed(destination);
     }

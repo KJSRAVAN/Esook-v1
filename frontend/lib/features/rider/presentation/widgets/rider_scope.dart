@@ -28,9 +28,12 @@ class RiderScope extends InheritedWidget {
     return context.dependOnInheritedWidgetOfExactType<RiderScope>();
   }
 
-  static RiderRepository riderRepositoryOf(BuildContext context) => of(context).riderRepository;
-  static AuthRepository authRepositoryOf(BuildContext context) => of(context).authRepository;
-  static UserModel? currentUserOf(BuildContext context) => of(context).currentUser;
+  static RiderRepository riderRepositoryOf(BuildContext context) =>
+      of(context).riderRepository;
+  static AuthRepository authRepositoryOf(BuildContext context) =>
+      of(context).authRepository;
+  static UserModel? currentUserOf(BuildContext context) =>
+      of(context).currentUser;
 
   @override
   bool updateShouldNotify(RiderScope oldWidget) {

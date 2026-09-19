@@ -4,11 +4,7 @@ class AreaModel {
   final String name;
   final DateTime? createdAt;
 
-  const AreaModel({
-    required this.id,
-    required this.name,
-    this.createdAt,
-  });
+  const AreaModel({required this.id, required this.name, this.createdAt});
 
   factory AreaModel.fromJson(Map<String, dynamic> json) {
     DateTime? parseDate(dynamic value) {

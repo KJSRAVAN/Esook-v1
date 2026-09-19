@@ -41,7 +41,9 @@ class StoreCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.primaryLight,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                 ),
                 child: Icon(
@@ -113,11 +115,7 @@ class StoreCard extends StatelessWidget {
                     color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.check,
-                    color: Colors.white,
-                    size: 16,
-                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 16),
                 ),
               ] else ...[
                 const SizedBox(width: AppDimensions.spacingSm),

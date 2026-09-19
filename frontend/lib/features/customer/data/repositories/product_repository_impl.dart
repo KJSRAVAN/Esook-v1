@@ -9,7 +9,8 @@ import '../../domain/repositories/product_repository.dart';
 class ProductRepositoryImpl implements ProductRepository {
   final ApiClient _apiClient;
 
-  const ProductRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
+  const ProductRepositoryImpl({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
   @override
   Future<Result<List<ProductModel>>> getProductsByStore(
@@ -22,7 +23,8 @@ class ProductRepositoryImpl implements ProductRepository {
   }) async {
     try {
       final queryParams = <String, dynamic>{
-        if (categoryId != null && categoryId.isNotEmpty) 'categoryId': categoryId,
+        if (categoryId != null && categoryId.isNotEmpty)
+          'categoryId': categoryId,
         if (search != null && search.isNotEmpty) 'search': search,
         if (isAvailable != null) 'available': isAvailable ? 'true' : 'false',
         if (page != null) 'page': page,
@@ -30,19 +32,19 @@ class ProductRepositoryImpl implements ProductRepository {
       };
 
       final response = await _apiClient.get<dynamic>(
-        '/products/store/$storeId',
+        '/stores/$storeId/items',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
 
       final dynamic rawData = response.data;
       final List<dynamic> rawList;
-      if (rawData is List) {
+      if (rawData is Map<String, dynamic> && rawData['data'] is List) {
+        rawList = rawData['data'] as List<dynamic>;
+      } else if (rawData is List) {
         rawList = rawData;
       } else if (rawData is Map<String, dynamic>) {
-        rawList = (rawData['data'] ??
-                rawData['items'] ??
-                rawData['products']) as List<dynamic>? ??
-            [];
+        rawList =
+            (rawData['items'] ?? rawData['products']) as List<dynamic>? ?? [];
       } else {
         rawList = [];
       }
@@ -55,7 +57,9 @@ class ProductRepositoryImpl implements ProductRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch items for store $storeId: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch items for store $storeId: $e'),
+      );
     }
   }
 
@@ -65,7 +69,17 @@ class ProductRepositoryImpl implements ProductRepository {
     String? storeId,
   }) async {
     try {
-      final response = await _apiClient.get<dynamic>('/products/$id');
+      if (storeId == null || storeId.isEmpty) {
+        return Result.failure(
+          const ValidationFailure(
+            message: 'storeId is required to fetch store item.',
+          ),
+        );
+      }
+
+      final response = await _apiClient.get<dynamic>(
+        '/stores/$storeId/items/$id',
+      );
       final dynamic rawData = response.data;
       final Map<String, dynamic> rawProduct;
       if (rawData is Map<String, dynamic>) {
@@ -87,42 +101,43 @@ class ProductRepositoryImpl implements ProductRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch item $id: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to fetch item $id: $e'),
+      );
     }
   }
 
   @override
   Future<Result<List<CategoryModel>>> getCategories(String storeId) async {
     try {
-      final productsResult = await getProductsByStore(storeId);
-      if (productsResult.isFailure) {
-        return Result.failure(productsResult.failureOrNull!);
+      final response = await _apiClient.get<dynamic>(
+        '/stores/$storeId/categories',
+      );
+      final dynamic rawData = response.data;
+      final List<dynamic> rawList;
+      if (rawData is List) {
+        rawList = rawData;
+      } else if (rawData is Map<String, dynamic>) {
+        rawList =
+            (rawData['categories'] ?? rawData['data']) as List<dynamic>? ?? [];
+      } else {
+        rawList = [];
       }
 
-      final products = productsResult.dataOrNull ?? [];
-      final categoryCounts = <String, int>{};
-
-      for (final product in products) {
-        if (product.category != null && product.category!.trim().isNotEmpty) {
-          final catName = product.category!.trim();
-          categoryCounts[catName] = (categoryCounts[catName] ?? 0) + 1;
-        }
-      }
-
-      final categories = categoryCounts.entries.map((entry) {
-        return CategoryModel(
-          id: entry.key,
-          storeId: storeId,
-          name: entry.key,
-          itemCount: entry.value,
-        );
-      }).toList();
+      final categories = rawList
+          .whereType<Map<String, dynamic>>()
+          .map((item) => CategoryModel.fromJson(item))
+          .toList();
 
       return Result.success(categories);
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to fetch categories for store $storeId: $e'));
+      return Result.failure(
+        UnknownFailure(
+          message: 'Failed to fetch categories for store $storeId: $e',
+        ),
+      );
     }
   }
 }

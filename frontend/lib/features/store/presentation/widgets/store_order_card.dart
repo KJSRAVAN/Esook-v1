@@ -95,17 +95,25 @@ class StoreOrderCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      order.orderNumber ?? 'Order #${order.id.substring(0, order.id.length > 8 ? 8 : order.id.length)}',
-                      style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                      order.orderNumber ??
+                          'Order #${order.id.substring(0, order.id.length > 8 ? 8 : order.id.length)}',
+                      style: AppTextStyles.titleMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusBg,
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusFull,
+                      ),
                     ),
                     child: Text(
                       order.status.displayName,
@@ -123,24 +131,35 @@ class StoreOrderCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: isPickup ? const Color(0xFFF1F5F9) : const Color(0xFFEFF6FF),
+                      color: isPickup
+                          ? const Color(0xFFF1F5F9)
+                          : const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          isPickup ? Icons.shopping_bag_outlined : Icons.delivery_dining_outlined,
+                          isPickup
+                              ? Icons.shopping_bag_outlined
+                              : Icons.delivery_dining_outlined,
                           size: 14,
-                          color: isPickup ? const Color(0xFF475569) : const Color(0xFF2563EB),
+                          color: isPickup
+                              ? const Color(0xFF475569)
+                              : const Color(0xFF2563EB),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           isPickup ? 'Pickup' : 'Delivery',
                           style: AppTextStyles.bodySmall.copyWith(
-                            color: isPickup ? const Color(0xFF475569) : const Color(0xFF2563EB),
+                            color: isPickup
+                                ? const Color(0xFF475569)
+                                : const Color(0xFF2563EB),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -151,7 +170,9 @@ class StoreOrderCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       _formatDateTime(order.createdAt),
-                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
                     ),
                   ],
                 ],
@@ -164,7 +185,9 @@ class StoreOrderCard extends StatelessWidget {
                 children: [
                   Text(
                     '${order.itemCount} ${order.itemCount == 1 ? 'item' : 'items'}',
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   Text(
                     '${order.total.toStringAsFixed(2)} AED',
@@ -181,9 +204,7 @@ class StoreOrderCard extends StatelessWidget {
                 const Divider(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    _buildQuickActionButton(context),
-                  ],
+                  children: [_buildQuickActionButton(context)],
                 ),
               ],
             ],
@@ -212,7 +233,10 @@ class StoreOrderCard extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
                 side: const BorderSide(color: AppColors.error),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -223,7 +247,10 @@ class StoreOrderCard extends StatelessWidget {
             ElevatedButton(
               key: Key('order_accept_btn_${order.id}'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
@@ -256,11 +283,15 @@ class StoreOrderCard extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFEA580C),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                onPressed: () => onQuickStatusChange?.call(OrderStatus.outForDelivery),
+                onPressed: () =>
+                    onQuickStatusChange?.call(OrderStatus.outForDelivery),
                 child: const Text('Out for Delivery'),
               ),
               const SizedBox(width: 8),
@@ -270,7 +301,10 @@ class StoreOrderCard extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.success,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),

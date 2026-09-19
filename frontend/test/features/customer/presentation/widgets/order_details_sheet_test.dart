@@ -15,7 +15,9 @@ void main() {
       mockOrderRepository = MockOrderRepository();
     });
 
-    testWidgets('renders complete order breakdown, items, and pricing', (tester) async {
+    testWidgets('renders complete order breakdown, items, and pricing', (
+      tester,
+    ) async {
       final order = OrderModel(
         id: 'ord-12345678',
         orderNumber: 'ESK-2026-888',

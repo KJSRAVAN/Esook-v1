@@ -46,7 +46,8 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
       widget.storeRepository ?? CustomerScope.storeRepositoryOf(context);
 
   ValueNotifier<StoreModel?> get _storeNotifier =>
-      widget.selectedStoreNotifier ?? CustomerScope.of(context).selectedStoreNotifier;
+      widget.selectedStoreNotifier ??
+      CustomerScope.of(context).selectedStoreNotifier;
 
   @override
   void initState() {
@@ -113,7 +114,8 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
     } else {
       setState(() {
         _isLoading = false;
-        _errorMessage = result.failureOrNull?.message ?? 'Failed to load catalog';
+        _errorMessage =
+            result.failureOrNull?.message ?? 'Failed to load catalog';
       });
     }
   }
@@ -133,7 +135,8 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
       // 1. Category filter
       if (_selectedCategory != 'All') {
         if (product.category == null ||
-            product.category!.toLowerCase() != _selectedCategory.toLowerCase()) {
+            product.category!.toLowerCase() !=
+                _selectedCategory.toLowerCase()) {
           return false;
         }
       }
@@ -142,9 +145,11 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
         final nameMatch = product.name.toLowerCase().contains(query);
-        final descMatch = product.description != null &&
+        final descMatch =
+            product.description != null &&
             product.description!.toLowerCase().contains(query);
-        final catMatch = product.category != null &&
+        final catMatch =
+            product.category != null &&
             product.category!.toLowerCase().contains(query);
 
         if (!nameMatch && !descMatch && !catMatch) {
@@ -162,7 +167,9 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDimensions.radiusLg)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppDimensions.radiusLg),
+        ),
       ),
       builder: (sheetContext) {
         return SafeArea(
@@ -193,9 +200,7 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
         if (currentStore == null) {
           return Scaffold(
             backgroundColor: AppColors.background,
-            appBar: AppBar(
-              title: const Text('Market'),
-            ),
+            appBar: AppBar(title: const Text('Market')),
             body: SafeArea(
               child: StoreSelectionView(
                 storeRepository: _storeRepo,
@@ -220,7 +225,10 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
               onTap: _openStoreSelector,
               borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 2.0),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 4.0,
+                  horizontal: 2.0,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -228,7 +236,9 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
                       padding: const EdgeInsets.all(AppDimensions.spacingXs),
                       decoration: BoxDecoration(
                         color: AppColors.primaryLight,
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSm,
+                        ),
                       ),
                       child: const Icon(
                         Icons.storefront_rounded,
@@ -322,7 +332,9 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
                 ),
 
                 // Categories Bar
-                if (!_isLoading && _errorMessage == null && _allProducts.isNotEmpty) ...[
+                if (!_isLoading &&
+                    _errorMessage == null &&
+                    _allProducts.isNotEmpty) ...[
                   CategoryFilterBar(
                     categories: categories,
                     selectedCategory: _selectedCategory,
@@ -378,10 +390,7 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
                 color: AppColors.error,
               ),
               const SizedBox(height: AppDimensions.spacingSm),
-              Text(
-                'Could Not Load Products',
-                style: AppTextStyles.titleMedium,
-              ),
+              Text('Could Not Load Products', style: AppTextStyles.titleMedium),
               const SizedBox(height: AppDimensions.spacingXs),
               Text(
                 _errorMessage!,
@@ -449,10 +458,7 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
                 color: AppColors.textTertiary,
               ),
               const SizedBox(height: AppDimensions.spacingSm),
-              Text(
-                'No Matching Products',
-                style: AppTextStyles.titleMedium,
-              ),
+              Text('No Matching Products', style: AppTextStyles.titleMedium),
               const SizedBox(height: AppDimensions.spacingXs),
               Text(
                 'No items found matching "$_searchQuery" in $_selectedCategory.',
@@ -478,8 +484,8 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
         final crossAxisCount = constraints.maxWidth > 900
             ? 4
             : constraints.maxWidth > 600
-                ? 3
-                : 2;
+            ? 3
+            : 2;
 
         return GridView.builder(
           padding: const EdgeInsets.all(AppDimensions.spacingMd),
@@ -492,10 +498,7 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
           itemCount: products.length,
           itemBuilder: (context, index) {
             final product = products[index];
-            return ProductCard(
-              product: product,
-              onTap: () {},
-            );
+            return ProductCard(product: product, onTap: () {});
           },
         );
       },

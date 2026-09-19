@@ -5,10 +5,7 @@ sealed class AppFailure {
   final String message;
   final int? statusCode;
 
-  const AppFailure({
-    required this.message,
-    this.statusCode,
-  });
+  const AppFailure({required this.message, this.statusCode});
 
   /// Factory to map internal [AppException] to a safe [AppFailure].
   factory AppFailure.fromException(AppException exception) {
@@ -63,31 +60,23 @@ sealed class AppFailure {
   }
 
   @override
-  String toString() => '$runtimeType(message: $message, statusCode: $statusCode)';
+  String toString() =>
+      '$runtimeType(message: $message, statusCode: $statusCode)';
 }
 
 /// Network connectivity / socket / timeout failure.
 final class NetworkFailure extends AppFailure {
-  const NetworkFailure({
-    required super.message,
-    super.statusCode,
-  });
+  const NetworkFailure({required super.message, super.statusCode});
 }
 
 /// Authentication failure (401).
 final class UnauthorizedFailure extends AppFailure {
-  const UnauthorizedFailure({
-    required super.message,
-    super.statusCode = 401,
-  });
+  const UnauthorizedFailure({required super.message, super.statusCode = 401});
 }
 
 /// Authorization / permission failure (403).
 final class ForbiddenFailure extends AppFailure {
-  const ForbiddenFailure({
-    required super.message,
-    super.statusCode = 403,
-  });
+  const ForbiddenFailure({required super.message, super.statusCode = 403});
 }
 
 /// Validation failure containing optional field error mappings (400, 422).
@@ -103,40 +92,25 @@ final class ValidationFailure extends AppFailure {
 
 /// Resource conflict failure (409).
 final class ConflictFailure extends AppFailure {
-  const ConflictFailure({
-    required super.message,
-    super.statusCode = 409,
-  });
+  const ConflictFailure({required super.message, super.statusCode = 409});
 }
 
 /// Rate limit exceeded failure (429).
 final class RateLimitFailure extends AppFailure {
-  const RateLimitFailure({
-    required super.message,
-    super.statusCode = 429,
-  });
+  const RateLimitFailure({required super.message, super.statusCode = 429});
 }
 
 /// Resource not found failure (404).
 final class NotFoundFailure extends AppFailure {
-  const NotFoundFailure({
-    required super.message,
-    super.statusCode = 404,
-  });
+  const NotFoundFailure({required super.message, super.statusCode = 404});
 }
 
 /// Server error failure (5xx).
 final class ServerFailure extends AppFailure {
-  const ServerFailure({
-    required super.message,
-    super.statusCode = 500,
-  });
+  const ServerFailure({required super.message, super.statusCode = 500});
 }
 
 /// Generic unexpected failure.
 final class UnknownFailure extends AppFailure {
-  const UnknownFailure({
-    required super.message,
-    super.statusCode,
-  });
+  const UnknownFailure({required super.message, super.statusCode});
 }

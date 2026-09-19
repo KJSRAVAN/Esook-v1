@@ -54,7 +54,10 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
   StoreOrdersRepository get _ordersRepo =>
       widget.ordersRepository ?? StoreScope.ordersRepositoryOf(context);
 
-  Future<void> _updateStatus(OrderStatus newStatus, {String? rejectedReason}) async {
+  Future<void> _updateStatus(
+    OrderStatus newStatus, {
+    String? rejectedReason,
+  }) async {
     setState(() {
       _isSubmitting = true;
       _errorMessage = null;
@@ -77,12 +80,15 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
       widget.onOrderUpdated?.call(updated);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Order status updated to ${updated.status.displayName}'),
+          content: Text(
+            'Order status updated to ${updated.status.displayName}',
+          ),
           backgroundColor: AppColors.success,
         ),
       );
     } else {
-      final error = result.failureOrNull?.message ?? 'Failed to update order status';
+      final error =
+          result.failureOrNull?.message ?? 'Failed to update order status';
       setState(() {
         _isSubmitting = false;
         _errorMessage = error;
@@ -129,7 +135,10 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
       },
     ).then((confirmed) {
       if (confirmed == true) {
-        _updateStatus(OrderStatus.rejected, rejectedReason: reasonController.text);
+        _updateStatus(
+          OrderStatus.rejected,
+          rejectedReason: reasonController.text,
+        );
       }
     });
   }
@@ -144,7 +153,9 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
       ),
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDimensions.radiusLg)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppDimensions.radiusLg),
+        ),
       ),
       child: SafeArea(
         top: false,
@@ -166,14 +177,18 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
 
             // Top title & close
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingMd),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.spacingMd,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     child: Text(
                       _currentOrder.orderNumber ?? 'Order Details',
-                      style: AppTextStyles.headlineSmall.copyWith(fontWeight: FontWeight.w700),
+                      style: AppTextStyles.headlineSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -195,19 +210,29 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
                     if (_errorMessage != null) ...[
                       Container(
                         padding: const EdgeInsets.all(AppDimensions.spacingSm),
-                        margin: const EdgeInsets.only(bottom: AppDimensions.spacingMd),
+                        margin: const EdgeInsets.only(
+                          bottom: AppDimensions.spacingMd,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFEE2E2),
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusSm,
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppColors.error,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _errorMessage!,
-                                style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.error,
+                                ),
                               ),
                             ),
                           ],
@@ -224,25 +249,38 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
                           children: [
                             Text(
                               'Current Status',
-                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               _currentOrder.status.displayName,
-                              style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                              style: AppTextStyles.titleMedium.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: isPickup ? const Color(0xFFF1F5F9) : const Color(0xFFEFF6FF),
-                            borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                            color: isPickup
+                                ? const Color(0xFFF1F5F9)
+                                : const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusFull,
+                            ),
                           ),
                           child: Text(
                             isPickup ? 'Pickup Order' : 'Delivery Order',
                             style: AppTextStyles.labelLarge.copyWith(
-                              color: isPickup ? const Color(0xFF334155) : const Color(0xFF1D4ED8),
+                              color: isPickup
+                                  ? const Color(0xFF334155)
+                                  : const Color(0xFF1D4ED8),
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -256,21 +294,32 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
                       Card(
                         color: const Color(0xFFF8FAFC),
                         child: Padding(
-                          padding: const EdgeInsets.all(AppDimensions.spacingMd),
+                          padding: const EdgeInsets.all(
+                            AppDimensions.spacingMd,
+                          ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.location_on_outlined, color: AppColors.primary, size: 20),
+                              const Icon(
+                                Icons.location_on_outlined,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('Delivery Address', style: AppTextStyles.labelLarge),
+                                    const Text(
+                                      'Delivery Address',
+                                      style: AppTextStyles.labelLarge,
+                                    ),
                                     const SizedBox(height: 2),
                                     Text(
                                       _currentOrder.deliveryAddress!,
-                                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -285,7 +334,9 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
                     // Order Items
                     Text(
                       'Items (${_currentOrder.itemCount})',
-                      style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700),
+                      style: AppTextStyles.titleMedium.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: AppDimensions.spacingSm),
                     Card(
@@ -298,11 +349,20 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
                           final item = _currentOrder.items[index];
                           return ListTile(
                             dense: true,
-                            title: Text(item.itemName, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
-                            subtitle: Text('${item.quantity} × ${item.unitPrice.toStringAsFixed(2)} AED'),
+                            title: Text(
+                              item.itemName,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '${item.quantity} × ${item.unitPrice.toStringAsFixed(2)} AED',
+                            ),
                             trailing: Text(
                               '${item.subtotal.toStringAsFixed(2)} AED',
-                              style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.w700),
+                              style: AppTextStyles.labelLarge.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           );
                         },
@@ -316,11 +376,21 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
                         padding: const EdgeInsets.all(AppDimensions.spacingMd),
                         child: Column(
                           children: [
-                            _buildPriceRow('Subtotal', '${_currentOrder.subtotal.toStringAsFixed(2)} AED'),
+                            _buildPriceRow(
+                              'Subtotal',
+                              '${_currentOrder.subtotal.toStringAsFixed(2)} AED',
+                            ),
                             if (_currentOrder.deliveryFee > 0)
-                              _buildPriceRow('Delivery Fee', '${_currentOrder.deliveryFee.toStringAsFixed(2)} AED'),
+                              _buildPriceRow(
+                                'Delivery Fee',
+                                '${_currentOrder.deliveryFee.toStringAsFixed(2)} AED',
+                              ),
                             if (_currentOrder.discount > 0)
-                              _buildPriceRow('Discount', '-${_currentOrder.discount.toStringAsFixed(2)} AED', isDiscount: true),
+                              _buildPriceRow(
+                                'Discount',
+                                '-${_currentOrder.discount.toStringAsFixed(2)} AED',
+                                isDiscount: true,
+                              ),
                             const Divider(height: 16),
                             _buildPriceRow(
                               'Total Amount',
@@ -351,7 +421,13 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
     );
   }
 
-  Widget _buildPriceRow(String label, String value, {bool isBold = false, bool isDiscount = false, Color? textColor}) {
+  Widget _buildPriceRow(
+    String label,
+    String value, {
+    bool isBold = false,
+    bool isDiscount = false,
+    Color? textColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -360,13 +436,20 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
           Text(
             label,
             style: isBold
-                ? AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700)
-                : AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                ? AppTextStyles.titleMedium.copyWith(
+                    fontWeight: FontWeight.w700,
+                  )
+                : AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
           ),
           Text(
             value,
             style: isBold
-                ? AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w700, color: textColor)
+                ? AppTextStyles.titleMedium.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: textColor,
+                  )
                 : AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
                     color: isDiscount ? AppColors.success : textColor,
@@ -473,7 +556,9 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
         return Center(
           child: Text(
             'Order is in terminal state (${_currentOrder.status.displayName})',
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textTertiary),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textTertiary,
+            ),
           ),
         );
     }

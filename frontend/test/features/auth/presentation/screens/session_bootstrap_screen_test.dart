@@ -22,11 +22,16 @@ void main() {
     return MaterialApp(
       theme: AppTheme.lightTheme,
       routes: {
-        AppRoutes.login: (_) => const Scaffold(body: Text('Customer Login Shell')),
-        AppRoutes.customerHome: (_) => const Scaffold(body: Text('Customer Home Shell')),
-        AppRoutes.storeHome: (_) => const Scaffold(body: Text('Store Home Shell')),
-        AppRoutes.riderHome: (_) => const Scaffold(body: Text('Rider Home Shell')),
-        AppRoutes.adminHome: (_) => const Scaffold(body: Text('Admin Home Shell')),
+        AppRoutes.login: (_) =>
+            const Scaffold(body: Text('Customer Login Shell')),
+        AppRoutes.customerHome: (_) =>
+            const Scaffold(body: Text('Customer Home Shell')),
+        AppRoutes.storeHome: (_) =>
+            const Scaffold(body: Text('Store Home Shell')),
+        AppRoutes.riderHome: (_) =>
+            const Scaffold(body: Text('Rider Home Shell')),
+        AppRoutes.adminHome: (_) =>
+            const Scaffold(body: Text('Admin Home Shell')),
       },
       home: AuthScope(
         repository: mockRepo,
@@ -36,7 +41,9 @@ void main() {
   }
 
   group('SessionBootstrapScreen', () {
-    testWidgets('routes to customer login when no session exists', (tester) async {
+    testWidgets('routes to customer login when no session exists', (
+      tester,
+    ) async {
       mockRepo.checkSessionResult = Result.success(null);
 
       await tester.pumpWidget(buildBootstrapWidget());
@@ -46,7 +53,9 @@ void main() {
       expect(find.text('Customer Login Shell'), findsOneWidget);
     });
 
-    testWidgets('routes to customerHome when valid customer session exists', (tester) async {
+    testWidgets('routes to customerHome when valid customer session exists', (
+      tester,
+    ) async {
       mockRepo.checkSessionResult = Result.success(
         const UserModel(
           id: 'c1',
@@ -63,7 +72,9 @@ void main() {
       expect(find.text('Customer Home Shell'), findsOneWidget);
     });
 
-    testWidgets('routes to storeHome when valid storeStaff session exists', (tester) async {
+    testWidgets('routes to storeHome when valid storeStaff session exists', (
+      tester,
+    ) async {
       mockRepo.checkSessionResult = Result.success(
         const UserModel(
           id: 's1',
@@ -80,7 +91,9 @@ void main() {
       expect(find.text('Store Home Shell'), findsOneWidget);
     });
 
-    testWidgets('routes to riderHome when valid deliveryRider session exists', (tester) async {
+    testWidgets('routes to riderHome when valid deliveryRider session exists', (
+      tester,
+    ) async {
       mockRepo.checkSessionResult = Result.success(
         const UserModel(
           id: 'r1',
@@ -97,7 +110,9 @@ void main() {
       expect(find.text('Rider Home Shell'), findsOneWidget);
     });
 
-    testWidgets('routes to adminHome when valid superAdmin session exists', (tester) async {
+    testWidgets('routes to adminHome when valid superAdmin session exists', (
+      tester,
+    ) async {
       mockRepo.checkSessionResult = Result.success(
         const UserModel(
           id: 'a1',
@@ -114,35 +129,38 @@ void main() {
       expect(find.text('Admin Home Shell'), findsOneWidget);
     });
 
-    testWidgets('displays retry card on transient network failure without logging out', (tester) async {
-      mockRepo.checkSessionResult = Result.failure(
-        const NetworkFailure(message: 'Connection timed out'),
-      );
+    testWidgets(
+      'displays retry card on transient network failure without logging out',
+      (tester) async {
+        mockRepo.checkSessionResult = Result.failure(
+          const NetworkFailure(message: 'Connection timed out'),
+        );
 
-      await tester.pumpWidget(buildBootstrapWidget());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildBootstrapWidget());
+        await tester.pumpAndSettle();
 
-      expect(mockRepo.checkSessionCallCount, equals(1));
-      expect(find.text('Connection Issue'), findsOneWidget);
-      expect(find.text('Try Again'), findsOneWidget);
-      expect(find.text('Go to Login'), findsOneWidget);
-      expect(mockRepo.logoutCallCount, equals(0));
+        expect(mockRepo.checkSessionCallCount, equals(1));
+        expect(find.text('Connection Issue'), findsOneWidget);
+        expect(find.text('Try Again'), findsOneWidget);
+        expect(find.text('Go to Login'), findsOneWidget);
+        expect(mockRepo.logoutCallCount, equals(0));
 
-      // Test Retry button
-      mockRepo.checkSessionResult = Result.success(
-        const UserModel(
-          id: 'c1',
-          phoneNumber: '+96891111111',
-          fullName: 'Customer Salim',
-          role: UserRole.customer,
-        ),
-      );
+        // Test Retry button
+        mockRepo.checkSessionResult = Result.success(
+          const UserModel(
+            id: 'c1',
+            phoneNumber: '+96891111111',
+            fullName: 'Customer Salim',
+            role: UserRole.customer,
+          ),
+        );
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Try Again'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(ElevatedButton, 'Try Again'));
+        await tester.pumpAndSettle();
 
-      expect(mockRepo.checkSessionCallCount, equals(2));
-      expect(find.text('Customer Home Shell'), findsOneWidget);
-    });
+        expect(mockRepo.checkSessionCallCount, equals(2));
+        expect(find.text('Customer Home Shell'), findsOneWidget);
+      },
+    );
   });
 }

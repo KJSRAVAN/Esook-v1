@@ -4,14 +4,11 @@ sealed class AppException implements Exception {
   final int? statusCode;
   final dynamic details;
 
-  const AppException({
-    required this.message,
-    this.statusCode,
-    this.details,
-  });
+  const AppException({required this.message, this.statusCode, this.details});
 
   @override
-  String toString() => '$runtimeType(message: $message, statusCode: $statusCode)';
+  String toString() =>
+      '$runtimeType(message: $message, statusCode: $statusCode)';
 }
 
 /// Thrown when network transport, connectivity, or timeout fails.

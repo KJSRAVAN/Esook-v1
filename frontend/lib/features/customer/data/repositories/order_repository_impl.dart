@@ -10,7 +10,8 @@ import '../../domain/repositories/order_repository.dart';
 class OrderRepositoryImpl implements OrderRepository {
   final ApiClient _apiClient;
 
-  const OrderRepositoryImpl({required ApiClient apiClient}) : _apiClient = apiClient;
+  const OrderRepositoryImpl({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
   @override
   Future<Result<OrderModel>> createOrder({
@@ -29,16 +30,18 @@ class OrderRepositoryImpl implements OrderRepository {
       };
 
       final body = <String, dynamic>{
-        'store_id': storeId,
-        'fulfillment_type': fulfillment == FulfillmentType.pickup ? 'pickup' : 'delivery',
+        'storeId': storeId,
+        'fulfillment': fulfillment == FulfillmentType.pickup
+            ? 'PICKUP'
+            : 'DELIVERY',
         if (fulfillment == FulfillmentType.delivery &&
             deliveryAddress != null &&
             deliveryAddress.trim().isNotEmpty)
-          'delivery_address': deliveryAddress.trim(),
+          'deliveryAddress': deliveryAddress.trim(),
         if (couponCode != null && couponCode.trim().isNotEmpty)
-          'coupon_code': couponCode.trim(),
-        if (notes != null && notes.trim().isNotEmpty)
-          'notes': notes.trim(),
+          'couponCode': couponCode.trim(),
+        if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+        'items': items.map((i) => i.toJson()).toList(),
       };
 
       final response = await _apiClient.post<dynamic>(
@@ -66,7 +69,9 @@ class OrderRepositoryImpl implements OrderRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to place order: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to place order: $e'),
+      );
     }
   }
 
@@ -84,7 +89,7 @@ class OrderRepositoryImpl implements OrderRepository {
       };
 
       final response = await _apiClient.get<dynamic>(
-        '/orders',
+        '/orders/my',
         queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
 
@@ -113,7 +118,9 @@ class OrderRepositoryImpl implements OrderRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to retrieve orders: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to retrieve orders: $e'),
+      );
     }
   }
 
@@ -141,7 +148,9 @@ class OrderRepositoryImpl implements OrderRepository {
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
-      return Result.failure(UnknownFailure(message: 'Failed to retrieve order details: $e'));
+      return Result.failure(
+        UnknownFailure(message: 'Failed to retrieve order details: $e'),
+      );
     }
   }
 }
