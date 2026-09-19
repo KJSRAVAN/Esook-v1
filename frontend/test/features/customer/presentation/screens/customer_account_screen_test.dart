@@ -1,6 +1,7 @@
 import 'package:esouq/core/routing/app_routes.dart';
 import 'package:esouq/features/auth/domain/models/user_model.dart';
 import 'package:esouq/features/auth/domain/models/user_role.dart';
+import 'package:esouq/features/auth/presentation/widgets/auth_scope.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_account_screen.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_edit_profile_screen.dart';
 import 'package:flutter/material.dart';
@@ -118,5 +119,48 @@ void main() {
       expect(find.text('Fatima Updated'), findsOneWidget);
       expect(find.text('newemail@esouq.com'), findsOneWidget);
     });
+
+    testWidgets(
+      'mounts cleanly and loads user asynchronously when initialUser is null (didChangeDependencies)',
+      (tester) async {
+        // Mount without initialUser - should trigger _loadUser via didChangeDependencies
+        await tester.pumpWidget(buildTestWidget(initialUser: null));
+
+        // Before settle, may show loading indicator or user once resolved
+        await tester.pumpAndSettle();
+
+        expect(find.text('Customer Account'), findsOneWidget);
+        expect(find.text('Fatima Al-Zahra'), findsOneWidget);
+        expect(find.text('+966501234567'), findsOneWidget);
+        expect(find.text('customer@esouq.com'), findsOneWidget);
+        expect(find.text('Customer'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'mounts cleanly within AuthScope ancestor without initState lifecycle crash',
+      (tester) async {
+        // Mount inside AuthScope without passing widget.authRepository or widget.initialUser
+        await tester.pumpWidget(
+          MaterialApp(
+            home: AuthScope(
+              repository: mockAuthRepository,
+              child: const CustomerAccountScreen(),
+            ),
+          ),
+        );
+
+        // This would throw "dependOnInheritedWidgetOfExactType<AuthScope>() called before initState completed"
+        // if user loading or repository access is performed in initState.
+        expect(tester.takeException(), isNull);
+
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('Customer Account'), findsOneWidget);
+        expect(find.text('Fatima Al-Zahra'), findsOneWidget);
+        expect(find.text('+966501234567'), findsOneWidget);
+      },
+    );
   });
 }

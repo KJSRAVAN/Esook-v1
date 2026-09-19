@@ -56,13 +56,24 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
     );
   }
 
+  bool _isInitialized = false;
+
   @override
   void initState() {
     super.initState();
     if (widget.initialUser != null) {
       _currentUser = widget.initialUser;
-    } else {
-      _loadUser();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      _isInitialized = true;
+      if (_currentUser == null) {
+        _loadUser();
+      }
     }
   }
 
