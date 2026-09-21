@@ -72,6 +72,7 @@ model User {
   storeId         String?
   store           Store?         @relation(fields: [storeId], references: [id])
   isPhoneVerified Boolean        @default(false)
+  isEmailVerified Boolean        @default(false)
   isActive        Boolean        @default(true)
   orders          Order[]        @relation("CustomerOrders")
   deliveryOrders  Order[]        @relation("DriverOrders")

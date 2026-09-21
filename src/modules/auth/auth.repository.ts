@@ -5,7 +5,7 @@ import { RedisService } from '@shared/redis/redis.service';
 
 const SAFE_USER_SELECT = {
   id: true, name: true, email: true, phone: true, role: true,
-  storeId: true, isPhoneVerified: true, isActive: true,
+  storeId: true, isPhoneVerified: true, isEmailVerified: true, isActive: true,
   createdAt: true, updatedAt: true,
 } satisfies Prisma.UserSelect;
 
@@ -51,12 +51,66 @@ export class AuthRepository {
     });
   }
 
+  createCustomer(data: {
+    name: string;
+    email: string;
+    phone: string;
+    passwordHash: string;
+  }): Promise<SafeUser> {
+    return this.prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        passwordHash: data.passwordHash,
+        role: 'CUSTOMER',
+        isEmailVerified: true,
+        isPhoneVerified: false,
+      },
+      select: SAFE_USER_SELECT,
+    });
+  }
+
+  updateCustomer(
+    userId: string,
+    data: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      passwordHash?: string;
+      isEmailVerified?: boolean;
+    },
+  ): Promise<SafeUser> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data,
+      select: SAFE_USER_SELECT,
+    });
+  }
+
+  markEmailVerified(userId: string): Promise<SafeUser> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { isEmailVerified: true },
+      select: SAFE_USER_SELECT,
+    });
+  }
+
   markPhoneVerified(userId: string) {
     return this.prisma.user.update({
       where: { id: userId },
       data: { isPhoneVerified: true },
       select: SAFE_USER_SELECT,
     });
+  }
+
+  updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+    return this.prisma.user
+      .update({
+        where: { id: userId },
+        data: { passwordHash },
+      })
+      .then(() => undefined);
   }
 
   createDriver(data: { name: string; phone: string; passwordHash: string }): Promise<SafeUser> {

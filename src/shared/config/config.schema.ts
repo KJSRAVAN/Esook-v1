@@ -36,13 +36,16 @@ export const envSchema = z.object({
   WHATSAPP_OTP_TEMPLATE_NAME: z.string().default('otp_verification'),
   WHATSAPP_OTP_TEMPLATE_LANG: z.string().default('en'),
 
-  // SMTP (email OTP fallback)
+  // Email Delivery (Resend HTTPS API)
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default('Esook <noreply@esook.store>'),
+
+  // Legacy SMTP fallback (optional)
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_SECURE: z.coerce.boolean().default(false),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  EMAIL_FROM: z.string().default('Esook <noreply@esook.store>'),
 
   // CORS
   CORS_ORIGINS: z.string().default('http://localhost:3000'),

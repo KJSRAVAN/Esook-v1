@@ -6,6 +6,8 @@ import { AuthService } from './auth.service';
 import {
   sendOtpSchema, verifyOtpSchema, staffLoginSchema,
   refreshTokenSchema, logoutSchema, registerDriverSchema,
+  customerSignupSchema, customerVerifyEmailSchema, customerLoginSchema,
+  customerRequestPasswordResetSchema, customerResetPasswordSchema,
 } from './auth.schemas';
 import { ZodValidationPipe } from '@shared/pipes/zod-validation.pipe';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -66,6 +68,103 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async staffLogin(@Body(new ZodValidationPipe(staffLoginSchema)) body: unknown) {
     return this.authService.staffLogin(body as Parameters<typeof this.authService.staffLogin>[0]);
+  }
+
+  @ApiOperation({ summary: 'Customer registration — creates CUSTOMER account and sends email OTP' })
+  @ApiBody({
+    schema: {
+      type: 'object', required: ['name', 'email', 'phone', 'password'],
+      properties: {
+        name:     { type: 'string', example: 'Ahmed Ali' },
+        email:    { type: 'string', example: 'ahmed@example.com' },
+        phone:    { type: 'string', example: '+966501234567', description: 'E.164 format' },
+        password: { type: 'string', example: 'Customer@1234', minLength: 8 },
+      },
+    },
+  })
+  @Post('customer/signup')
+  @HttpCode(HttpStatus.CREATED)
+  async customerSignup(@Body(new ZodValidationPipe(customerSignupSchema)) body: unknown) {
+    return this.authService.customerSignup(
+      body as Parameters<typeof this.authService.customerSignup>[0],
+    );
+  }
+
+  @ApiOperation({ summary: 'Verify customer email address via OTP' })
+  @ApiBody({
+    schema: {
+      type: 'object', required: ['email', 'code'],
+      properties: {
+        email: { type: 'string', example: 'ahmed@example.com' },
+        code:  { type: 'string', example: '123456', description: '6-digit OTP' },
+      },
+    },
+  })
+  @Post('customer/verify-email')
+  @HttpCode(HttpStatus.OK)
+  async customerVerifyEmail(@Body(new ZodValidationPipe(customerVerifyEmailSchema)) body: unknown) {
+    return this.authService.customerVerifyEmail(
+      body as Parameters<typeof this.authService.customerVerifyEmail>[0],
+    );
+  }
+
+  @ApiOperation({ summary: 'Customer login — accepts email OR phone + password' })
+  @ApiBody({
+    schema: {
+      type: 'object', required: ['password'],
+      properties: {
+        email:    { type: 'string', example: 'ahmed@example.com' },
+        phone:    { type: 'string', example: '+966501234567' },
+        password: { type: 'string', example: 'Customer@1234', minLength: 8 },
+      },
+    },
+  })
+  @Post('customer/login')
+  @HttpCode(HttpStatus.OK)
+  async customerLogin(@Body(new ZodValidationPipe(customerLoginSchema)) body: unknown) {
+    return this.authService.customerLogin(
+      body as Parameters<typeof this.authService.customerLogin>[0],
+    );
+  }
+
+  @ApiOperation({ summary: 'Request password reset OTP for customer' })
+  @ApiBody({
+    schema: {
+      type: 'object', required: ['email'],
+      properties: {
+        email: { type: 'string', example: 'ahmed@example.com' },
+      },
+    },
+  })
+  @Post('customer/request-password-reset')
+  @HttpCode(HttpStatus.OK)
+  async customerRequestPasswordReset(
+    @Body(new ZodValidationPipe(customerRequestPasswordResetSchema)) body: unknown,
+  ) {
+    return this.authService.customerRequestPasswordReset(
+      body as Parameters<typeof this.authService.customerRequestPasswordReset>[0],
+    );
+  }
+
+  @ApiOperation({ summary: 'Reset customer password with OTP verification' })
+  @ApiBody({
+    schema: {
+      type: 'object', required: ['email', 'code', 'newPassword'],
+      properties: {
+        email:       { type: 'string', example: 'ahmed@example.com' },
+        code:        { type: 'string', example: '123456', description: '6-digit OTP' },
+        newPassword: { type: 'string', example: 'NewSecret@1234', minLength: 8 },
+      },
+    },
+  })
+  @Post('customer/reset-password')
+  @HttpCode(HttpStatus.OK)
+  async customerResetPassword(
+    @Body(new ZodValidationPipe(customerResetPasswordSchema)) body: unknown,
+  ) {
+    return this.authService.customerResetPassword(
+      body as Parameters<typeof this.authService.customerResetPassword>[0],
+    );
   }
 
   @ApiBearerAuth()

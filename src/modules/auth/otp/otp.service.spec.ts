@@ -82,4 +82,60 @@ describe('OtpService', () => {
       });
     });
   });
+
+  describe('sendEmailOtp', () => {
+    it('stores hash in redis and calls email provider', async () => {
+      redis.incr.mockResolvedValue(1);
+      redis.expire.mockResolvedValue(1);
+      redis.set.mockResolvedValue('OK');
+      redis.del.mockResolvedValue(1);
+      emailProv.sendOtp.mockResolvedValue({ success: true, channel: 'email' });
+
+      const result = await service.sendEmailOtp('user@example.com', 'verification');
+      expect(result.channel).toBe('email');
+      expect(emailProv.sendOtp).toHaveBeenCalledWith(
+        'user@example.com',
+        expect.any(String),
+        'verification',
+      );
+    });
+
+    it('enforces rate limit on sendEmailOtp', async () => {
+      redis.incr.mockResolvedValue(4);
+      await expect(service.sendEmailOtp('user@example.com', 'verification')).rejects.toMatchObject({
+        response: { code: 'OTP_RATE_LIMIT' },
+      });
+    });
+  });
+
+  describe('verifyEmailOtp', () => {
+    it('throws OTP_EXPIRED when no token in redis', async () => {
+      redis.get.mockResolvedValue(null);
+      await expect(service.verifyEmailOtp('user@example.com', '123456', 'verification')).rejects.toMatchObject({
+        response: { code: 'OTP_EXPIRED' },
+      });
+    });
+
+    it('successfully verifies and deletes token when hash matches', async () => {
+      const crypto = require('crypto');
+      const hash = crypto.createHash('sha256').update('123456').digest('hex');
+      redis.get.mockResolvedValue(JSON.stringify({ hash, attempts: 0 }));
+      redis.del.mockResolvedValue(1);
+
+      await expect(service.verifyEmailOtp('user@example.com', '123456', 'verification')).resolves.toBeUndefined();
+      expect(redis.del).toHaveBeenCalled();
+    });
+
+    it('increments attempt and throws OTP_INVALID when hash does not match', async () => {
+      const crypto = require('crypto');
+      const hash = crypto.createHash('sha256').update('654321').digest('hex');
+      redis.get.mockResolvedValue(JSON.stringify({ hash, attempts: 0 }));
+      redis.set.mockResolvedValue('OK');
+
+      await expect(service.verifyEmailOtp('user@example.com', '123456', 'verification')).rejects.toMatchObject({
+        response: { code: 'OTP_INVALID' },
+      });
+      expect(redis.set).toHaveBeenCalled();
+    });
+  });
 });

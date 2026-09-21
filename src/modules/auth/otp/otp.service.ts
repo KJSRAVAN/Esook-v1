@@ -10,6 +10,13 @@ const OTP_HASH_KEY = (phone: string) => `otp:hash:${phone}`;
 const OTP_ATTEMPTS_KEY = (phone: string) => `otp:attempts:${phone}`;
 const OTP_RATE_KEY = (phone: string) => `otp:rate:${phone}`;
 
+const EMAIL_OTP_HASH_KEY = (email: string, purpose: string) =>
+  `otp:email:hash:${email.toLowerCase()}:${purpose}`;
+const EMAIL_OTP_ATTEMPTS_KEY = (email: string, purpose: string) =>
+  `otp:email:attempts:${email.toLowerCase()}:${purpose}`;
+const EMAIL_OTP_RATE_KEY = (email: string, purpose: string) =>
+  `otp:email:rate:${email.toLowerCase()}:${purpose}`;
+
 interface OtpRecord {
   hash: string;
   destination: string; // phone or email used for delivery
@@ -47,7 +54,7 @@ export class OtpService {
 
   /** Send OTP to a phone number. Tries WhatsApp first, falls back to email. */
   async sendOtp(phone: string, emailFallback?: string): Promise<{ channel: string }> {
-    await this.enforceRateLimit(phone);
+    await this.enforceRateLimit(OTP_RATE_KEY(phone));
 
     const code = this.generateCode();
     const hash = this.hashCode(code);
@@ -142,6 +149,103 @@ export class OtpService {
     this.logger.log(`OTP verified for phone +${phone.slice(0, 4)}****`);
   }
 
+  /** Send dedicated email OTP for customer verification or password reset */
+  async sendEmailOtp(
+    email: string,
+    purpose: 'verification' | 'password_reset' = 'verification',
+  ): Promise<{ channel: string }> {
+    const normEmail = email.toLowerCase().trim();
+    await this.enforceRateLimit(EMAIL_OTP_RATE_KEY(normEmail, purpose));
+
+    const code = this.generateCode();
+    const hash = this.hashCode(code);
+
+    const result = await this.email.sendOtp(normEmail, code, purpose);
+    if (!result.success) {
+      this.logger.error(`Email delivery failed for ${normEmail}: ${result.error}`);
+      throw new HttpException(
+        {
+          code: 'EMAIL_SEND_FAILED',
+          message:
+            result.error === 'Email not configured'
+              ? 'Email delivery service is currently not configured on this server.'
+              : 'Failed to deliver email. Please try again.',
+        },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+
+    const expiry = purpose === 'password_reset' ? 600 : this.expirySeconds;
+    const record: OtpRecord = { hash, destination: normEmail, channel: 'email' };
+    try {
+      await this.redis.set(
+        EMAIL_OTP_HASH_KEY(normEmail, purpose),
+        JSON.stringify(record),
+        'EX',
+        expiry,
+      );
+      await this.redis.del(EMAIL_OTP_ATTEMPTS_KEY(normEmail, purpose));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Redis error storing email OTP: ${msg}`);
+      throw new HttpException(
+        { code: 'OTP_STORE_FAILED', message: 'Verification service is temporarily unavailable.' },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+
+    return { channel: 'email' };
+  }
+
+  /** Verify email OTP */
+  async verifyEmailOtp(
+    email: string,
+    code: string,
+    purpose: 'verification' | 'password_reset' = 'verification',
+  ): Promise<void> {
+    const normEmail = email.toLowerCase().trim();
+    const key = EMAIL_OTP_HASH_KEY(normEmail, purpose);
+    const raw = await this.redis.get(key);
+
+    if (!raw) {
+      throw new HttpException(
+        { code: 'OTP_EXPIRED', message: 'Verification code expired or not found. Please request a new code.' },
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    const record: OtpRecord = JSON.parse(raw);
+    const attemptsKey = EMAIL_OTP_ATTEMPTS_KEY(normEmail, purpose);
+    const attempts = parseInt((await this.redis.get(attemptsKey)) ?? '0', 10);
+
+    if (attempts >= this.maxAttempts) {
+      await this.redis.del(key);
+      throw new HttpException(
+        { code: 'OTP_MAX_ATTEMPTS', message: 'Too many failed attempts. Please request a new code.' },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
+    const inputHash = this.hashCode(code);
+    if (inputHash !== record.hash) {
+      await this.redis.set(attemptsKey, String(attempts + 1), 'KEEPTTL');
+      const remaining = this.maxAttempts - (attempts + 1);
+      throw new HttpException(
+        {
+          code: 'OTP_INVALID',
+          message: `Invalid code. ${remaining} attempts remaining.`,
+        },
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    // Success -- clean up
+    await this.redis.del(key);
+    await this.redis.del(attemptsKey);
+    const masked = normEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+    this.logger.log(`Email OTP verified for ${masked} (${purpose})`);
+  }
+
   // ---------------------------------------------------------------------------
 
   private generateCode(): string {
@@ -159,18 +263,13 @@ export class OtpService {
    * Subsequent requests use INCR — the TTL set by the first SET is preserved.
    * This avoids the TOCTOU race between INCR and EXPIRE.
    */
-  private async enforceRateLimit(phone: string): Promise<void> {
-    const key = OTP_RATE_KEY(phone);
-
-    // Attempt to set the key for the first time (NX = only if not exists)
+  private async enforceRateLimit(key: string): Promise<void> {
     const firstSet = await this.redis.set(key, '1', 'EX', this.rateLimitWindow, 'NX');
 
     let count: number;
     if (firstSet === 'OK') {
-      // First request in this window
       count = 1;
     } else {
-      // Key already exists — increment and check
       count = await this.redis.incr(key);
     }
 
