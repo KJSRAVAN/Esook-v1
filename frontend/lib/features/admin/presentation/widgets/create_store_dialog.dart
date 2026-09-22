@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/saudi_phone_helper.dart';
 import '../../../auth/presentation/widgets/auth_primary_button.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
 import '../../domain/models/admin_store_model.dart';
+import '../../domain/models/store_delivery_area.dart';
 import '../../domain/repositories/admin_stores_repository.dart';
 
 /// Modal dialog for Super Admin to create a new Store.
@@ -32,17 +34,16 @@ class CreateStoreDialog extends StatefulWidget {
 class _CreateStoreDialogState extends State<CreateStoreDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _areaController = TextEditingController();
   final _addressController = TextEditingController();
   final _phoneController = TextEditingController();
 
+  String? _selectedAreaId;
   bool _isSubmitting = false;
   String? _errorMessage;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _areaController.dispose();
     _addressController.dispose();
     _phoneController.dispose();
     super.dispose();
@@ -52,19 +53,25 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
     setState(() => _errorMessage = null);
 
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedAreaId == null || _selectedAreaId!.isEmpty) {
+      setState(() => _errorMessage = 'Please select a delivery area');
+      return;
+    }
 
     setState(() => _isSubmitting = true);
 
     final name = _nameController.text.trim();
-    final area = _areaController.text.trim();
     final address = _addressController.text.trim();
-    final phone = _phoneController.text.trim();
+    final rawPhone = _phoneController.text.trim();
+    final normalizedPhone = rawPhone.isNotEmpty
+        ? SaudiPhoneHelper.normalizeStorePhone(rawPhone)
+        : null;
 
     final result = await widget.storesRepository.createStore(
       name: name,
-      area: area,
+      areaId: _selectedAreaId!,
       address: address.isNotEmpty ? address : null,
-      phone: phone.isNotEmpty ? phone : null,
+      phone: normalizedPhone,
     );
 
     if (!mounted) return;
@@ -179,20 +186,59 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
                   ),
                   const SizedBox(height: AppDimensions.spacingSm),
 
-                  // Delivery Area
-                  AuthTextField(
-                    key: const Key('store_area_field'),
-                    controller: _areaController,
-                    label: 'Delivery Area',
-                    hintText: 'e.g. Riyadh-North, Downtown, Olaya',
-                    prefixIcon: Icons.location_on_outlined,
-                    enabled: !_isSubmitting,
+                  // Delivery Area Dropdown (Riyadh / Jeddah)
+                  DropdownButtonFormField<String>(
+                    key: const Key('store_area_dropdown'),
+                    value: _selectedAreaId,
+                    decoration: InputDecoration(
+                      labelText: 'Delivery Area',
+                      hintText: 'Select delivery area',
+                      prefixIcon: const Icon(
+                        Icons.location_on_outlined,
+                        size: 20,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.spacingMd,
+                        vertical: AppDimensions.spacingSm,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
+                        borderSide: const BorderSide(
+                          color: AppColors.borderStrong,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
+                        borderSide: const BorderSide(
+                          color: AppColors.borderStrong,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
+                        borderSide: const BorderSide(
+                          color: AppColors.primary,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    items: StoreDeliveryArea.supportedAreas.map((area) {
+                      return DropdownMenuItem<String>(
+                        value: area.areaId,
+                        child: Text(area.name),
+                      );
+                    }).toList(),
+                    onChanged: _isSubmitting
+                        ? null
+                        : (val) => setState(() => _selectedAreaId = val),
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) {
-                        return 'Please enter delivery area';
-                      }
-                      if (val.trim().length < 2) {
-                        return 'Area must be at least 2 characters';
+                      if (val == null || val.isEmpty) {
+                        return 'Please select a delivery area';
                       }
                       return null;
                     },
@@ -215,10 +261,11 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
                     key: const Key('store_phone_field'),
                     controller: _phoneController,
                     label: 'Contact Phone',
-                    hintText: '+966112345678',
+                    hintText: '+966 11 234 5678',
                     prefixIcon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
                     enabled: !_isSubmitting,
+                    validator: SaudiPhoneHelper.validateStorePhone,
                   ),
                   const SizedBox(height: AppDimensions.spacingLg),
 
@@ -232,14 +279,12 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
                         child: const Text('Cancel'),
                       ),
                       const SizedBox(width: AppDimensions.spacingSm),
-                      SizedBox(
-                        width: 140,
-                        child: AuthPrimaryButton(
-                          key: const Key('submit_store_button'),
-                          label: 'Create Store',
-                          isLoading: _isSubmitting,
-                          onPressed: _handleSubmit,
-                        ),
+                      AuthPrimaryButton(
+                        key: const Key('submit_store_button'),
+                        label: 'Create Store',
+                        width: 240,
+                        isLoading: _isSubmitting,
+                        onPressed: _handleSubmit,
                       ),
                     ],
                   ),

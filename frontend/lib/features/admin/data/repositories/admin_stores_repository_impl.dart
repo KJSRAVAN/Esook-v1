@@ -4,6 +4,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/result.dart';
 import '../../domain/models/admin_area_model.dart';
 import '../../domain/models/admin_store_model.dart';
+import '../../domain/models/store_delivery_area.dart';
 import '../../domain/repositories/admin_stores_repository.dart';
 
 /// Concrete [AdminStoresRepository] communicating with `/stores` endpoints.
@@ -88,7 +89,8 @@ class AdminStoresRepositoryImpl implements AdminStoresRepository {
     bool? isActive,
   }) async {
     try {
-      final effectiveAreaId = (areaId ?? area ?? '').trim();
+      final rawArea = (areaId ?? area ?? '').trim();
+      final effectiveAreaId = StoreDeliveryArea.resolveAreaId(rawArea) ?? rawArea;
       final body = <String, dynamic>{
         'name': name.trim(),
         'areaId': effectiveAreaId,
@@ -129,14 +131,20 @@ class AdminStoresRepositoryImpl implements AdminStoresRepository {
     required String storeId,
     String? name,
     String? area,
+    String? areaId,
     String? address,
     String? phone,
     bool? isActive,
   }) async {
     try {
+      final rawArea = (areaId ?? area)?.trim();
+      final effectiveAreaId = rawArea != null
+          ? (StoreDeliveryArea.resolveAreaId(rawArea) ?? rawArea)
+          : null;
       final body = <String, dynamic>{
         if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
-        if (area != null && area.trim().isNotEmpty) 'areaId': area.trim(),
+        if (effectiveAreaId != null && effectiveAreaId.isNotEmpty)
+          'areaId': effectiveAreaId,
         if (address != null && address.trim().isNotEmpty)
           'address': address.trim(),
         if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),

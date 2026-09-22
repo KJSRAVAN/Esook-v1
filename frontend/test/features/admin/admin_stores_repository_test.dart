@@ -4,6 +4,7 @@ import 'package:esouq/core/network/api_client.dart';
 import 'package:esouq/core/network/http_method.dart';
 import 'package:esouq/core/network/http_transport.dart';
 import 'package:esouq/features/admin/data/repositories/admin_stores_repository_impl.dart';
+import 'package:esouq/features/admin/domain/models/store_delivery_area.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class MockHttpTransport implements HttpTransport {
@@ -134,6 +135,70 @@ void main() {
     });
 
     test(
+      'createStore sends exact Riyadh CUID when Riyadh area or areaId is given',
+      () async {
+        mockTransport.statusCode = 201;
+        mockTransport.responseBody = jsonEncode({
+          'store': {
+            'id': 'store-riyadh',
+            'name': 'Riyadh Store',
+            'areaId': StoreDeliveryArea.riyadhId,
+          },
+        });
+
+        // Test passing Riyadh CUID directly
+        await storesRepository.createStore(
+          name: 'Riyadh Store',
+          areaId: StoreDeliveryArea.riyadhId,
+        );
+        var sentBody =
+            jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+        expect(sentBody['areaId'], 'cmu5u0i810000vy8ilejcv1rz');
+
+        // Test resolving raw 'Riyadh' name to CUID
+        await storesRepository.createStore(
+          name: 'Riyadh Store 2',
+          area: 'Riyadh',
+        );
+        sentBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+        expect(sentBody['areaId'], 'cmu5u0i810000vy8ilejcv1rz');
+        expect(sentBody['areaId'], isNot('Riyadh'));
+      },
+    );
+
+    test(
+      'createStore sends exact Jeddah CUID when Jeddah area or areaId is given',
+      () async {
+        mockTransport.statusCode = 201;
+        mockTransport.responseBody = jsonEncode({
+          'store': {
+            'id': 'store-jeddah',
+            'name': 'Jeddah Store',
+            'areaId': StoreDeliveryArea.jeddahId,
+          },
+        });
+
+        // Test passing Jeddah CUID directly
+        await storesRepository.createStore(
+          name: 'Jeddah Store',
+          areaId: StoreDeliveryArea.jeddahId,
+        );
+        var sentBody =
+            jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+        expect(sentBody['areaId'], 'cmu5u0ink0001vy8i7hu36wkg');
+
+        // Test resolving raw 'Jeddah' name to CUID
+        await storesRepository.createStore(
+          name: 'Jeddah Store 2',
+          area: 'Jeddah',
+        );
+        sentBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+        expect(sentBody['areaId'], 'cmu5u0ink0001vy8i7hu36wkg');
+        expect(sentBody['areaId'], isNot('Jeddah'));
+      },
+    );
+
+    test(
       'updateStore sends PATCH /stores/:storeId with areaId, phone, isActive',
       () async {
         mockTransport.statusCode = 200;
@@ -170,6 +235,37 @@ void main() {
         expect(sentBody['isActive'], isFalse);
         expect(sentBody.containsKey('phone_number'), isFalse);
         expect(sentBody.containsKey('is_active'), isFalse);
+      },
+    );
+
+    test(
+      'updateStore converts area name to CUID and preserves areaId',
+      () async {
+        mockTransport.statusCode = 200;
+        mockTransport.responseBody = jsonEncode({
+          'store': {
+            'id': 'store-3',
+            'name': 'Store 3',
+            'areaId': StoreDeliveryArea.riyadhId,
+          },
+        });
+
+        // Updating area to Riyadh
+        await storesRepository.updateStore(
+          storeId: 'store-3',
+          area: 'Riyadh',
+        );
+        var sentBody =
+            jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+        expect(sentBody['areaId'], 'cmu5u0i810000vy8ilejcv1rz');
+
+        // Updating areaId to Jeddah CUID
+        await storesRepository.updateStore(
+          storeId: 'store-3',
+          areaId: StoreDeliveryArea.jeddahId,
+        );
+        sentBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+        expect(sentBody['areaId'], 'cmu5u0ink0001vy8i7hu36wkg');
       },
     );
   });

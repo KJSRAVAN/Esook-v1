@@ -31,6 +31,7 @@ abstract interface class AdminStoresRepository {
     required String storeId,
     String? name,
     String? area,
+    String? areaId,
     String? address,
     String? phone,
     bool? isActive,

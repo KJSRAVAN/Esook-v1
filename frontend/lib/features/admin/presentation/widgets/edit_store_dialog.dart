@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/saudi_phone_helper.dart';
 import '../../../auth/presentation/widgets/auth_primary_button.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
 import '../../domain/models/admin_store_model.dart';
+import '../../domain/models/store_delivery_area.dart';
 import '../../domain/repositories/admin_stores_repository.dart';
 
 /// Modal dialog for Super Admin to edit an existing Store.
@@ -39,11 +41,11 @@ class EditStoreDialog extends StatefulWidget {
 class _EditStoreDialogState extends State<EditStoreDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
-  late final TextEditingController _areaController;
   late final TextEditingController _addressController;
   late final TextEditingController _phoneController;
   late bool _isActive;
 
+  String? _selectedAreaId;
   bool _isSubmitting = false;
   String? _errorMessage;
 
@@ -51,18 +53,22 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.store.name);
-    _areaController = TextEditingController(text: widget.store.area);
     _addressController = TextEditingController(
       text: widget.store.address ?? '',
     );
     _phoneController = TextEditingController(text: widget.store.phone ?? '');
     _isActive = widget.store.isActive;
+
+    // Preselect current area based on areaId / areaName / area
+    final currentArea = widget.store.area.isNotEmpty
+        ? widget.store.area
+        : (widget.store.areaName ?? widget.store.areaId);
+    _selectedAreaId = StoreDeliveryArea.resolveAreaId(currentArea);
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _areaController.dispose();
     _addressController.dispose();
     _phoneController.dispose();
     super.dispose();
@@ -72,20 +78,26 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
     setState(() => _errorMessage = null);
 
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedAreaId == null || _selectedAreaId!.isEmpty) {
+      setState(() => _errorMessage = 'Please select a delivery area');
+      return;
+    }
 
     setState(() => _isSubmitting = true);
 
     final name = _nameController.text.trim();
-    final area = _areaController.text.trim();
     final address = _addressController.text.trim();
-    final phone = _phoneController.text.trim();
+    final rawPhone = _phoneController.text.trim();
+    final normalizedPhone = rawPhone.isNotEmpty
+        ? SaudiPhoneHelper.normalizeStorePhone(rawPhone)
+        : null;
 
     final result = await widget.storesRepository.updateStore(
       storeId: widget.store.id,
       name: name,
-      area: area.isNotEmpty ? area : null,
+      areaId: _selectedAreaId,
       address: address.isNotEmpty ? address : null,
-      phone: phone.isNotEmpty ? phone : null,
+      phone: normalizedPhone,
       isActive: _isActive,
     );
 
@@ -197,16 +209,59 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                   ),
                   const SizedBox(height: AppDimensions.spacingSm),
 
-                  // Delivery Area
-                  AuthTextField(
-                    key: const Key('edit_store_area_field'),
-                    controller: _areaController,
-                    label: 'Delivery Area',
-                    prefixIcon: Icons.location_on_outlined,
-                    enabled: !_isSubmitting,
+                  // Delivery Area Dropdown (Riyadh / Jeddah)
+                  DropdownButtonFormField<String>(
+                    key: const Key('edit_store_area_dropdown'),
+                    value: _selectedAreaId,
+                    decoration: InputDecoration(
+                      labelText: 'Delivery Area',
+                      hintText: 'Select delivery area',
+                      prefixIcon: const Icon(
+                        Icons.location_on_outlined,
+                        size: 20,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.spacingMd,
+                        vertical: AppDimensions.spacingSm,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
+                        borderSide: const BorderSide(
+                          color: AppColors.borderStrong,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
+                        borderSide: const BorderSide(
+                          color: AppColors.borderStrong,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
+                        borderSide: const BorderSide(
+                          color: AppColors.primary,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    items: StoreDeliveryArea.supportedAreas.map((area) {
+                      return DropdownMenuItem<String>(
+                        value: area.areaId,
+                        child: Text(area.name),
+                      );
+                    }).toList(),
+                    onChanged: _isSubmitting
+                        ? null
+                        : (val) => setState(() => _selectedAreaId = val),
                     validator: (val) {
-                      if (val == null || val.trim().isEmpty) {
-                        return 'Please enter delivery area';
+                      if (val == null || val.isEmpty) {
+                        return 'Please select a delivery area';
                       }
                       return null;
                     },
@@ -231,6 +286,7 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                     prefixIcon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
                     enabled: !_isSubmitting,
+                    validator: SaudiPhoneHelper.validateStorePhone,
                   ),
                   const SizedBox(height: AppDimensions.spacingSm),
 
@@ -265,14 +321,12 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                         child: const Text('Cancel'),
                       ),
                       const SizedBox(width: AppDimensions.spacingSm),
-                      SizedBox(
-                        width: 140,
-                        child: AuthPrimaryButton(
-                          key: const Key('submit_edit_store_button'),
-                          label: 'Save Changes',
-                          isLoading: _isSubmitting,
-                          onPressed: _handleSubmit,
-                        ),
+                      AuthPrimaryButton(
+                        key: const Key('submit_edit_store_button'),
+                        label: 'Save Changes',
+                        width: 240,
+                        isLoading: _isSubmitting,
+                        onPressed: _handleSubmit,
                       ),
                     ],
                   ),
