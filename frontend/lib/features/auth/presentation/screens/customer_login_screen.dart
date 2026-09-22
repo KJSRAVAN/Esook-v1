@@ -1,12 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/routing/app_routes.dart';
-import '../../../../core/routing/role_routing.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/auth_phone_helper.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../widgets/auth_error_banner.dart';
 import '../widgets/auth_primary_button.dart';
@@ -14,10 +15,11 @@ import '../widgets/auth_scaffold.dart';
 import '../widgets/auth_scope.dart';
 import '../widgets/auth_text_field.dart';
 
-/// Customer login step for phone-based OTP authentication flow.
-enum CustomerLoginStep { phoneInput, otpVerification }
-
-/// Customer login screen for eSOuQ using phone OTP authentication.
+/// Customer login screen for eSOuQ implementing the partner-required 2-step OTP flow.
+///
+/// - Step 1: Collects Full Name, Email Address, and Phone Number -> `POST /auth/otp/send`.
+/// - Step 2: Collects 6-digit OTP -> `POST /auth/otp/verify`.
+/// - Navigation: Routes to [AppRoutes.profileSetup] if `isNew == true`, otherwise [AppRoutes.customerHome].
 class CustomerLoginScreen extends StatefulWidget {
   final AuthRepository? authRepository;
 
@@ -28,13 +30,17 @@ class CustomerLoginScreen extends StatefulWidget {
 }
 
 class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
-  final _phoneFormKey = GlobalKey<FormState>();
+  final _detailsFormKey = GlobalKey<FormState>();
   final _otpFormKey = GlobalKey<FormState>();
+
+  final _fullNameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
 
-  CustomerLoginStep _step = CustomerLoginStep.phoneInput;
+  int _currentStep = 1;
   bool _isSubmitting = false;
+  bool _isResending = false;
   AppFailure? _failure;
   String? _infoMessage;
 
@@ -43,35 +49,44 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
 
   @override
   void dispose() {
+    _fullNameController.dispose();
+    _emailController.dispose();
     _phoneController.dispose();
     _otpController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleSendOtp({bool isResend = false}) async {
+  Future<void> _handleRequestOtp() async {
     setState(() {
       _failure = null;
-      if (!isResend) _infoMessage = null;
+      _infoMessage = null;
     });
 
-    if (!isResend && !_phoneFormKey.currentState!.validate()) {
+    if (!_detailsFormKey.currentState!.validate()) {
       return;
     }
 
     setState(() => _isSubmitting = true);
 
-    final phone = _phoneController.text.trim();
+    final normalizedPhone =
+        AuthPhoneHelper.normalizeAuthPhone(_phoneController.text) ??
+        _phoneController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
+    final fullName = _fullNameController.text.trim();
 
-    final result = await _repository.sendOtp(phone: phone);
+    final result = await _repository.sendOtp(
+      phone: normalizedPhone,
+      email: email,
+      name: fullName,
+    );
 
     if (!mounted) return;
 
     if (result.isSuccess) {
-      final message = result.dataOrNull ?? 'Verification code sent';
       setState(() {
         _isSubmitting = false;
-        _step = CustomerLoginStep.otpVerification;
-        _infoMessage = message;
+        _currentStep = 2;
+        _infoMessage = result.dataOrNull ?? 'Verification code sent to your phone';
         _failure = null;
       });
     } else {
@@ -82,8 +97,47 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
     }
   }
 
+  Future<void> _handleResendOtp() async {
+    if (_isResending || _isSubmitting) return;
+
+    setState(() {
+      _failure = null;
+      _isResending = true;
+    });
+
+    final normalizedPhone =
+        AuthPhoneHelper.normalizeAuthPhone(_phoneController.text) ??
+        _phoneController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
+    final fullName = _fullNameController.text.trim();
+
+    final result = await _repository.sendOtp(
+      phone: normalizedPhone,
+      email: email,
+      name: fullName,
+    );
+
+    if (!mounted) return;
+
+    if (result.isSuccess) {
+      setState(() {
+        _isResending = false;
+        _infoMessage = result.dataOrNull ?? 'New verification code sent';
+        _failure = null;
+      });
+    } else {
+      setState(() {
+        _isResending = false;
+        _failure = result.failureOrNull;
+      });
+    }
+  }
+
   Future<void> _handleVerifyOtp() async {
-    setState(() => _failure = null);
+    setState(() {
+      _failure = null;
+      _infoMessage = null;
+    });
 
     if (!_otpFormKey.currentState!.validate()) {
       return;
@@ -91,21 +145,34 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
 
     setState(() => _isSubmitting = true);
 
-    final phone = _phoneController.text.trim();
+    final normalizedPhone =
+        AuthPhoneHelper.normalizeAuthPhone(_phoneController.text) ??
+        _phoneController.text.trim();
     final code = _otpController.text.trim();
 
-    final result = await _repository.verifyOtp(phone: phone, code: code);
+    final result = await _repository.verifyOtp(
+      phone: normalizedPhone,
+      code: code,
+    );
 
     if (!mounted) return;
 
     if (result.isSuccess) {
       final authResponse = result.dataOrNull!;
       setState(() => _isSubmitting = false);
-      RoleRouting.navigateForRole(
-        context,
-        authResponse.user.role,
-        clearStack: true,
-      );
+
+      if (authResponse.isNew) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRoutes.profileSetup,
+          (route) => false,
+          arguments: authResponse.user,
+        );
+      } else {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRoutes.customerHome,
+          (route) => false,
+        );
+      }
     } else {
       setState(() {
         _isSubmitting = false;
@@ -114,47 +181,92 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
     }
   }
 
-  void _handleChangePhone() {
-    setState(() {
-      _step = CustomerLoginStep.phoneInput;
-      _otpController.clear();
-      _failure = null;
-      _infoMessage = null;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isPhoneStep = _step == CustomerLoginStep.phoneInput;
+    final isOtpStep = _currentStep == 2;
 
     return AuthScaffold(
-      title: isPhoneStep ? 'Welcome Back' : 'Verify Code',
-      subtitle: isPhoneStep
-          ? 'Sign in to continue ordering fresh groceries'
-          : 'Enter the 6-digit code sent to ${_phoneController.text.trim()}',
+      title: isOtpStep ? 'Verify Phone' : 'Welcome to eSOuQ',
+      subtitle: isOtpStep
+          ? 'Enter the 6-digit verification code sent to your phone'
+          : 'Enter your details to sign in or get started',
+      showBackButton: isOtpStep,
+      onBackPressed: () {
+        setState(() {
+          _currentStep = 1;
+          _failure = null;
+          _infoMessage = null;
+        });
+      },
       bottomNavigation: _buildBottomLinks(context),
-      child: isPhoneStep ? _buildPhoneForm() : _buildOtpForm(),
+      child: isOtpStep ? _buildOtpStepForm() : _buildDetailsStepForm(),
     );
   }
 
-  Widget _buildPhoneForm() {
+  Widget _buildDetailsStepForm() {
     return Form(
-      key: _phoneFormKey,
+      key: _detailsFormKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Backend / Network Error Banner
+          // Error Banner
           if (_failure != null)
             AuthErrorBanner(
               failure: _failure,
               onDismiss: () => setState(() => _failure = null),
-              onRetry: _failure is NetworkFailure
-                  ? () => _handleSendOtp()
-                  : null,
+              onRetry: _failure is NetworkFailure ? _handleRequestOtp : null,
             ),
 
-          // Phone Number Field
+          // 1. Full Name Field
           AuthTextField(
+            key: const Key('customer_name_field'),
+            controller: _fullNameController,
+            label: 'Full Name',
+            hintText: 'Ahmed Ali',
+            prefixIcon: Icons.person_outline_rounded,
+            textInputAction: TextInputAction.next,
+            enabled: !_isSubmitting,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter your full name';
+              }
+              if (value.trim().length < 2) {
+                return 'Name must be at least 2 characters';
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: AppDimensions.spacingMd),
+
+          // 2. Email Address Field
+          AuthTextField(
+            key: const Key('customer_email_field'),
+            controller: _emailController,
+            label: 'Email Address',
+            hintText: 'customer@example.com',
+            prefixIcon: Icons.email_outlined,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+            enabled: !_isSubmitting,
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Please enter your email address';
+              }
+              final email = value.trim();
+              final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+              if (!emailRegex.hasMatch(email)) {
+                return 'Please enter a valid email address';
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: AppDimensions.spacingMd),
+
+          // 3. Phone Number Field
+          AuthTextField(
+            key: const Key('customer_phone_field'),
             controller: _phoneController,
             label: 'Phone Number',
             hintText: '+966 50 123 4567',
@@ -162,85 +274,43 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.done,
             enabled: !_isSubmitting,
-            onFieldSubmitted: (_) => _handleSendOtp(),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your phone number';
-              }
-              if (value.trim().length < 8) {
-                return 'Please enter a valid phone number';
-              }
-              return null;
-            },
+            onFieldSubmitted: (_) => _handleRequestOtp(),
+            validator: (value) => AuthPhoneHelper.validateAuthPhone(
+              value,
+              requiredMessage: 'Please enter your phone number',
+            ),
           ),
 
           const SizedBox(height: AppDimensions.spacingLg),
 
-          // Primary Send OTP CTA Button
+          // Primary Request OTP CTA Button
           AuthPrimaryButton(
-            label: 'Send OTP',
+            key: const Key('customer_request_otp_button'),
+            label: 'Request OTP',
             isLoading: _isSubmitting,
-            onPressed: () => _handleSendOtp(),
-          ),
-
-          const SizedBox(height: AppDimensions.spacingLg),
-
-          // Navigation to Signup
-          Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                "Don't have an account?",
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              TextButton(
-                onPressed: _isSubmitting
-                    ? null
-                    : () {
-                        Navigator.of(context).pushNamed(AppRoutes.signup);
-                      },
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  visualDensity: VisualDensity.compact,
-                ),
-                child: const Text(
-                  'Sign Up',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
+            onPressed: _handleRequestOtp,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildOtpForm() {
+  Widget _buildOtpStepForm() {
+    final phoneDisplay = _phoneController.text.trim();
+
     return Form(
       key: _otpFormKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Backend / Network Error Banner
-          if (_failure != null)
-            AuthErrorBanner(
-              failure: _failure,
-              onDismiss: () => setState(() => _failure = null),
-              onRetry: _failure is NetworkFailure ? _handleVerifyOtp : null,
-            ),
-
-          // Status / Channel Banner
+          // Info Message Banner
           if (_infoMessage != null && _failure == null)
             Container(
-              padding: const EdgeInsets.all(AppDimensions.spacingMd),
               margin: const EdgeInsets.only(bottom: AppDimensions.spacingMd),
+              padding: const EdgeInsets.all(AppDimensions.spacingSm + 4),
               decoration: BoxDecoration(
                 color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
                 border: Border.all(
                   color: AppColors.primary.withValues(alpha: 0.3),
                 ),
@@ -248,9 +318,9 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
               child: Row(
                 children: [
                   const Icon(
-                    Icons.mark_email_read_outlined,
+                    Icons.info_outline_rounded,
                     color: AppColors.primaryDark,
-                    size: 20,
+                    size: 18,
                   ),
                   const SizedBox(width: AppDimensions.spacingSm),
                   Expanded(
@@ -266,24 +336,87 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
               ),
             ),
 
-          // 6-Digit OTP Field
+          // Error Banner
+          if (_failure != null)
+            AuthErrorBanner(
+              failure: _failure,
+              onDismiss: () => setState(() => _failure = null),
+              onRetry: _failure is NetworkFailure ? _handleVerifyOtp : null,
+            ),
+
+          // Phone display badge with Edit action
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.spacingMd,
+              vertical: AppDimensions.spacingSm,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+              border: Border.all(color: AppColors.borderSubtle),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.phone_iphone_rounded,
+                  size: 20,
+                  color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: AppDimensions.spacingSm),
+                Expanded(
+                  child: Text(
+                    phoneDisplay,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  key: const Key('customer_change_phone_button'),
+                  onPressed: _isSubmitting
+                      ? null
+                      : () {
+                          setState(() {
+                            _currentStep = 1;
+                            _failure = null;
+                            _infoMessage = null;
+                          });
+                        },
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: AppColors.primary,
+                  ),
+                  child: const Text('Change'),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppDimensions.spacingMd),
+
+          // 6-digit OTP Code Field
           AuthTextField(
-            key: const Key('otp_code_field'),
+            key: const Key('customer_otp_field'),
             controller: _otpController,
-            label: '6-Digit OTP Code',
+            label: 'Verification Code',
             hintText: '123456',
-            prefixIcon: Icons.security_rounded,
+            prefixIcon: Icons.lock_outline_rounded,
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.done,
+            autofocus: true,
             enabled: !_isSubmitting,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(6),
+            ],
             onFieldSubmitted: (_) => _handleVerifyOtp(),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Please enter the 6-digit OTP code';
+                return 'Please enter the 6-digit verification code';
               }
-              final clean = value.trim();
-              if (clean.length != 6 || !RegExp(r'^\d{6}$').hasMatch(clean)) {
-                return 'OTP must be exactly 6 digits';
+              if (value.trim().length != 6) {
+                return 'Code must be exactly 6 digits';
               }
               return null;
             },
@@ -291,42 +424,37 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
 
           const SizedBox(height: AppDimensions.spacingLg),
 
-          // Primary Verify CTA Button
+          // Verify & Continue CTA Button
           AuthPrimaryButton(
-            key: const Key('verify_otp_button'),
-            label: 'Verify & Sign In',
+            key: const Key('customer_verify_otp_button'),
+            label: 'Verify & Continue',
             isLoading: _isSubmitting,
             onPressed: _handleVerifyOtp,
           ),
 
           const SizedBox(height: AppDimensions.spacingMd),
 
-          // Secondary Actions: Change Phone & Resend Code
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              TextButton.icon(
-                onPressed: _isSubmitting ? null : _handleChangePhone,
-                icon: const Icon(Icons.edit_outlined, size: 16),
-                label: const Text('Change Phone'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.textSecondary,
-                  visualDensity: VisualDensity.compact,
-                ),
+          // Resend OTP Action
+          Center(
+            child: TextButton(
+              key: const Key('customer_resend_otp_button'),
+              onPressed: (_isSubmitting || _isResending)
+                  ? null
+                  : _handleResendOtp,
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
               ),
-              TextButton.icon(
-                onPressed: _isSubmitting
-                    ? null
-                    : () => _handleSendOtp(isResend: true),
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Resend Code'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ],
+              child: _isResending
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text(
+                      'Resend Code',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+            ),
           ),
         ],
       ),

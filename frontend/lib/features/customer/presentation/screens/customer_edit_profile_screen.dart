@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/routing/app_routes.dart';
 import '../../../../core/storage/flutter_secure_storage_impl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
@@ -125,7 +126,14 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
             backgroundColor: AppColors.success,
           ),
         );
-        Navigator.of(context).pop(updatedUser);
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop(updatedUser);
+        } else {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.customerHome,
+            (route) => false,
+          );
+        }
       },
       onFailure: (failure) {
         setState(() {
@@ -153,6 +161,7 @@ class _CustomerEditProfileScreenState extends State<CustomerEditProfileScreen> {
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
+        automaticallyImplyLeading: Navigator.of(context).canPop(),
       ),
       body: SafeArea(
         child: Center(

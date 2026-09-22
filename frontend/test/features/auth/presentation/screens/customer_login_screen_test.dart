@@ -26,8 +26,8 @@ void main() {
       routes: {
         AppRoutes.login: (_) =>
             CustomerLoginScreen(authRepository: effectiveRepo),
-        AppRoutes.signup: (_) =>
-            const Scaffold(body: Text('Signup Screen Placeholder')),
+        AppRoutes.profileSetup: (_) =>
+            const Scaffold(body: Text('Profile Setup Shell')),
         AppRoutes.customerHome: (_) =>
             const Scaffold(body: Text('Customer Home Shell')),
         AppRoutes.staffLogin: (_) =>
@@ -46,273 +46,458 @@ void main() {
     );
   }
 
-  group('CustomerLoginScreen - OTP Flow', () {
-    testWidgets('renders initial phone input step with branding and portals', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildTestWidget());
-
-      expect(find.text('Welcome Back'), findsOneWidget);
-      expect(
-        find.text('Sign in to continue ordering fresh groceries'),
-        findsOneWidget,
-      );
-      expect(find.text('Phone Number'), findsOneWidget);
-      expect(find.widgetWithText(ElevatedButton, 'Send OTP'), findsOneWidget);
-      expect(find.text('Sign Up'), findsOneWidget);
-      expect(find.text('Store Staff'), findsOneWidget);
-      expect(find.text('Delivery Rider'), findsOneWidget);
-      expect(find.text('Admin'), findsOneWidget);
-      expect(
-        find.byKey(const Key('dev_customer_preview_button')),
-        findsOneWidget,
-      );
+  void setupViewport(WidgetTester tester) {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
     });
+  }
 
-    testWidgets('shows validation error when submitting empty phone number', (
+  group('CustomerLoginScreen - Partner OTP Login Flow', () {
+    testWidgets(
+      'Step 1: renders full name, email, phone, and request OTP CTA without password or signup link',
+      (tester) async {
+        setupViewport(tester);
+        await tester.pumpWidget(buildTestWidget());
+
+        expect(find.text('Welcome to eSOuQ'), findsOneWidget);
+        expect(
+          find.text('Enter your details to sign in or get started'),
+          findsOneWidget,
+        );
+
+        // Required Step 1 Fields
+        expect(find.text('Full Name'), findsOneWidget);
+        expect(find.byKey(const Key('customer_name_field')), findsOneWidget);
+
+        expect(find.text('Email Address'), findsOneWidget);
+        expect(find.byKey(const Key('customer_email_field')), findsOneWidget);
+
+        expect(find.text('Phone Number'), findsOneWidget);
+        expect(find.byKey(const Key('customer_phone_field')), findsOneWidget);
+
+        // CTA
+        expect(find.widgetWithText(ElevatedButton, 'Request OTP'), findsOneWidget);
+        expect(
+          find.byKey(const Key('customer_request_otp_button')),
+          findsOneWidget,
+        );
+
+        // Assert absence of password field, email/phone toggle, and signup link
+        expect(find.byKey(const Key('customer_password_field')), findsNothing);
+        expect(find.text('Password'), findsNothing);
+        expect(find.text("Don't have an account?"), findsNothing);
+        expect(find.text('Sign Up'), findsNothing);
+        expect(find.byKey(const Key('customer_to_signup_button')), findsNothing);
+
+        // Portals
+        expect(find.text('Store Staff'), findsOneWidget);
+        expect(find.text('Delivery Rider'), findsOneWidget);
+        expect(find.text('Admin'), findsOneWidget);
+      },
+    );
+
+    testWidgets('Step 1: validates empty/required fields on Request OTP tap', (
       tester,
     ) async {
+      setupViewport(tester);
       await tester.pumpWidget(buildTestWidget());
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Send OTP'));
+      await tester.tap(find.byKey(const Key('customer_request_otp_button')));
       await tester.pumpAndSettle();
 
+      expect(find.text('Please enter your full name'), findsOneWidget);
+      expect(find.text('Please enter your email address'), findsOneWidget);
       expect(find.text('Please enter your phone number'), findsOneWidget);
       expect(mockRepo.sendOtpCallCount, equals(0));
     });
 
+    testWidgets('Step 1: validates short name, invalid email, and malformed phone', (
+      tester,
+    ) async {
+      setupViewport(tester);
+      await tester.pumpWidget(buildTestWidget());
+
+      await tester.enterText(
+        find.byKey(const Key('customer_name_field')),
+        'A',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_email_field')),
+        'invalid-email-address',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_phone_field')),
+        '123',
+      );
+
+      await tester.tap(find.byKey(const Key('customer_request_otp_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Name must be at least 2 characters'), findsOneWidget);
+      expect(find.text('Please enter a valid email address'), findsOneWidget);
+      expect(find.text('Please enter a valid phone number'), findsOneWidget);
+      expect(mockRepo.sendOtpCallCount, equals(0));
+    });
+
     testWidgets(
-      'shows validation error for phone number shorter than 8 digits',
+      'Step 1 -> Step 2: submitting valid details calls sendOtp and transitions to OTP step',
       (tester) async {
+        setupViewport(tester);
+        mockRepo.sendOtpResult = Result.success('OTP sent successfully');
+
         await tester.pumpWidget(buildTestWidget());
 
-        await tester.enterText(find.byType(TextFormField), '123');
-        await tester.tap(find.widgetWithText(ElevatedButton, 'Send OTP'));
+        await tester.enterText(
+          find.byKey(const Key('customer_name_field')),
+          'Ahmed Ali',
+        );
+        await tester.enterText(
+          find.byKey(const Key('customer_email_field')),
+          'ahmed@example.com',
+        );
+        await tester.enterText(
+          find.byKey(const Key('customer_phone_field')),
+          '+966501234567',
+        );
+
+        await tester.tap(find.byKey(const Key('customer_request_otp_button')));
         await tester.pumpAndSettle();
 
-        expect(find.text('Please enter a valid phone number'), findsOneWidget);
-        expect(mockRepo.sendOtpCallCount, equals(0));
+        expect(mockRepo.sendOtpCallCount, equals(1));
+        expect(mockRepo.lastSendOtpName, equals('Ahmed Ali'));
+        expect(mockRepo.lastSendOtpEmail, equals('ahmed@example.com'));
+        expect(mockRepo.lastSendOtpPhone, equals('+966501234567'));
+
+        // Step 2 OTP UI should now be displayed
+        expect(find.text('Verify Phone'), findsOneWidget);
+        expect(find.byKey(const Key('customer_otp_field')), findsOneWidget);
+        expect(
+          find.byKey(const Key('customer_verify_otp_button')),
+          findsOneWidget,
+        );
+        expect(find.text('OTP sent successfully'), findsOneWidget);
       },
     );
 
-    testWidgets('displays error banner when sendOtp fails', (tester) async {
+    testWidgets('Step 1: shows error banner when sendOtp fails', (tester) async {
+      setupViewport(tester);
       mockRepo.sendOtpResult = Result.failure(
-        const RateLimitFailure(message: 'Too many OTP requests. Please wait.'),
+        const RateLimitFailure(
+          message: 'Too many OTP requests. Please wait.',
+        ),
       );
 
       await tester.pumpWidget(buildTestWidget());
 
-      await tester.enterText(find.byType(TextFormField), '+966501234567');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Send OTP'));
+      await tester.enterText(
+        find.byKey(const Key('customer_name_field')),
+        'Ahmed Ali',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_email_field')),
+        'ahmed@example.com',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_phone_field')),
+        '+966501234567',
+      );
+
+      await tester.tap(find.byKey(const Key('customer_request_otp_button')));
       await tester.pumpAndSettle();
 
-      expect(mockRepo.sendOtpCallCount, equals(1));
-      expect(mockRepo.lastSendOtpPhone, equals('+966501234567'));
       expect(find.text('Too many OTP requests. Please wait.'), findsOneWidget);
-      expect(find.text('Send OTP'), findsOneWidget);
+      expect(find.byKey(const Key('customer_otp_field')), findsNothing);
     });
 
-    testWidgets('advances to OTP verification step on successful sendOtp', (
-      tester,
-    ) async {
-      mockRepo.sendOtpResult = Result.success(
-        'Verification code sent via WhatsApp',
-      );
+    testWidgets('Step 2: validates 6-digit OTP code input', (tester) async {
+      setupViewport(tester);
+      mockRepo.sendOtpResult = Result.success('OTP sent');
 
       await tester.pumpWidget(buildTestWidget());
 
-      await tester.enterText(find.byType(TextFormField), '+966501234567');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Send OTP'));
-      await tester.pumpAndSettle();
-
-      expect(mockRepo.sendOtpCallCount, equals(1));
-      expect(find.text('Verify Code'), findsOneWidget);
-      expect(
-        find.text('Enter the 6-digit code sent to +966501234567'),
-        findsOneWidget,
+      // Transition to Step 2
+      await tester.enterText(
+        find.byKey(const Key('customer_name_field')),
+        'Ahmed Ali',
       );
-      expect(find.text('Verification code sent via WhatsApp'), findsOneWidget);
-      expect(find.byKey(const Key('otp_code_field')), findsOneWidget);
-      expect(
-        find.widgetWithText(ElevatedButton, 'Verify & Sign In'),
-        findsOneWidget,
+      await tester.enterText(
+        find.byKey(const Key('customer_email_field')),
+        'ahmed@example.com',
       );
-      expect(find.text('Resend Code'), findsOneWidget);
-      expect(find.text('Change Phone'), findsOneWidget);
-    });
-
-    testWidgets('validates 6-digit OTP code before verifying', (tester) async {
-      mockRepo.sendOtpResult = Result.success('Code sent');
-
-      await tester.pumpWidget(buildTestWidget());
-
-      // Advance to OTP step
-      await tester.enterText(find.byType(TextFormField), '+966501234567');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Send OTP'));
+      await tester.enterText(
+        find.byKey(const Key('customer_phone_field')),
+        '+966501234567',
+      );
+      await tester.tap(find.byKey(const Key('customer_request_otp_button')));
       await tester.pumpAndSettle();
 
       // Submit empty OTP
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Verify & Sign In'));
+      await tester.tap(find.byKey(const Key('customer_verify_otp_button')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Please enter the 6-digit OTP code'), findsOneWidget);
+      expect(
+        find.text('Please enter the 6-digit verification code'),
+        findsOneWidget,
+      );
       expect(mockRepo.verifyOtpCallCount, equals(0));
 
-      // Enter less than 6 digits
-      await tester.enterText(find.byKey(const Key('otp_code_field')), '123');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Verify & Sign In'));
+      // Enter incomplete OTP
+      await tester.enterText(
+        find.byKey(const Key('customer_otp_field')),
+        '123',
+      );
+      await tester.tap(find.byKey(const Key('customer_verify_otp_button')));
       await tester.pumpAndSettle();
 
-      expect(find.text('OTP must be exactly 6 digits'), findsOneWidget);
+      expect(find.text('Code must be exactly 6 digits'), findsOneWidget);
       expect(mockRepo.verifyOtpCallCount, equals(0));
     });
 
     testWidgets(
-      'submits 6-digit OTP and navigates to customerHome on success',
+      'Step 2: verifying OTP for new customer (isNew == true) routes to Profile Setup',
       (tester) async {
-        mockRepo.sendOtpResult = Result.success('Code sent');
+        setupViewport(tester);
+        mockRepo.sendOtpResult = Result.success('OTP sent');
         mockRepo.verifyOtpResult = Result.success(
-          AuthResponseModel(
-            user: const UserModel(
-              id: 'cust_99',
+          const AuthResponseModel(
+            user: UserModel(
+              id: 'new_cust_1',
               phoneNumber: '+966501234567',
-              fullName: 'Customer',
+              fullName: 'Ahmed Ali',
+              email: 'ahmed@example.com',
               role: UserRole.customer,
             ),
-            token: 'valid_jwt_access_token',
+            token: 'mock_jwt_token',
+            isNew: true,
           ),
         );
 
         await tester.pumpWidget(buildTestWidget());
 
-        // Send OTP
-        await tester.enterText(find.byType(TextFormField), '+966501234567');
-        await tester.tap(find.widgetWithText(ElevatedButton, 'Send OTP'));
+        // Step 1
+        await tester.enterText(
+          find.byKey(const Key('customer_name_field')),
+          'Ahmed Ali',
+        );
+        await tester.enterText(
+          find.byKey(const Key('customer_email_field')),
+          'ahmed@example.com',
+        );
+        await tester.enterText(
+          find.byKey(const Key('customer_phone_field')),
+          '+966501234567',
+        );
+        await tester.tap(find.byKey(const Key('customer_request_otp_button')));
         await tester.pumpAndSettle();
 
-        // Enter OTP
+        // Step 2
         await tester.enterText(
-          find.byKey(const Key('otp_code_field')),
+          find.byKey(const Key('customer_otp_field')),
           '123456',
         );
-        await tester.tap(
-          find.widgetWithText(ElevatedButton, 'Verify & Sign In'),
-        );
+        await tester.tap(find.byKey(const Key('customer_verify_otp_button')));
         await tester.pumpAndSettle();
 
         expect(mockRepo.verifyOtpCallCount, equals(1));
         expect(mockRepo.lastVerifyOtpPhone, equals('+966501234567'));
         expect(mockRepo.lastVerifyOtpCode, equals('123456'));
-        expect(find.text('Customer Home Shell'), findsOneWidget);
+
+        // Routed to Profile Setup Shell because isNew == true
+        expect(find.text('Profile Setup Shell'), findsOneWidget);
+        expect(find.text('Customer Home Shell'), findsNothing);
       },
     );
 
     testWidgets(
-      'displays error banner when verifyOtp fails (invalid OTP code)',
+      'Step 2: verifying OTP for returning customer (isNew == false) routes to Customer Home',
       (tester) async {
-        mockRepo.sendOtpResult = Result.success('Code sent');
-        mockRepo.verifyOtpResult = Result.failure(
-          const ValidationFailure(
-            message: 'Invalid code. 4 attempts remaining.',
+        setupViewport(tester);
+        mockRepo.sendOtpResult = Result.success('OTP sent');
+        mockRepo.verifyOtpResult = Result.success(
+          const AuthResponseModel(
+            user: UserModel(
+              id: 'existing_cust_1',
+              phoneNumber: '+966501234567',
+              fullName: 'Ahmed Ali',
+              email: 'ahmed@example.com',
+              role: UserRole.customer,
+            ),
+            token: 'mock_jwt_token',
+            isNew: false,
           ),
         );
 
         await tester.pumpWidget(buildTestWidget());
 
-        // Send OTP
-        await tester.enterText(find.byType(TextFormField), '+966501234567');
-        await tester.tap(find.widgetWithText(ElevatedButton, 'Send OTP'));
+        // Step 1
+        await tester.enterText(
+          find.byKey(const Key('customer_name_field')),
+          'Ahmed Ali',
+        );
+        await tester.enterText(
+          find.byKey(const Key('customer_email_field')),
+          'ahmed@example.com',
+        );
+        await tester.enterText(
+          find.byKey(const Key('customer_phone_field')),
+          '+966501234567',
+        );
+        await tester.tap(find.byKey(const Key('customer_request_otp_button')));
         await tester.pumpAndSettle();
 
-        // Enter wrong OTP
+        // Step 2
         await tester.enterText(
-          find.byKey(const Key('otp_code_field')),
-          '999999',
+          find.byKey(const Key('customer_otp_field')),
+          '654321',
         );
-        await tester.tap(
-          find.widgetWithText(ElevatedButton, 'Verify & Sign In'),
-        );
+        await tester.tap(find.byKey(const Key('customer_verify_otp_button')));
         await tester.pumpAndSettle();
 
         expect(mockRepo.verifyOtpCallCount, equals(1));
-        expect(
-          find.text('Invalid code. 4 attempts remaining.'),
-          findsOneWidget,
-        );
+        expect(mockRepo.lastVerifyOtpPhone, equals('+966501234567'));
+        expect(mockRepo.lastVerifyOtpCode, equals('654321'));
+
+        // Routed to Customer Home Shell because isNew == false
+        expect(find.text('Customer Home Shell'), findsOneWidget);
+        expect(find.text('Profile Setup Shell'), findsNothing);
       },
     );
 
-    testWidgets('resends OTP when tapping Resend Code', (tester) async {
-      mockRepo.sendOtpResult = Result.success('First code sent');
+    testWidgets('Step 2: displays error banner on invalid OTP code', (tester) async {
+      setupViewport(tester);
+      mockRepo.sendOtpResult = Result.success('OTP sent');
+      mockRepo.verifyOtpResult = Result.failure(
+        const ValidationFailure(message: 'Invalid or expired OTP code'),
+      );
 
       await tester.pumpWidget(buildTestWidget());
 
-      // Send OTP
-      await tester.enterText(find.byType(TextFormField), '+966501234567');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Send OTP'));
+      // Step 1
+      await tester.enterText(
+        find.byKey(const Key('customer_name_field')),
+        'Ahmed Ali',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_email_field')),
+        'ahmed@example.com',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_phone_field')),
+        '+966501234567',
+      );
+      await tester.tap(find.byKey(const Key('customer_request_otp_button')));
       await tester.pumpAndSettle();
 
-      expect(mockRepo.sendOtpCallCount, equals(1));
-
-      // Tap Resend Code
-      mockRepo.sendOtpResult = Result.success('New code sent via WhatsApp');
-      await tester.tap(find.text('Resend Code'));
+      // Step 2
+      await tester.enterText(
+        find.byKey(const Key('customer_otp_field')),
+        '000000',
+      );
+      await tester.tap(find.byKey(const Key('customer_verify_otp_button')));
       await tester.pumpAndSettle();
 
-      expect(mockRepo.sendOtpCallCount, equals(2));
-      expect(mockRepo.lastSendOtpPhone, equals('+966501234567'));
-      expect(find.text('New code sent via WhatsApp'), findsOneWidget);
+      expect(find.text('Invalid or expired OTP code'), findsOneWidget);
+      expect(find.text('Customer Home Shell'), findsNothing);
+      expect(find.text('Profile Setup Shell'), findsNothing);
     });
 
-    testWidgets('returns to phone input step when tapping Change Phone', (
-      tester,
-    ) async {
+    testWidgets('Step 2: resend code triggers sendOtp again', (tester) async {
+      setupViewport(tester);
       mockRepo.sendOtpResult = Result.success('Code sent');
 
       await tester.pumpWidget(buildTestWidget());
 
-      // Send OTP
-      await tester.enterText(find.byType(TextFormField), '+966501234567');
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Send OTP'));
+      // Step 1
+      await tester.enterText(
+        find.byKey(const Key('customer_name_field')),
+        'Ahmed Ali',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_email_field')),
+        'ahmed@example.com',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_phone_field')),
+        '+966501234567',
+      );
+      await tester.tap(find.byKey(const Key('customer_request_otp_button')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Verify Code'), findsOneWidget);
+      expect(mockRepo.sendOtpCallCount, equals(1));
 
-      // Tap Change Phone
-      await tester.tap(find.text('Change Phone'));
+      // Resend OTP in Step 2
+      await tester.tap(find.byKey(const Key('customer_resend_otp_button')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Welcome Back'), findsOneWidget);
-      expect(find.widgetWithText(ElevatedButton, 'Send OTP'), findsOneWidget);
+      expect(mockRepo.sendOtpCallCount, equals(2));
+      expect(find.text('Code sent'), findsOneWidget);
     });
 
-    testWidgets('navigates to signup screen when tapping Sign Up', (
-      tester,
-    ) async {
+    testWidgets('Step 2: Change number returns to Step 1', (tester) async {
+      setupViewport(tester);
+      mockRepo.sendOtpResult = Result.success('Code sent');
+
       await tester.pumpWidget(buildTestWidget());
 
-      await tester.tap(find.text('Sign Up'));
+      // Step 1
+      await tester.enterText(
+        find.byKey(const Key('customer_name_field')),
+        'Ahmed Ali',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_email_field')),
+        'ahmed@example.com',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_phone_field')),
+        '+966501234567',
+      );
+      await tester.tap(find.byKey(const Key('customer_request_otp_button')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Signup Screen Placeholder'), findsOneWidget);
+      expect(find.byKey(const Key('customer_otp_field')), findsOneWidget);
+
+      // Tap Change button
+      await tester.tap(find.byKey(const Key('customer_change_phone_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('customer_otp_field')), findsNothing);
+      expect(find.byKey(const Key('customer_name_field')), findsOneWidget);
+      expect(find.byKey(const Key('customer_email_field')), findsOneWidget);
+      expect(find.byKey(const Key('customer_phone_field')), findsOneWidget);
     });
 
-    testWidgets(
-      'navigates to devCustomerPreview when tapping Developer Preview button in debug mode',
-      (tester) async {
-        await tester.pumpWidget(buildTestWidget());
+    testWidgets('navigates to Store Staff portal', (tester) async {
+      setupViewport(tester);
+      await tester.pumpWidget(buildTestWidget());
 
-        final buttonFinder = find.byKey(
-          const Key('dev_customer_preview_button'),
-        );
-        await tester.ensureVisible(buttonFinder);
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('Store Staff'));
+      await tester.pumpAndSettle();
 
-        await tester.tap(buttonFinder);
-        await tester.pumpAndSettle();
+      expect(find.text('Staff Login Shell'), findsOneWidget);
+    });
 
-        expect(find.text('Dev Customer Preview Shell'), findsOneWidget);
-      },
-    );
+    testWidgets('navigates to Delivery Rider portal', (tester) async {
+      setupViewport(tester);
+      await tester.pumpWidget(buildTestWidget());
+
+      await tester.tap(find.text('Delivery Rider'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rider Login Shell'), findsOneWidget);
+    });
+
+    testWidgets('navigates to Admin portal', (tester) async {
+      setupViewport(tester);
+      await tester.pumpWidget(buildTestWidget());
+
+      await tester.tap(find.text('Admin'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Admin Magic Link Shell'), findsOneWidget);
+    });
   });
 }

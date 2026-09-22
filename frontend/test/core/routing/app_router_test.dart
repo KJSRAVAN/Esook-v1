@@ -23,6 +23,15 @@ void main() {
       expect(route.settings.name, equals(AppRoutes.customerHome));
     });
 
+    test('generates MaterialPageRoute for profileSetup route', () {
+      final route = AppRouter.onGenerateRoute(
+        const RouteSettings(name: AppRoutes.profileSetup),
+      );
+
+      expect(route, isA<MaterialPageRoute<void>>());
+      expect(route.settings.name, equals(AppRoutes.profileSetup));
+    });
+
     test(
       'generates MaterialPageRoute for devCustomerPreview in debug mode',
       () {

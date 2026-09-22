@@ -1,4 +1,5 @@
 import 'package:esouq/core/error/failures.dart';
+import 'package:esouq/core/routing/app_routes.dart';
 import 'package:esouq/core/utils/result.dart';
 import 'package:esouq/features/auth/domain/models/user_model.dart';
 import 'package:esouq/features/auth/domain/models/user_role.dart';
@@ -185,5 +186,44 @@ void main() {
       // Field input is retained after failure
       expect(find.text('Updated Name'), findsOneWidget);
     });
+
+    testWidgets(
+      'root profile setup: successful save navigates to customerHome when cannot pop',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            routes: {
+              AppRoutes.customerHome: (_) =>
+                  const Scaffold(body: Text('Customer Home Shell')),
+            },
+            home: CustomerEditProfileScreen(
+              authRepository: mockAuthRepository,
+              currentUser: initialUser,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Check that leading back button is absent
+        expect(find.byType(BackButton), findsNothing);
+
+        final nameField = find.byKey(const Key('edit_profile_name_field'));
+        final emailField = find.byKey(const Key('edit_profile_email_field'));
+        final saveBtn = find.byKey(const Key('edit_profile_save_button'));
+
+        await tester.enterText(nameField, 'Brand New Customer');
+        await tester.enterText(emailField, 'brandnew@esouq.com');
+        await tester.tap(saveBtn);
+        await tester.pump();
+
+        expect(mockAuthRepository.updateProfileCallCount, equals(1));
+        expect(mockAuthRepository.lastUpdateName, equals('Brand New Customer'));
+        expect(mockAuthRepository.lastUpdateEmail, equals('brandnew@esouq.com'));
+
+        await tester.pumpAndSettle();
+        expect(find.text('Customer Home Shell'), findsOneWidget);
+        expect(find.byType(CustomerEditProfileScreen), findsNothing);
+      },
+    );
   });
 }

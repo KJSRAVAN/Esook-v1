@@ -10,6 +10,9 @@ import '../../features/auth/presentation/screens/customer_signup_screen.dart';
 import '../../features/auth/presentation/screens/rider_login_screen.dart';
 import '../../features/auth/presentation/screens/session_bootstrap_screen.dart';
 import '../../features/auth/presentation/screens/staff_login_screen.dart';
+import '../../features/auth/domain/models/user_model.dart';
+import '../../features/auth/domain/models/user_role.dart';
+import '../../features/customer/presentation/screens/customer_edit_profile_screen.dart';
 import '../../features/customer/presentation/screens/customer_shell.dart';
 import '../../features/rider/presentation/screens/rider_shell.dart';
 import '../../features/store/presentation/screens/store_shell.dart';
@@ -90,6 +93,20 @@ abstract final class AppRouter {
         return MaterialPageRoute<void>(
           settings: settings,
           builder: (_) => const CustomerShell(),
+        );
+
+      case AppRoutes.profileSetup:
+        final user =
+            settings.arguments as UserModel? ??
+            const UserModel(
+              id: '',
+              phoneNumber: '',
+              fullName: '',
+              role: UserRole.customer,
+            );
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (_) => CustomerEditProfileScreen(currentUser: user),
         );
 
       case AppRoutes.storeHome:
