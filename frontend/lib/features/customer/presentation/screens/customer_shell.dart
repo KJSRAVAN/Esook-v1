@@ -178,6 +178,8 @@ class _CustomerShellState extends State<CustomerShell> {
               storeRepository: _storeRepository,
               productRepository: _productRepository,
               selectedStoreNotifier: _storeNotifier,
+              cartNotifier: _cartNotifier,
+              onViewCart: () => _onNavigationTabSelected(2),
             ),
             const CustomerChatScreen(),
             CartScreen(

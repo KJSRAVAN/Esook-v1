@@ -247,6 +247,7 @@ class _CustomerOrdersScreenState extends State<CustomerOrdersScreen> {
                 context,
                 order: order,
                 orderRepository: repo,
+                cartNotifier: CustomerScope.maybeOf(context)?.cartNotifier,
               );
             },
           );

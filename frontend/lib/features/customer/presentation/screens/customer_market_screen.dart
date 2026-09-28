@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../cart/application/cart_notifier.dart';
+import '../../cart/presentation/screens/cart_screen.dart';
 import '../../domain/models/product_model.dart';
 import '../../domain/models/store_model.dart';
 import '../../domain/repositories/product_repository.dart';
@@ -13,6 +15,7 @@ import '../widgets/customer_scope.dart';
 import '../widgets/product_card.dart';
 import '../widgets/product_detail_sheet.dart';
 import '../widgets/store_selection_view.dart';
+import 'customer_order_history_screen.dart';
 
 /// Customer Market Screen displaying active store catalog, search, and category filtering.
 class CustomerMarketScreen extends StatefulWidget {
@@ -20,6 +23,9 @@ class CustomerMarketScreen extends StatefulWidget {
   final StoreRepository? storeRepository;
   final ValueNotifier<StoreModel?>? selectedStoreNotifier;
   final CartNotifier? cartNotifier;
+  final VoidCallback? onViewCart;
+  final VoidCallback? onOpenOrderHistory;
+  final String currency;
 
   const CustomerMarketScreen({
     super.key,
@@ -27,6 +33,9 @@ class CustomerMarketScreen extends StatefulWidget {
     this.storeRepository,
     this.selectedStoreNotifier,
     this.cartNotifier,
+    this.onViewCart,
+    this.onOpenOrderHistory,
+    this.currency = AppConstants.defaultCurrency,
   });
 
   @override
@@ -199,6 +208,22 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
     );
   }
 
+  void _openOrderHistory() {
+    if (widget.onOpenOrderHistory != null) {
+      widget.onOpenOrderHistory!();
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => CustomerOrderHistoryScreen(
+          orderRepository: CustomerScope.maybeOf(context)?.orderRepository,
+          cartNotifier: _cartNotifier,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<StoreModel?>(
@@ -207,7 +232,38 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
         if (currentStore == null) {
           return Scaffold(
             backgroundColor: AppColors.background,
-            appBar: AppBar(title: const Text('Market')),
+            appBar: AppBar(
+              title: const Text('Market'),
+              actions: [
+                PopupMenuButton<String>(
+                  key: const Key('customer_market_overflow_menu'),
+                  icon: const Icon(Icons.more_vert_rounded),
+                  tooltip: 'More options',
+                  onSelected: (val) {
+                    if (val == 'order_history') {
+                      _openOrderHistory();
+                    }
+                  },
+                  itemBuilder: (ctx) => [
+                    const PopupMenuItem<String>(
+                      key: Key('menu_order_history'),
+                      value: 'order_history',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 20,
+                            color: AppColors.textPrimary,
+                          ),
+                          SizedBox(width: 8),
+                          Text('Order History'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
             body: SafeArea(
               child: StoreSelectionView(
                 storeRepository: _storeRepo,
@@ -296,6 +352,35 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
                 ),
               ),
             ),
+            actions: [
+              PopupMenuButton<String>(
+                key: const Key('customer_market_overflow_menu'),
+                icon: const Icon(Icons.more_vert_rounded),
+                tooltip: 'More options',
+                onSelected: (val) {
+                  if (val == 'order_history') {
+                    _openOrderHistory();
+                  }
+                },
+                itemBuilder: (ctx) => [
+                  const PopupMenuItem<String>(
+                    key: Key('menu_order_history'),
+                    value: 'order_history',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.receipt_long_outlined,
+                          size: 20,
+                          color: AppColors.textPrimary,
+                        ),
+                        SizedBox(width: 8),
+                        Text('Order History'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           body: SafeArea(
             child: Column(
@@ -355,6 +440,122 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
                 // Catalog Body
                 Expanded(
                   child: _buildCatalogContent(currentStore, filteredProducts),
+                ),
+              ],
+            ),
+          ),
+          bottomNavigationBar: _buildPersistentCartBar(),
+        );
+      },
+    );
+  }
+
+  Widget? _buildPersistentCartBar() {
+    final notifier = _cartNotifier;
+    if (notifier == null) return null;
+
+    return ListenableBuilder(
+      listenable: notifier,
+      builder: (context, _) {
+        final itemCount = notifier.itemCount;
+        if (itemCount <= 0) return const SizedBox.shrink();
+
+        final subtotal = notifier.subtotal;
+
+        return Container(
+          key: const Key('market_persistent_cart_bar'),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.spacingMd,
+            vertical: AppDimensions.spacingSm,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(20),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
+            ],
+            border: const Border(
+              top: BorderSide(color: AppColors.borderSubtle, width: 1),
+            ),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                  ),
+                  child: const Icon(
+                    Icons.shopping_bag_outlined,
+                    color: AppColors.primaryDark,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.spacingSm),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$itemCount ${itemCount == 1 ? 'item' : 'items'} in cart',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '${subtotal.toStringAsFixed(2)} ${widget.currency}',
+                        style: AppTextStyles.titleMedium.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primaryDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ElevatedButton.icon(
+                  key: const Key('market_view_cart_button'),
+                  onPressed: () {
+                    if (widget.onViewCart != null) {
+                      widget.onViewCart!();
+                    } else {
+                      final scope = CustomerScope.maybeOf(context);
+                      final selectedStore = _storeNotifier.value;
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => CartScreen(
+                            cartNotifier: notifier,
+                            orderRepository: scope?.orderRepository,
+                            storeName: selectedStore?.name,
+                            storeArea: selectedStore?.area,
+                            currency: widget.currency,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                  label: const Text('View Cart'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(0, 36),
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.spacingMd,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                    ),
+                  ),
                 ),
               ],
             ),

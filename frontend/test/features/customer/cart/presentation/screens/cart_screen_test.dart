@@ -190,5 +190,22 @@ void main() {
 
       expect(mockRepo.clearCartCallCount, equals(1));
     });
+
+    testWidgets('renders continue shopping button in AppBar when onExploreMarket is provided', (
+      tester,
+    ) async {
+      bool continueShoppingCalled = false;
+      await notifier.loadForStore('s-1');
+      await tester.pumpWidget(
+        buildWidget(onExploreMarket: () => continueShoppingCalled = true),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('cart_continue_shopping_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('cart_continue_shopping_button')));
+      await tester.pumpAndSettle();
+
+      expect(continueShoppingCalled, isTrue);
+    });
   });
 }

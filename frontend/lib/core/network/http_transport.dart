@@ -23,3 +23,17 @@ abstract interface class HttpTransport {
     Duration? timeout,
   });
 }
+
+/// Abstract contract for multipart/form-data HTTP network transport.
+abstract interface class MultipartHttpTransport {
+  Future<HttpResponseData> sendMultipart({
+    required Uri uri,
+    required HttpMethod method,
+    required Map<String, String> headers,
+    required List<int> fileBytes,
+    required String filename,
+    required String fileField,
+    Map<String, String>? fields,
+    Duration? timeout,
+  });
+}

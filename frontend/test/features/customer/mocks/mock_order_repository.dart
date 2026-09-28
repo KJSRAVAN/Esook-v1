@@ -12,6 +12,7 @@ class MockOrderRepository implements OrderRepository {
   Future<Result<OrderModel>> Function({
     required String storeId,
     required FulfillmentType fulfillment,
+    required PaymentMethod paymentMethod,
     String? deliveryAddress,
     String? couponCode,
     String? notes,
@@ -30,12 +31,20 @@ class MockOrderRepository implements OrderRepository {
   Future<Result<OrderModel>> Function(String orderId)?
   customGetOrderByIdHandler;
 
+  Future<Result<OrderModel>> Function({
+    required String orderId,
+    String? cancelReason,
+  })?
+  customCancelOrderHandler;
+
   int createOrderCallCount = 0;
   int getMyOrdersCallCount = 0;
   int getOrderByIdCallCount = 0;
+  int cancelOrderCallCount = 0;
 
   String? lastStoreIdParam;
   FulfillmentType? lastFulfillmentParam;
+  PaymentMethod? lastPaymentMethodParam;
   String? lastDeliveryAddressParam;
   String? lastCouponCodeParam;
   String? lastNotesParam;
@@ -46,6 +55,7 @@ class MockOrderRepository implements OrderRepository {
   int? lastLimitParam;
   OrderStatus? lastStatusParam;
   String? lastOrderIdParam;
+  String? lastCancelReasonParam;
 
   OrderModel get defaultOrder => OrderModel(
     id: 'ord-123',
@@ -95,6 +105,7 @@ class MockOrderRepository implements OrderRepository {
   Future<Result<OrderModel>> createOrder({
     required String storeId,
     required FulfillmentType fulfillment,
+    required PaymentMethod paymentMethod,
     String? deliveryAddress,
     String? couponCode,
     String? notes,
@@ -104,6 +115,7 @@ class MockOrderRepository implements OrderRepository {
     createOrderCallCount++;
     lastStoreIdParam = storeId;
     lastFulfillmentParam = fulfillment;
+    lastPaymentMethodParam = paymentMethod;
     lastDeliveryAddressParam = deliveryAddress;
     lastCouponCodeParam = couponCode;
     lastNotesParam = notes;
@@ -114,6 +126,7 @@ class MockOrderRepository implements OrderRepository {
       return customCreateOrderHandler!(
         storeId: storeId,
         fulfillment: fulfillment,
+        paymentMethod: paymentMethod,
         deliveryAddress: deliveryAddress,
         couponCode: couponCode,
         notes: notes,
@@ -166,5 +179,29 @@ class MockOrderRepository implements OrderRepository {
       return Result.failure(failureToReturn!);
     }
     return Result.success(orderToReturn ?? defaultOrder);
+  }
+
+  @override
+  Future<Result<OrderModel>> cancelOrder({
+    required String orderId,
+    String? cancelReason,
+  }) async {
+    cancelOrderCallCount++;
+    lastOrderIdParam = orderId;
+    lastCancelReasonParam = cancelReason;
+
+    if (customCancelOrderHandler != null) {
+      return customCancelOrderHandler!(
+        orderId: orderId,
+        cancelReason: cancelReason,
+      );
+    }
+
+    if (failureToReturn != null) {
+      return Result.failure(failureToReturn!);
+    }
+    return Result.success(
+      (orderToReturn ?? defaultOrder).copyWith(status: OrderStatus.cancelled),
+    );
   }
 }

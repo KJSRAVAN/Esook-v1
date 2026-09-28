@@ -17,6 +17,7 @@ class OrderRepositoryImpl implements OrderRepository {
   Future<Result<OrderModel>> createOrder({
     required String storeId,
     required FulfillmentType fulfillment,
+    required PaymentMethod paymentMethod,
     String? deliveryAddress,
     String? couponCode,
     String? notes,
@@ -34,6 +35,7 @@ class OrderRepositoryImpl implements OrderRepository {
         'fulfillment': fulfillment == FulfillmentType.pickup
             ? 'PICKUP'
             : 'DELIVERY',
+        'paymentMethod': paymentMethod.toBackendString(),
         if (fulfillment == FulfillmentType.delivery &&
             deliveryAddress != null &&
             deliveryAddress.trim().isNotEmpty)
@@ -150,6 +152,47 @@ class OrderRepositoryImpl implements OrderRepository {
     } catch (e) {
       return Result.failure(
         UnknownFailure(message: 'Failed to retrieve order details: $e'),
+      );
+    }
+  }
+
+  @override
+  Future<Result<OrderModel>> cancelOrder({
+    required String orderId,
+    String? cancelReason,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        if (cancelReason != null && cancelReason.trim().isNotEmpty)
+          'cancelReason': cancelReason.trim(),
+      };
+
+      final response = await _apiClient.post<dynamic>(
+        '/orders/$orderId/cancel',
+        body: body.isNotEmpty ? body : null,
+      );
+
+      final dynamic rawData = response.data;
+      final Map<String, dynamic> rawOrder;
+      if (rawData is Map<String, dynamic>) {
+        if (rawData['order'] is Map<String, dynamic>) {
+          rawOrder = rawData['order'] as Map<String, dynamic>;
+        } else if (rawData['data'] is Map<String, dynamic>) {
+          rawOrder = rawData['data'] as Map<String, dynamic>;
+        } else {
+          rawOrder = rawData;
+        }
+      } else {
+        rawOrder = {};
+      }
+
+      final order = OrderModel.fromJson(rawOrder);
+      return Result.success(order);
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(
+        UnknownFailure(message: 'Failed to cancel order: $e'),
       );
     }
   }

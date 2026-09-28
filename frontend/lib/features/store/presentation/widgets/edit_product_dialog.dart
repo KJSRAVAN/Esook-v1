@@ -171,15 +171,28 @@ class _EditProductDialogState extends State<EditProductDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+    final dialogWidth =
+        screenWidth < 540 ? (screenWidth - 32).clamp(280.0, 500.0) : 500.0;
+    final dialogMaxHeight = (screenHeight * 0.85).clamp(380.0, 680.0);
+
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
       ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500),
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.spacingLg),
-          child: Form(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: SizedBox(
+        width: dialogWidth,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: dialogWidth,
+            maxHeight: dialogMaxHeight,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.spacingLg),
+            child: Form(
             key: _formKey,
             child: SingleChildScrollView(
               child: Column(
@@ -189,10 +202,12 @@ class _EditProductDialogState extends State<EditProductDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Edit Store Item',
-                        style: AppTextStyles.headlineSmall.copyWith(
-                          fontWeight: FontWeight.w700,
+                      Expanded(
+                        child: Text(
+                          'Edit Store Item',
+                          style: AppTextStyles.headlineSmall.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                       IconButton(
@@ -243,7 +258,7 @@ class _EditProductDialogState extends State<EditProductDialog> {
                       ),
                     ),
                     value: _isAvailable,
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                     contentPadding: EdgeInsets.zero,
                     onChanged: (val) => setState(() => _isAvailable = val),
                   ),
@@ -298,7 +313,8 @@ class _EditProductDialogState extends State<EditProductDialog> {
                   else if (_categories.isNotEmpty)
                     DropdownButtonFormField<String>(
                       key: const Key('edit_product_category_dropdown'),
-                      value: _selectedCategoryId,
+                      initialValue: _selectedCategoryId,
+                      isExpanded: true,
                       decoration: const InputDecoration(labelText: 'Category'),
                       items: [
                         const DropdownMenuItem<String>(
@@ -353,12 +369,20 @@ class _EditProductDialogState extends State<EditProductDialog> {
                         onPressed: _isSubmitting
                             ? null
                             : () => Navigator.of(context).pop(),
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(0, AppDimensions.buttonHeight),
+                        ),
                         child: const Text('Cancel'),
                       ),
                       const SizedBox(width: AppDimensions.spacingSm),
                       ElevatedButton(
                         key: const Key('edit_product_submit_btn'),
                         onPressed: _isSubmitting ? null : _handleSubmit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(0, AppDimensions.buttonHeight),
+                        ),
                         child: _isSubmitting
                             ? const SizedBox(
                                 width: 20,
@@ -378,6 +402,7 @@ class _EditProductDialogState extends State<EditProductDialog> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

@@ -92,7 +92,7 @@ class CartRepositoryImpl implements CartRepository {
     try {
       final resolvedItemId = (itemId.isNotEmpty) ? itemId : (productId ?? '');
       if (quantity <= 0) {
-        return removeItem(
+        return await removeItem(
           itemId: resolvedItemId,
           storeId: storeId,
           productId: resolvedItemId,

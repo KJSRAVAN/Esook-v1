@@ -4,20 +4,24 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../cart/application/cart_notifier.dart';
 import '../../domain/models/order_model.dart';
 import '../../domain/repositories/order_repository.dart';
 import '../screens/customer_order_tracking_screen.dart';
+import 'customer_scope.dart';
 
 /// Modal bottom sheet displaying granular order details and tracking status.
 class OrderDetailsSheet extends StatefulWidget {
   final OrderModel initialOrder;
   final OrderRepository? orderRepository;
+  final CartNotifier? cartNotifier;
   final String currency;
 
   const OrderDetailsSheet({
     super.key,
     required this.initialOrder,
     this.orderRepository,
+    this.cartNotifier,
     this.currency = AppConstants.defaultCurrency,
   });
 
@@ -25,6 +29,7 @@ class OrderDetailsSheet extends StatefulWidget {
     BuildContext context, {
     required OrderModel order,
     OrderRepository? orderRepository,
+    CartNotifier? cartNotifier,
     String currency = AppConstants.defaultCurrency,
   }) {
     return showModalBottomSheet<void>(
@@ -34,6 +39,7 @@ class OrderDetailsSheet extends StatefulWidget {
       builder: (ctx) => OrderDetailsSheet(
         initialOrder: order,
         orderRepository: orderRepository,
+        cartNotifier: cartNotifier,
         currency: currency,
       ),
     );
@@ -46,7 +52,13 @@ class OrderDetailsSheet extends StatefulWidget {
 class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
   late OrderModel _order;
   bool _isLoading = false;
+  bool _isCancelling = false;
+  bool _isReordering = false;
   String? _errorMessage;
+
+  bool get _isCancellable =>
+      _order.status == OrderStatus.pending ||
+      _order.status == OrderStatus.accepted;
 
   @override
   void initState() {
@@ -82,6 +94,180 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
         });
       },
     );
+  }
+
+  Future<void> _promptCancelOrderDialog() async {
+    if (_isCancelling || !_isCancellable || widget.orderRepository == null) {
+      return;
+    }
+
+    final reasonController = TextEditingController();
+    final shouldCancel = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          key: const Key('details_cancel_order_dialog'),
+          title: const Text('Cancel Order'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Are you sure you want to cancel this order?'),
+              const SizedBox(height: AppDimensions.spacingMd),
+              TextField(
+                key: const Key('details_cancel_order_reason_input'),
+                controller: reasonController,
+                maxLength: 500,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Reason for cancellation (optional)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(false),
+              child: const Text('Keep Order'),
+            ),
+            ElevatedButton(
+              key: const Key('details_confirm_cancel_order_btn'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.of(dialogCtx).pop(true),
+              child: const Text('Cancel Order'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldCancel == true && mounted) {
+      final reason = reasonController.text.trim();
+      setState(() {
+        _isCancelling = true;
+      });
+
+      final result = await widget.orderRepository!.cancelOrder(
+        orderId: _order.id,
+        cancelReason: reason.isNotEmpty ? reason : null,
+      );
+
+      if (!mounted) return;
+
+      result.fold(
+        onSuccess: (updatedOrder) {
+          setState(() {
+            _order = updatedOrder;
+            _isCancelling = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Order cancelled successfully.'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        },
+        onFailure: (failure) {
+          setState(() {
+            _isCancelling = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failure.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          _refreshOrder();
+        },
+      );
+    }
+  }
+
+  Future<void> _handleReorder() async {
+    if (_isReordering) return;
+
+    final notifier =
+        widget.cartNotifier ?? CustomerScope.maybeOf(context)?.cartNotifier;
+    if (notifier == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cart service is not available.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isReordering = true;
+    });
+
+    try {
+      OrderModel orderToUse = _order;
+      if (orderToUse.items.isEmpty && widget.orderRepository != null) {
+        final result = await widget.orderRepository!.getOrderById(_order.id);
+        if (result.isSuccess && result.dataOrNull != null) {
+          orderToUse = result.dataOrNull!;
+          if (mounted) {
+            setState(() {
+              _order = orderToUse;
+            });
+          }
+        }
+      }
+
+      if (orderToUse.items.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No item details available to reorder.'),
+              backgroundColor: AppColors.warning,
+            ),
+          );
+        }
+        return;
+      }
+
+      await notifier.loadForStore(orderToUse.storeId);
+
+      int addedCount = 0;
+      for (final item in orderToUse.items) {
+        await notifier.addItem(item.itemId, item.quantity);
+        addedCount++;
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '$addedCount item(s) added to cart from Order #${orderToUse.orderNumber ?? orderToUse.id}. Review your cart to proceed.',
+          ),
+          backgroundColor: AppColors.success,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to reorder items: $e'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isReordering = false;
+        });
+      }
+    }
   }
 
   Color _getStatusColor(OrderStatus status) {
@@ -350,6 +536,35 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                               ),
                             ),
                           ],
+                          const SizedBox(height: AppDimensions.spacingSm),
+                          const Divider(height: 1.0, color: AppColors.borderSubtle),
+                          const SizedBox(height: AppDimensions.spacingSm),
+                          Row(
+                            children: [
+                              Icon(
+                                _order.paymentMethod == PaymentMethod.card
+                                    ? Icons.credit_card_rounded
+                                    : Icons.payments_outlined,
+                                size: 18.0,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: AppDimensions.spacingSm),
+                              Text(
+                                'Payment Method: ',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                _order.paymentMethod.displayName,
+                                key: const Key('order_details_payment_method'),
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.primaryDark,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -528,42 +743,122 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                     top: BorderSide(color: AppColors.borderSubtle),
                   ),
                 ),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: AppDimensions.buttonHeight,
-                  child: ElevatedButton.icon(
-                    key: const Key('order_details_track_order_button'),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => CustomerOrderTrackingScreen(
-                            orderId: _order.id,
-                            initialOrder: _order,
-                            orderRepository: widget.orderRepository!,
-                            currency: widget.currency,
+                child: Row(
+                  children: [
+                    if (_isCancellable) ...[
+                      Expanded(
+                        child: SizedBox(
+                          height: AppDimensions.buttonHeight,
+                          child: OutlinedButton.icon(
+                            key: const Key('order_details_cancel_order_button'),
+                            onPressed: _isCancelling ? null : _promptCancelOrderDialog,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.error,
+                              side: const BorderSide(color: AppColors.error),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusSm,
+                                ),
+                              ),
+                            ),
+                            icon: _isCancelling
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        AppColors.error,
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(Icons.cancel_outlined, size: 18),
+                            label: Text(
+                              _isCancelling ? 'Cancelling…' : 'Cancel Order',
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
                           ),
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.timeline_rounded, size: 20),
-                    label: const Text(
-                      'Track Order',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
                       ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusSm,
+                      const SizedBox(width: AppDimensions.spacingSm),
+                    ],
+                    Expanded(
+                      child: SizedBox(
+                        height: AppDimensions.buttonHeight,
+                        child: OutlinedButton.icon(
+                          key: const Key('order_details_track_order_button'),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => CustomerOrderTrackingScreen(
+                                  orderId: _order.id,
+                                  initialOrder: _order,
+                                  orderRepository: widget.orderRepository!,
+                                  currency: widget.currency,
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.timeline_rounded, size: 18),
+                          label: const Text(
+                            'Track',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusSm,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      elevation: 0,
                     ),
-                  ),
+                    const SizedBox(width: AppDimensions.spacingSm),
+                    Expanded(
+                      child: SizedBox(
+                        height: AppDimensions.buttonHeight,
+                        child: ElevatedButton.icon(
+                          key: const Key('order_details_reorder_button'),
+                          onPressed: _isReordering ? null : _handleReorder,
+                          icon: _isReordering
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(Icons.replay_rounded, size: 18),
+                          label: Text(
+                            _isReordering ? 'Adding…' : 'Reorder',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusSm,
+                              ),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
           ],

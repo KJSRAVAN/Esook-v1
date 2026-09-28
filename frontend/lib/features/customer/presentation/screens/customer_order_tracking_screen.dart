@@ -41,6 +41,7 @@ class _CustomerOrderTrackingScreenState
   bool _isLoading = false;
   bool _isPolling = false;
   bool _isFetching = false;
+  bool _isCancelling = false;
   String? _errorMessage;
   Timer? _pollTimer;
 
@@ -48,6 +49,10 @@ class _CustomerOrderTrackingScreenState
       _order?.status == OrderStatus.delivered ||
       _order?.status == OrderStatus.cancelled ||
       _order?.status == OrderStatus.rejected;
+
+  bool get _isCancellable =>
+      _order?.status == OrderStatus.pending ||
+      _order?.status == OrderStatus.accepted;
 
   @override
   void initState() {
@@ -139,6 +144,103 @@ class _CustomerOrderTrackingScreenState
             ),
           );
         }
+      },
+    );
+  }
+
+  Future<void> _promptCancelOrderDialog() async {
+    if (_isCancelling || !_isCancellable || _order == null) return;
+
+    final reasonController = TextEditingController();
+    final shouldCancel = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          key: const Key('cancel_order_dialog'),
+          title: const Text('Cancel Order'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Are you sure you want to cancel this order?'),
+              const SizedBox(height: AppDimensions.spacingMd),
+              TextField(
+                key: const Key('cancel_order_reason_input'),
+                controller: reasonController,
+                maxLength: 500,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Reason for cancellation (optional)',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(false),
+              child: const Text('Keep Order'),
+            ),
+            ElevatedButton(
+              key: const Key('confirm_cancel_order_btn'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.of(dialogCtx).pop(true),
+              child: const Text('Cancel Order'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldCancel == true && mounted) {
+      final reason = reasonController.text.trim();
+      await _executeCancelOrder(reason.isNotEmpty ? reason : null);
+    }
+  }
+
+  Future<void> _executeCancelOrder(String? reason) async {
+    if (_order == null) return;
+
+    setState(() {
+      _isCancelling = true;
+    });
+
+    final result = await widget.orderRepository.cancelOrder(
+      orderId: _order!.id,
+      cancelReason: reason,
+    );
+
+    if (!mounted) return;
+
+    result.fold(
+      onSuccess: (updatedOrder) {
+        setState(() {
+          _order = updatedOrder;
+          _isCancelling = false;
+        });
+        _stopPolling();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Order cancelled successfully.'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      },
+      onFailure: (failure) {
+        setState(() {
+          _isCancelling = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        // Refresh order state in case status advanced concurrently on backend
+        _fetchOrder(isBackgroundPoll: false);
       },
     );
   }
@@ -305,6 +407,47 @@ class _CustomerOrderTrackingScreenState
 
                 // Order Items & Pricing Card
                 _buildOrderItemsCard(order),
+
+                // Customer Cancellation Action
+                if (_isCancellable) ...[
+                  const SizedBox(height: AppDimensions.spacingLg),
+                  SizedBox(
+                    width: double.infinity,
+                    height: AppDimensions.buttonHeight,
+                    child: OutlinedButton.icon(
+                      key: const Key('tracking_cancel_order_button'),
+                      onPressed: _isCancelling ? null : _promptCancelOrderDialog,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                        side: const BorderSide(color: AppColors.error),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusMd,
+                          ),
+                        ),
+                      ),
+                      icon: _isCancelling
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.error,
+                                ),
+                              ),
+                            )
+                          : const Icon(Icons.cancel_outlined, size: 20),
+                      label: Text(
+                        _isCancelling ? 'Cancelling…' : 'Cancel Order',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

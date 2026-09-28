@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/routing/app_routes.dart';
-import '../../../../core/routing/role_routing.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/auth_phone_helper.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../widgets/auth_error_banner.dart';
+import '../widgets/auth_password_field.dart';
 import '../widgets/auth_primary_button.dart';
 import '../widgets/auth_scaffold.dart';
 import '../widgets/auth_scope.dart';
 import '../widgets/auth_text_field.dart';
 
-/// Customer signup step for OTP registration flow.
-enum CustomerSignupStep { detailsInput, otpVerification }
-
-/// Customer registration screen for eSOuQ aligned with the OTP authentication architecture.
+/// Customer registration screen for eSOuQ aligned with the production email/password contract.
+///
+/// Collects name, email, phone, and password against `POST /auth/customer/signup`.
 class CustomerSignupScreen extends StatefulWidget {
   final AuthRepository? authRepository;
 
@@ -27,17 +27,15 @@ class CustomerSignupScreen extends StatefulWidget {
 }
 
 class _CustomerSignupScreenState extends State<CustomerSignupScreen> {
-  final _detailsFormKey = GlobalKey<FormState>();
-  final _otpFormKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
-  final _otpController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  CustomerSignupStep _step = CustomerSignupStep.detailsInput;
   bool _isSubmitting = false;
   AppFailure? _failure;
-  String? _infoMessage;
+  String? _successMessage;
 
   AuthRepository get _repository =>
       widget.authRepository ?? AuthScope.of(context);
@@ -45,40 +43,46 @@ class _CustomerSignupScreenState extends State<CustomerSignupScreen> {
   @override
   void dispose() {
     _fullNameController.dispose();
-    _phoneController.dispose();
     _emailController.dispose();
-    _otpController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleSendOtp({bool isResend = false}) async {
+  Future<void> _handleSignup() async {
     setState(() {
       _failure = null;
-      if (!isResend) _infoMessage = null;
+      _successMessage = null;
     });
 
-    if (!isResend && !_detailsFormKey.currentState!.validate()) {
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
     setState(() => _isSubmitting = true);
 
-    final phone = _phoneController.text.trim();
-    final email = _emailController.text.trim();
+    final fullName = _fullNameController.text.trim();
+    final email = _emailController.text.trim().toLowerCase();
+    final phone =
+        AuthPhoneHelper.normalizeAuthPhone(_phoneController.text) ??
+        _phoneController.text.trim();
+    final password = _passwordController.text;
 
-    final result = await _repository.sendOtp(
-      phone: phone,
-      email: email.isNotEmpty ? email : null,
+    final result = await _repository.signupCustomer(
+      fullName: fullName,
+      email: email,
+      phoneNumber: phone,
+      password: password,
     );
 
     if (!mounted) return;
 
     if (result.isSuccess) {
-      final message = result.dataOrNull ?? 'Verification code sent';
+      final message =
+          result.dataOrNull ?? 'Account created successfully. You can now log in.';
       setState(() {
         _isSubmitting = false;
-        _step = CustomerSignupStep.otpVerification;
-        _infoMessage = message;
+        _successMessage = message;
         _failure = null;
       });
     } else {
@@ -89,104 +93,83 @@ class _CustomerSignupScreenState extends State<CustomerSignupScreen> {
     }
   }
 
-  Future<void> _handleVerifyOtp() async {
-    setState(() => _failure = null);
-
-    if (!_otpFormKey.currentState!.validate()) {
-      return;
-    }
-
-    setState(() => _isSubmitting = true);
-
-    final phone = _phoneController.text.trim();
-    final code = _otpController.text.trim();
-    final fullName = _fullNameController.text.trim();
-    final email = _emailController.text.trim();
-
-    // 1. Verify OTP with phone + code (strictly passwordless OTP challenge)
-    final verifyResult = await _repository.verifyOtp(phone: phone, code: code);
-
-    if (!mounted) return;
-
-    if (verifyResult.isFailure) {
-      setState(() {
-        _isSubmitting = false;
-        _failure = verifyResult.failureOrNull;
-      });
-      return;
-    }
-
-    final authResponse = verifyResult.dataOrNull!;
-
-    // 2. Persist real customer profile (name + optional backup email) via PATCH /users/me
-    final profileResult = await _repository.updateProfile(
-      name: fullName,
-      email: email.isNotEmpty ? email : null,
-    );
-
-    if (!mounted) return;
-
-    if (profileResult.isFailure) {
-      setState(() {
-        _isSubmitting = false;
-        _failure = profileResult.failureOrNull ??
-            const ServerFailure(
-              message: 'Failed to save customer profile. Please try again.',
-            );
-      });
-      return;
-    }
-
-    // 3. Navigate to Customer Home on successful completion
-    setState(() => _isSubmitting = false);
-    RoleRouting.navigateForRole(
-      context,
-      authResponse.user.role,
-      clearStack: true,
-    );
-  }
-
-  void _handleChangeDetails() {
-    setState(() {
-      _step = CustomerSignupStep.detailsInput;
-      _otpController.clear();
-      _failure = null;
-      _infoMessage = null;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isDetailsStep = _step == CustomerSignupStep.detailsInput;
-
     return AuthScaffold(
-      title: isDetailsStep ? 'Create Account' : 'Verify Code',
-      subtitle: isDetailsStep
-          ? 'Join eSOuQ for fast delivery of fresh essentials'
-          : 'Enter the 6-digit code sent to ${_phoneController.text.trim()}',
+      title: 'Create Account',
+      subtitle: 'Join eSOuQ for fast delivery of fresh essentials',
       showBackButton: true,
-      onBackPressed: isDetailsStep
-          ? () => Navigator.of(context).maybePop()
-          : _handleChangeDetails,
-      bottomNavigation: isDetailsStep ? _buildBottomSignInLink(context) : null,
-      child: isDetailsStep ? _buildDetailsForm() : _buildOtpForm(),
+      onBackPressed: () => Navigator.of(context).maybePop(),
+      bottomNavigation: _buildBottomSignInLink(context),
+      child: _successMessage != null
+          ? _buildSuccessConfirmation()
+          : _buildSignupForm(),
     );
   }
 
-  Widget _buildDetailsForm() {
+  Widget _buildSuccessConfirmation() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(AppDimensions.spacingLg),
+          decoration: BoxDecoration(
+            color: AppColors.primaryLight,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            border: Border.all(
+              color: AppColors.primary.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Column(
+            children: [
+              const Icon(
+                Icons.check_circle_outline_rounded,
+                color: AppColors.primaryDark,
+                size: 48,
+              ),
+              const SizedBox(height: AppDimensions.spacingMd),
+              Text(
+                'Account Created!',
+                style: AppTextStyles.titleMedium.copyWith(
+                  color: AppColors.primaryDark,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.spacingSm),
+              Text(
+                _successMessage!,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.primaryDark,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacingXl),
+        AuthPrimaryButton(
+          key: const Key('signup_proceed_to_login_button'),
+          label: 'Proceed to Sign In',
+          onPressed: () {
+            Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSignupForm() {
     return Form(
-      key: _detailsFormKey,
+      key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Backend / Validation Error Banner
+          // Backend / Network Error Banner
           if (_failure != null)
             AuthErrorBanner(
               failure: _failure,
               onDismiss: () => setState(() => _failure = null),
-              onRetry: _failure is NetworkFailure
-                  ? () => _handleSendOtp()
-                  : null,
+              onRetry: _failure is NetworkFailure ? _handleSignup : null,
             ),
 
           // Full Name Field
@@ -194,7 +177,7 @@ class _CustomerSignupScreenState extends State<CustomerSignupScreen> {
             key: const Key('signup_name_field'),
             controller: _fullNameController,
             label: 'Full Name',
-            hintText: 'Ahmed Al-Harthy',
+            hintText: 'Ahmed Ali',
             prefixIcon: Icons.person_outline_rounded,
             textInputAction: TextInputAction.next,
             enabled: !_isSubmitting,
@@ -221,33 +204,27 @@ class _CustomerSignupScreenState extends State<CustomerSignupScreen> {
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.next,
             enabled: !_isSubmitting,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your phone number';
-              }
-              if (value.trim().length < 8) {
-                return 'Please enter a valid phone number';
-              }
-              return null;
-            },
+            validator: (value) => AuthPhoneHelper.validateAuthPhone(
+              value,
+              requiredMessage: 'Please enter your phone number',
+            ),
           ),
 
           const SizedBox(height: AppDimensions.spacingMd),
 
-          // Optional Email Field (Backup OTP delivery)
+          // Email Address Field
           AuthTextField(
             key: const Key('signup_email_field'),
             controller: _emailController,
-            label: 'Email Address (optional)',
-            hintText: 'Used as backup OTP delivery',
+            label: 'Email Address',
+            hintText: 'ahmed@example.com',
             prefixIcon: Icons.email_outlined,
             keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.done,
+            textInputAction: TextInputAction.next,
             enabled: !_isSubmitting,
-            onFieldSubmitted: (_) => _handleSendOtp(),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return null;
+                return 'Please enter your email address';
               }
               final email = value.trim();
               final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
@@ -258,84 +235,23 @@ class _CustomerSignupScreenState extends State<CustomerSignupScreen> {
             },
           ),
 
-          const SizedBox(height: AppDimensions.spacingLg),
+          const SizedBox(height: AppDimensions.spacingMd),
 
-          // Primary Signup CTA Button
-          AuthPrimaryButton(
-            label: 'Create Account',
-            isLoading: _isSubmitting,
-            onPressed: () => _handleSendOtp(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOtpForm() {
-    return Form(
-      key: _otpFormKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Backend / Network Error Banner
-          if (_failure != null)
-            AuthErrorBanner(
-              failure: _failure,
-              onDismiss: () => setState(() => _failure = null),
-              onRetry: _failure is NetworkFailure ? _handleVerifyOtp : null,
-            ),
-
-          // Status / Channel Banner
-          if (_infoMessage != null && _failure == null)
-            Container(
-              padding: const EdgeInsets.all(AppDimensions.spacingMd),
-              margin: const EdgeInsets.only(bottom: AppDimensions.spacingMd),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.mark_email_read_outlined,
-                    color: AppColors.primaryDark,
-                    size: 20,
-                  ),
-                  const SizedBox(width: AppDimensions.spacingSm),
-                  Expanded(
-                    child: Text(
-                      _infoMessage!,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.primaryDark,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          // 6-Digit OTP Field
-          AuthTextField(
-            key: const Key('otp_code_field'),
-            controller: _otpController,
-            label: '6-Digit OTP Code',
-            hintText: '123456',
-            prefixIcon: Icons.security_rounded,
-            keyboardType: TextInputType.number,
+          // Password Field
+          AuthPasswordField(
+            key: const Key('signup_password_field'),
+            controller: _passwordController,
+            label: 'Password',
+            hintText: 'At least 8 characters',
             textInputAction: TextInputAction.done,
             enabled: !_isSubmitting,
-            onFieldSubmitted: (_) => _handleVerifyOtp(),
+            onFieldSubmitted: (_) => _handleSignup(),
             validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter the 6-digit OTP code';
+              if (value == null || value.isEmpty) {
+                return 'Please enter a password';
               }
-              final clean = value.trim();
-              if (clean.length != 6 || !RegExp(r'^\d{6}$').hasMatch(clean)) {
-                return 'OTP must be exactly 6 digits';
+              if (value.length < 8) {
+                return 'Password must be at least 8 characters';
               }
               return null;
             },
@@ -343,41 +259,12 @@ class _CustomerSignupScreenState extends State<CustomerSignupScreen> {
 
           const SizedBox(height: AppDimensions.spacingLg),
 
-          // Primary Verify CTA Button
+          // Primary Signup CTA Button
           AuthPrimaryButton(
-            key: const Key('verify_otp_button'),
-            label: 'Verify & Continue',
+            key: const Key('signup_submit_button'),
+            label: 'Create Account',
             isLoading: _isSubmitting,
-            onPressed: _handleVerifyOtp,
-          ),
-
-          const SizedBox(height: AppDimensions.spacingMd),
-
-          // Secondary actions: Edit Details & Resend Code
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              TextButton.icon(
-                onPressed: _isSubmitting ? null : _handleChangeDetails,
-                icon: const Icon(Icons.edit_outlined, size: 16),
-                label: const Text('Edit Details'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.textSecondary,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-              TextButton.icon(
-                onPressed:
-                    _isSubmitting ? null : () => _handleSendOtp(isResend: true),
-                icon: const Icon(Icons.refresh_rounded, size: 16),
-                label: const Text('Resend Code'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ],
+            onPressed: _handleSignup,
           ),
         ],
       ),
@@ -396,6 +283,7 @@ class _CustomerSignupScreenState extends State<CustomerSignupScreen> {
           ),
         ),
         TextButton(
+          key: const Key('signup_to_login_button'),
           onPressed: _isSubmitting
               ? null
               : () {

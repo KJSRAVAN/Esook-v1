@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../features/admin/domain/models/admin_store_model.dart';
 import '../../features/admin/presentation/screens/admin_shell.dart';
+import '../../features/admin/presentation/screens/admin_store_staff_screen.dart';
 import '../../features/auth/presentation/screens/admin_magic_link_pending_screen.dart';
 import '../../features/auth/presentation/screens/admin_magic_link_request_screen.dart';
 import '../../features/auth/presentation/screens/admin_verify_screen.dart';
@@ -13,6 +15,7 @@ import '../../features/auth/presentation/screens/staff_login_screen.dart';
 import '../../features/auth/domain/models/user_model.dart';
 import '../../features/auth/domain/models/user_role.dart';
 import '../../features/customer/presentation/screens/customer_edit_profile_screen.dart';
+import '../../features/customer/presentation/screens/customer_order_history_screen.dart';
 import '../../features/customer/presentation/screens/customer_shell.dart';
 import '../../features/rider/presentation/screens/rider_shell.dart';
 import '../../features/store/presentation/screens/store_shell.dart';
@@ -95,6 +98,12 @@ abstract final class AppRouter {
           builder: (_) => const CustomerShell(),
         );
 
+      case AppRoutes.customerOrderHistory:
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (_) => const CustomerOrderHistoryScreen(),
+        );
+
       case AppRoutes.profileSetup:
         final user =
             settings.arguments as UserModel? ??
@@ -125,6 +134,19 @@ abstract final class AppRouter {
         return MaterialPageRoute<void>(
           settings: settings,
           builder: (_) => const AdminShell(),
+        );
+
+      case AppRoutes.adminStoreStaff:
+        final store = settings.arguments as AdminStoreModel?;
+        if (store == null) {
+          return MaterialPageRoute<void>(
+            settings: settings,
+            builder: (_) => const _NotFoundScreen(routeName: 'Store required for staff management'),
+          );
+        }
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (_) => AdminStoreStaffScreen(store: store),
         );
 
       default:

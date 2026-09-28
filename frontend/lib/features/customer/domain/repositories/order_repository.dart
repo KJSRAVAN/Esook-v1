@@ -8,6 +8,7 @@ abstract class OrderRepository {
   Future<Result<OrderModel>> createOrder({
     required String storeId,
     required FulfillmentType fulfillment,
+    required PaymentMethod paymentMethod,
     String? deliveryAddress,
     String? couponCode,
     String? notes,
@@ -24,4 +25,10 @@ abstract class OrderRepository {
 
   /// Retrieves detailed information for a single order matching GET /orders/:orderId.
   Future<Result<OrderModel>> getOrderById(String orderId);
+
+  /// Cancels an order matching the backend POST /orders/:orderId/cancel contract.
+  Future<Result<OrderModel>> cancelOrder({
+    required String orderId,
+    String? cancelReason,
+  });
 }

@@ -18,15 +18,27 @@ abstract interface class AuthRepository {
     required String code,
   });
 
-  /// Customer self-registration.
-  Future<Result<AuthResponseModel>> signupCustomer({
-    required String phoneNumber,
+  /// Customer self-registration (POST /auth/customer/signup).
+  ///
+  /// Requires [fullName], [email], [phoneNumber], and [password].
+  /// Returns the server success message on account creation.
+  Future<Result<String>> signupCustomer({
     required String fullName,
+    required String email,
+    required String phoneNumber,
     required String password,
-    String? address,
   });
 
-  /// Password login for Customer, Store Staff, Store Manager, Delivery Rider, and Super Admin (POST /auth/staff/login).
+  /// Dedicated customer login (POST /auth/customer/login).
+  ///
+  /// Accepts either [email] or [phoneNumber], plus [password].
+  Future<Result<AuthResponseModel>> customerLogin({
+    String? email,
+    String? phoneNumber,
+    required String password,
+  });
+
+  /// Password login for Store Staff, Store Manager, Delivery Rider, and Super Admin (POST /auth/staff/login).
   Future<Result<AuthResponseModel>> login({
     String? phoneNumber,
     String? email,

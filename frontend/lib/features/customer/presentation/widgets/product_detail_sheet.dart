@@ -526,14 +526,14 @@ class ProductDetailSheet extends StatelessWidget {
                   ),
                   IconButton(
                     key: const Key('detail_cart_increment'),
-                    onPressed: isPending
+                    onPressed: isPending || quantity >= 99
                         ? null
                         : () => effectiveCartNotifier.setQuantity(
                             product.id,
                             quantity + 1,
                           ),
                     icon: const Icon(Icons.add_circle),
-                    color: AppColors.primary,
+                    color: quantity >= 99 ? AppColors.textTertiary : AppColors.primary,
                     iconSize: 28,
                   ),
                 ],

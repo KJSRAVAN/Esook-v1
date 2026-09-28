@@ -122,11 +122,17 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogCtx).pop(false),
+              style: TextButton.styleFrom(
+                minimumSize: const Size(0, AppDimensions.buttonHeight),
+              ),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
               key: const Key('confirm_reject_btn'),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                minimumSize: const Size(0, AppDimensions.buttonHeight),
+              ),
               onPressed: () => Navigator.of(dialogCtx).pop(true),
               child: const Text('Confirm Reject'),
             ),
@@ -262,28 +268,72 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isPickup
-                                ? const Color(0xFFF1F5F9)
-                                : const Color(0xFFEFF6FF),
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusFull,
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            Container(
+                              key: const Key('store_order_payment_badge'),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _currentOrder.paymentMethod == PaymentMethod.card
+                                    ? const Color(0xFFEFF6FF)
+                                    : const Color(0xFFFEF3C7),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusFull,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _currentOrder.paymentMethod == PaymentMethod.card
+                                        ? Icons.credit_card_outlined
+                                        : Icons.payments_outlined,
+                                    size: 14,
+                                    color: _currentOrder.paymentMethod == PaymentMethod.card
+                                        ? const Color(0xFF1D4ED8)
+                                        : const Color(0xFFB45309),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _currentOrder.paymentMethod.displayName,
+                                    style: AppTextStyles.labelLarge.copyWith(
+                                      color: _currentOrder.paymentMethod == PaymentMethod.card
+                                          ? const Color(0xFF1D4ED8)
+                                          : const Color(0xFFB45309),
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            isPickup ? 'Pickup Order' : 'Delivery Order',
-                            style: AppTextStyles.labelLarge.copyWith(
-                              color: isPickup
-                                  ? const Color(0xFF334155)
-                                  : const Color(0xFF1D4ED8),
-                              fontWeight: FontWeight.w700,
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isPickup
+                                    ? const Color(0xFFF1F5F9)
+                                    : const Color(0xFFEFF6FF),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusFull,
+                                ),
+                              ),
+                              child: Text(
+                                isPickup ? 'Pickup Order' : 'Delivery Order',
+                                style: AppTextStyles.labelLarge.copyWith(
+                                  color: isPickup
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFF1D4ED8),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
@@ -506,49 +556,104 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
         final isPickup = _currentOrder.fulfillment == FulfillmentType.pickup;
         return Row(
           children: [
-            if (!isPickup) ...[
-              Expanded(
-                child: ElevatedButton(
-                  key: const Key('details_out_for_delivery_btn'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFEA580C),
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () => _updateStatus(OrderStatus.outForDelivery),
-                  child: const Text('Out for Delivery'),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.spacingSm),
-            ],
             Expanded(
               child: ElevatedButton(
-                key: const Key('details_complete_btn'),
+                key: Key(
+                  isPickup
+                      ? 'details_ready_pickup_btn'
+                      : 'details_ready_delivery_btn',
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.success,
+                  backgroundColor: const Color(0xFF7E22CE),
                   foregroundColor: Colors.white,
                 ),
-                onPressed: () => _updateStatus(OrderStatus.delivered),
-                child: const Text('Complete Order'),
+                onPressed: () => _updateStatus(OrderStatus.ready),
+                child: Text(
+                  isPickup ? 'Ready for Pickup' : 'Mark Ready for Driver',
+                ),
               ),
             ),
           ],
         );
       case OrderStatus.ready:
-      case OrderStatus.outForDelivery:
-        return Row(
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                key: const Key('details_complete_btn'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.success,
-                  foregroundColor: Colors.white,
+        final isPickup = _currentOrder.fulfillment == FulfillmentType.pickup;
+        if (isPickup) {
+          return Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  key: const Key('details_complete_pickup_btn'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.success,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () => _updateStatus(OrderStatus.delivered),
+                  child: const Text('Complete Pickup'),
                 ),
-                onPressed: () => _updateStatus(OrderStatus.delivered),
-                child: const Text('Complete Order'),
               ),
-            ),
-          ],
+            ],
+          );
+        }
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            vertical: AppDimensions.spacingSm,
+            horizontal: AppDimensions.spacingMd,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFAF5FF),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            border: Border.all(color: const Color(0xFFE9D5FF)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.delivery_dining_outlined,
+                size: 20,
+                color: Color(0xFF7E22CE),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Ready for Driver Pickup (Awaiting Driver)',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: const Color(0xFF7E22CE),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        );
+      case OrderStatus.outForDelivery:
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            vertical: AppDimensions.spacingSm,
+            horizontal: AppDimensions.spacingMd,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF7ED),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            border: Border.all(color: const Color(0xFFFFEDD5)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.two_wheeler_rounded,
+                size: 20,
+                color: Color(0xFFC2410C),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Out for Delivery with Driver',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: const Color(0xFFC2410C),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         );
       case OrderStatus.delivered:
       case OrderStatus.rejected:

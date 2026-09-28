@@ -101,6 +101,23 @@ enum FulfillmentType {
   }
 }
 
+/// Preferred payment method for the customer (CASH or CARD).
+enum PaymentMethod {
+  cash,
+  card;
+
+  String get displayName => this == PaymentMethod.cash ? 'Cash' : 'Card';
+
+  String toBackendString() => this == PaymentMethod.cash ? 'CASH' : 'CARD';
+
+  static PaymentMethod fromString(String? value) {
+    if (value == null) return PaymentMethod.cash;
+    final normalized = value.trim().toUpperCase();
+    if (normalized == 'CARD') return PaymentMethod.card;
+    return PaymentMethod.cash;
+  }
+}
+
 /// Immutable model representing an order placed by a customer.
 class OrderModel {
   final String id;
@@ -110,6 +127,7 @@ class OrderModel {
   final String? storeName;
   final OrderStatus status;
   final FulfillmentType fulfillment;
+  final PaymentMethod paymentMethod;
   final String? deliveryAddress;
   final String? couponCode;
   final String? notes;
@@ -131,6 +149,7 @@ class OrderModel {
     this.storeName,
     required this.status,
     required this.fulfillment,
+    this.paymentMethod = PaymentMethod.cash,
     this.deliveryAddress,
     this.couponCode,
     this.notes,
@@ -179,6 +198,10 @@ class OrderModel {
         json['fulfillment'] as String? ??
         json['fulfillmentType'] as String? ??
         json['fulfillment_type'] as String?;
+    final paymentMethodStr =
+        json['paymentMethod'] as String? ??
+        json['payment_method'] as String? ??
+        json['paymentType'] as String?;
 
     final subtotalVal = parseDouble(json['subtotal']);
     final totalVal = parseDouble(
@@ -213,6 +236,7 @@ class OrderModel {
       storeName: storeName,
       status: OrderStatus.fromString(statusStr),
       fulfillment: FulfillmentType.fromString(fulfillmentStr),
+      paymentMethod: PaymentMethod.fromString(paymentMethodStr),
       deliveryAddress:
           json['deliveryAddress'] as String? ??
           json['delivery_address'] as String?,
@@ -245,6 +269,7 @@ class OrderModel {
       if (storeName != null) 'storeName': storeName,
       'status': status.toBackendString(),
       'fulfillment': fulfillment.toBackendString(),
+      'paymentMethod': paymentMethod.toBackendString(),
       if (deliveryAddress != null) 'deliveryAddress': deliveryAddress,
       if (couponCode != null) 'couponCode': couponCode,
       if (notes != null) 'notes': notes,
@@ -268,6 +293,7 @@ class OrderModel {
     String? storeName,
     OrderStatus? status,
     FulfillmentType? fulfillment,
+    PaymentMethod? paymentMethod,
     String? deliveryAddress,
     String? couponCode,
     String? notes,
@@ -289,6 +315,7 @@ class OrderModel {
       storeName: storeName ?? this.storeName,
       status: status ?? this.status,
       fulfillment: fulfillment ?? this.fulfillment,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
       deliveryAddress: deliveryAddress ?? this.deliveryAddress,
       couponCode: couponCode ?? this.couponCode,
       notes: notes ?? this.notes,

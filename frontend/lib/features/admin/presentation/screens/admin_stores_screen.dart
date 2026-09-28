@@ -8,6 +8,8 @@ import '../../domain/repositories/admin_stores_repository.dart';
 import '../widgets/admin_scope.dart';
 import '../widgets/create_store_dialog.dart';
 import '../widgets/edit_store_dialog.dart';
+import 'admin_store_catalog_screen.dart';
+import 'admin_store_staff_screen.dart';
 
 /// Store management screen for Super Admin to onboard and configure supermarket locations.
 class AdminStoresScreen extends StatefulWidget {
@@ -72,8 +74,83 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
         ),
       );
       _loadStores();
+      await _showStaffSetupPrompt(createdStore);
     }
   }
+
+  Future<void> _showStaffSetupPrompt(AdminStoreModel store) async {
+    final setupStaff = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => AlertDialog(
+        key: const Key('post_create_staff_prompt_dialog'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+              ),
+              child: const Icon(
+                Icons.people_outline_rounded,
+                color: AppColors.primaryDark,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Configure Staff Accounts?',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Store "${store.name}" was successfully onboarded. Would you like to configure staff login accounts for this store now? You can also skip and manage staff anytime from the store card.',
+          style: AppTextStyles.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            key: const Key('skip_staff_setup_btn'),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Skip for Now'),
+          ),
+          ElevatedButton.icon(
+            key: const Key('setup_staff_now_btn'),
+            icon: const Icon(Icons.person_add_rounded, size: 16),
+            label: const Text('Configure Staff'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(0, 36),
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+          ),
+        ],
+      ),
+    );
+
+    if (setupStaff == true && mounted) {
+      _navigateToStaffScreen(store);
+    }
+  }
+
+  void _navigateToStaffScreen(AdminStoreModel store) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AdminStoreStaffScreen(
+          store: store,
+          usersRepository: AdminScope.usersRepositoryOf(context),
+        ),
+      ),
+    );
+  }
+
 
   Future<void> _openEditStoreDialog(AdminStoreModel store) async {
     final updatedStore = await EditStoreDialog.show(
@@ -367,6 +444,58 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
                     ],
                   ),
                 ],
+                const Divider(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton.icon(
+                      key: Key('manage_staff_btn_${store.id}'),
+                      icon: const Icon(Icons.people_outline_rounded, size: 16),
+                      label: const Text('Manage Staff'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        side: const BorderSide(color: AppColors.borderStrong),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () => _navigateToStaffScreen(store),
+                    ),
+                    const SizedBox(width: AppDimensions.spacingSm),
+                    OutlinedButton.icon(
+                      key: Key('manage_catalog_btn_${store.id}'),
+                      icon: const Icon(Icons.inventory_2_outlined, size: 16),
+                      label: const Text('Manage Catalog'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primaryDark,
+                        side: const BorderSide(color: AppColors.primary),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => AdminStoreCatalogScreen(
+                              initialStoreId: store.id,
+                              storesRepository: _repo,
+                              productsRepository:
+                                  AdminScope.productsRepositoryOf(context),
+                              categoriesRepository:
+                                  AdminScope.categoriesRepositoryOf(context),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

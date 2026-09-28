@@ -87,6 +87,7 @@ void main() {
         final result = await orderRepository.createOrder(
           storeId: 'store-1',
           fulfillment: FulfillmentType.delivery,
+          paymentMethod: PaymentMethod.card,
           deliveryAddress: 'Building 4B, Riyadh',
           couponCode: 'SAVE5',
           notes: 'Doorbell broken',
@@ -115,6 +116,7 @@ void main() {
             jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
         expect(decodedBody['storeId'], equals('store-1'));
         expect(decodedBody['fulfillment'], equals('DELIVERY'));
+        expect(decodedBody['paymentMethod'], equals('CARD'));
         expect(decodedBody['deliveryAddress'], equals('Building 4B, Riyadh'));
         expect(decodedBody['couponCode'], equals('SAVE5'));
         expect(decodedBody['notes'], equals('Doorbell broken'));
@@ -141,6 +143,7 @@ void main() {
             'storeId': 'store-1',
             'status': 'PENDING',
             'fulfillment': 'PICKUP',
+            'paymentMethod': 'CASH',
             'subtotal': 5.00,
             'total': 5.00,
             'items': [],
@@ -150,6 +153,7 @@ void main() {
         final result = await orderRepository.createOrder(
           storeId: 'store-1',
           fulfillment: FulfillmentType.pickup,
+          paymentMethod: PaymentMethod.cash,
           items: const [OrderItemInput(itemId: 'prod-2', quantity: 1)],
         );
 
@@ -158,6 +162,7 @@ void main() {
             jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
         expect(decodedBody['storeId'], equals('store-1'));
         expect(decodedBody['fulfillment'], equals('PICKUP'));
+        expect(decodedBody['paymentMethod'], equals('CASH'));
         expect(
           decodedBody['items'],
           equals([
@@ -182,6 +187,7 @@ void main() {
         final result = await orderRepository.createOrder(
           storeId: 'store-1',
           fulfillment: FulfillmentType.delivery,
+          paymentMethod: PaymentMethod.cash,
           items: const [OrderItemInput(itemId: 'prod-1', quantity: 1)],
         );
 
@@ -307,6 +313,54 @@ void main() {
 
       expect(result.isFailure, isTrue);
       expect(result.failureOrNull, isA<ServerFailure>());
+    });
+
+    test('cancelOrder sends POST /orders/:orderId/cancel and returns cancelled order', () async {
+      mockTransport.statusCode = 200;
+      mockTransport.responseBody = jsonEncode({
+        'id': 'ord-123',
+        'orderNumber': 'ESK-2026-123',
+        'customerId': 'usr-1',
+        'storeId': 'store-1',
+        'status': 'CANCELLED',
+        'fulfillment': 'DELIVERY',
+        'paymentMethod': 'CARD',
+        'subtotal': 40.0,
+        'total': 40.0,
+        'items': [],
+      });
+
+      final result = await orderRepository.cancelOrder(
+        orderId: 'ord-123',
+        cancelReason: 'Customer request',
+      );
+
+      expect(result.isSuccess, isTrue);
+      final order = result.dataOrNull!;
+      expect(order.id, equals('ord-123'));
+      expect(order.status, equals(OrderStatus.cancelled));
+      expect(order.paymentMethod, equals(PaymentMethod.card));
+
+      expect(mockTransport.lastUri?.path, equals('/api/orders/ord-123/cancel'));
+      expect(mockTransport.lastMethod, equals(HttpMethod.post));
+
+      final decodedBody = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+      expect(decodedBody['cancelReason'], equals('Customer request'));
+    });
+
+    test('cancelOrder maps 400 ORDER_NOT_CANCELLABLE to failure', () async {
+      mockTransport.statusCode = 400;
+      mockTransport.responseBody = jsonEncode({
+        'error': {
+          'code': 'ORDER_NOT_CANCELLABLE',
+          'message': 'Order cannot be cancelled in status: PREPARING',
+        },
+      });
+
+      final result = await orderRepository.cancelOrder(orderId: 'ord-123');
+
+      expect(result.isFailure, isTrue);
+      expect(result.failureOrNull?.message, contains('cannot be cancelled'));
     });
   });
 }

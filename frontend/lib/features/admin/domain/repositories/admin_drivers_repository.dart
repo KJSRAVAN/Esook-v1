@@ -16,4 +16,13 @@ abstract interface class AdminDriversRepository {
     int page = 1,
     int limit = 50,
   });
+
+  /// Enable or disable driver login access via `PATCH /users/:id`.
+  Future<Result<AdminUserModel>> updateDriverStatus({
+    required String driverId,
+    required bool isActive,
+  });
+
+  /// Delete driver partner account via `DELETE /users/:id`.
+  Future<Result<void>> deleteDriver(String driverId);
 }

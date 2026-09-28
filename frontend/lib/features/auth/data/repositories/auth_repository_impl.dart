@@ -96,35 +96,86 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Result<AuthResponseModel>> signupCustomer({
-    required String phoneNumber,
+  Future<Result<String>> signupCustomer({
     required String fullName,
+    required String email,
+    required String phoneNumber,
     required String password,
-    String? address,
   }) async {
     try {
       final response = await _apiClient.post<Map<String, dynamic>>(
-        '/auth/signup',
+        '/auth/customer/signup',
         body: {
-          'phone_number': phoneNumber,
-          'full_name': fullName,
+          'name': fullName.trim(),
+          'email': email.trim().toLowerCase(),
+          'phone': phoneNumber.trim(),
           'password': password,
-          if (address != null && address.isNotEmpty) 'address': address,
         },
       );
 
-      final authResponse = AuthResponseModel.fromJson(response.data);
-      await _secureStorage.write(
-        key: StorageKeys.authToken,
-        value: authResponse.token,
-      );
-      _currentUser = authResponse.user;
-
-      return Result.success(authResponse);
+      final message = response.data['message'] as String? ??
+          'Account created successfully.';
+      return Result.success(message);
     } on AppException catch (e) {
       return Result.failure(AppFailure.fromException(e));
     } catch (e) {
       return Result.failure(UnknownFailure(message: 'Signup failed: $e'));
+    }
+  }
+
+  @override
+  Future<Result<AuthResponseModel>> customerLogin({
+    String? email,
+    String? phoneNumber,
+    required String password,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'password': password,
+        if (email != null && email.trim().isNotEmpty)
+          'email': email.trim().toLowerCase(),
+        if (phoneNumber != null && phoneNumber.trim().isNotEmpty)
+          'phone': phoneNumber.trim(),
+      };
+
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        '/auth/customer/login',
+        body: body,
+      );
+
+      final authResponse = AuthResponseModel.fromJson(response.data);
+      if (authResponse.token.isNotEmpty) {
+        await _secureStorage.write(
+          key: StorageKeys.authToken,
+          value: authResponse.token,
+        );
+      }
+      if (authResponse.refreshToken != null &&
+          authResponse.refreshToken!.isNotEmpty) {
+        await _secureStorage.write(
+          key: StorageKeys.refreshToken,
+          value: authResponse.refreshToken!,
+        );
+      }
+      if (authResponse.user.id.isNotEmpty) {
+        await _secureStorage.write(
+          key: StorageKeys.userId,
+          value: authResponse.user.id,
+        );
+      }
+      await _secureStorage.write(
+        key: StorageKeys.userRole,
+        value: authResponse.user.role.value,
+      );
+
+      _currentUser = authResponse.user;
+      return Result.success(authResponse);
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(
+        UnknownFailure(message: 'Customer login failed: $e'),
+      );
     }
   }
 

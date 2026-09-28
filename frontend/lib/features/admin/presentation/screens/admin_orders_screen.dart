@@ -348,7 +348,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                   const SizedBox(height: AppDimensions.spacingXs),
                   DropdownButtonFormField<String>(
                     key: const Key('admin_orders_store_dropdown'),
-                    value: _selectedStoreId,
+                    initialValue: _selectedStoreId,
                     decoration: const InputDecoration(
                       prefixIcon: Icon(Icons.storefront_rounded, size: 20),
                     ),

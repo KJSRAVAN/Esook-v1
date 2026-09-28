@@ -61,6 +61,7 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
   final _couponController = TextEditingController();
 
   FulfillmentType _fulfillment = FulfillmentType.delivery;
+  PaymentMethod _paymentMethod = PaymentMethod.cash;
   bool _isSubmitting = false;
   String? _errorMessage;
   late final String _idempotencyKey;
@@ -102,6 +103,7 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
     final result = await widget.orderRepository.createOrder(
       storeId: targetStoreId,
       fulfillment: _fulfillment,
+      paymentMethod: _paymentMethod,
       deliveryAddress: _fulfillment == FulfillmentType.delivery
           ? _addressController.text.trim()
           : null,
@@ -294,6 +296,53 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                                   : () {
                                       setState(() {
                                         _fulfillment = FulfillmentType.pickup;
+                                      });
+                                    },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppDimensions.spacingLg),
+
+                      // Payment Method Selector
+                      Text(
+                        'Payment Method',
+                        style: AppTextStyles.titleMedium.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingSm),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _FulfillmentOptionCard(
+                              key: const Key('payment_method_cash_option'),
+                              title: 'Cash',
+                              subtitle: 'Pay on delivery/pickup',
+                              icon: Icons.payments_outlined,
+                              isSelected: _paymentMethod == PaymentMethod.cash,
+                              onTap: _isSubmitting
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        _paymentMethod = PaymentMethod.cash;
+                                      });
+                                    },
+                            ),
+                          ),
+                          const SizedBox(width: AppDimensions.spacingMd),
+                          Expanded(
+                            child: _FulfillmentOptionCard(
+                              key: const Key('payment_method_card_option'),
+                              title: 'Card',
+                              subtitle: 'Pay with card',
+                              icon: Icons.credit_card_outlined,
+                              isSelected: _paymentMethod == PaymentMethod.card,
+                              onTap: _isSubmitting
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        _paymentMethod = PaymentMethod.card;
                                       });
                                     },
                             ),

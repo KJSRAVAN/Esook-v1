@@ -219,7 +219,10 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = StoreScope.currentUserOf(context);
-    final isManager = currentUser?.role.isStoreManager ?? false;
+    final canManageProducts = currentUser != null &&
+        (currentUser.role.isStoreStaff ||
+         currentUser.role.isStoreManager ||
+         currentUser.role.isSuperAdmin);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -234,7 +237,7 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
           ),
         ],
       ),
-      floatingActionButton: isManager
+      floatingActionButton: canManageProducts
           ? FloatingActionButton.extended(
               key: const Key('store_add_product_fab'),
               onPressed: _openCreateProductDialog,
@@ -293,7 +296,7 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
             const Divider(height: 1),
 
             // Product List
-            Expanded(child: _buildProductsList(isManager)),
+            Expanded(child: _buildProductsList(canManageProducts)),
           ],
         ),
       ),
@@ -323,7 +326,7 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
     );
   }
 
-  Widget _buildProductsList(bool isManager) {
+  Widget _buildProductsList(bool canManageProducts) {
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(
@@ -394,7 +397,7 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      isManager
+                      canManageProducts
                           ? 'Tap the button below to add items to this store.'
                           : 'No items found matching the current search criteria.',
                       style: AppTextStyles.bodySmall.copyWith(
@@ -402,6 +405,18 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
+                    if (canManageProducts) ...[
+                      const SizedBox(height: AppDimensions.spacingMd),
+                      ElevatedButton.icon(
+                        key: const Key('store_empty_add_product_btn'),
+                        onPressed: _openCreateProductDialog,
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: const Text('Add Product'),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(0, AppDimensions.buttonHeight),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -418,13 +433,13 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
         itemCount: displayProducts.length,
         itemBuilder: (context, index) {
           final product = displayProducts[index];
-          return _buildProductCard(product, isManager);
+          return _buildProductCard(product, canManageProducts);
         },
       ),
     );
   }
 
-  Widget _buildProductCard(ProductModel product, bool isManager) {
+  Widget _buildProductCard(ProductModel product, bool canManageProducts) {
     return Card(
       key: Key('store_product_card_${product.id}'),
       margin: const EdgeInsets.only(bottom: AppDimensions.spacingSm),
@@ -514,7 +529,7 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                     ),
                   ),
                 ),
-                if (isManager) ...[
+                if (canManageProducts) ...[
                   const SizedBox(height: 8),
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -525,7 +540,7 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                         child: Switch.adaptive(
                           key: Key('product_toggle_${product.id}'),
                           value: product.isAvailable,
-                          activeColor: AppColors.primary,
+                          activeThumbColor: AppColors.primary,
                           onChanged: (val) =>
                               _toggleProductAvailability(product, val),
                         ),

@@ -14,8 +14,12 @@ import '../../data/repositories/admin_users_repository_impl.dart';
 import '../../domain/repositories/admin_drivers_repository.dart';
 import '../../domain/repositories/admin_stores_repository.dart';
 import '../../domain/repositories/admin_users_repository.dart';
+import '../../../store/data/repositories/store_categories_repository_impl.dart';
 import '../../../store/data/repositories/store_orders_repository_impl.dart';
+import '../../../store/data/repositories/store_products_repository_impl.dart';
+import '../../../store/domain/repositories/store_categories_repository.dart';
 import '../../../store/domain/repositories/store_orders_repository.dart';
+import '../../../store/domain/repositories/store_products_repository.dart';
 import '../widgets/admin_scope.dart';
 import 'admin_dashboard_screen.dart';
 import 'admin_drivers_screen.dart';
@@ -31,6 +35,8 @@ class AdminShell extends StatefulWidget {
   final AdminDriversRepository? driversRepository;
   final AdminStoresRepository? storesRepository;
   final StoreOrdersRepository? ordersRepository;
+  final StoreProductsRepository? productsRepository;
+  final StoreCategoriesRepository? categoriesRepository;
 
   const AdminShell({
     super.key,
@@ -40,6 +46,8 @@ class AdminShell extends StatefulWidget {
     this.driversRepository,
     this.storesRepository,
     this.ordersRepository,
+    this.productsRepository,
+    this.categoriesRepository,
   });
 
   @override
@@ -53,6 +61,8 @@ class _AdminShellState extends State<AdminShell> {
   late final AdminDriversRepository _driversRepository;
   late final AdminStoresRepository _storesRepository;
   late final StoreOrdersRepository _ordersRepository;
+  late final StoreProductsRepository _productsRepository;
+  late final StoreCategoriesRepository _categoriesRepository;
 
   @override
   void initState() {
@@ -79,6 +89,12 @@ class _AdminShellState extends State<AdminShell> {
     _ordersRepository =
         widget.ordersRepository ??
         StoreOrdersRepositoryImpl(apiClient: apiClient);
+    _productsRepository =
+        widget.productsRepository ??
+        StoreProductsRepositoryImpl(apiClient: apiClient);
+    _categoriesRepository =
+        widget.categoriesRepository ??
+        StoreCategoriesRepositoryImpl(apiClient: apiClient);
   }
 
   void _onTabSelected(int index) {
@@ -104,6 +120,8 @@ class _AdminShellState extends State<AdminShell> {
       driversRepository: _driversRepository,
       storesRepository: _storesRepository,
       ordersRepository: _ordersRepository,
+      productsRepository: _productsRepository,
+      categoriesRepository: _categoriesRepository,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(

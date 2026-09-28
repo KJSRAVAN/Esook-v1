@@ -189,7 +189,7 @@ class _CreateStoreDialogState extends State<CreateStoreDialog> {
                   // Delivery Area Dropdown (Riyadh / Jeddah)
                   DropdownButtonFormField<String>(
                     key: const Key('store_area_dropdown'),
-                    value: _selectedAreaId,
+                    initialValue: _selectedAreaId,
                     decoration: InputDecoration(
                       labelText: 'Delivery Area',
                       hintText: 'Select delivery area',

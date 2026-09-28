@@ -237,6 +237,7 @@ void main() {
           ({
             required storeId,
             required fulfillment,
+            required paymentMethod,
             deliveryAddress,
             couponCode,
             notes,
@@ -264,6 +265,33 @@ void main() {
 
       // Only one submission should have gone through
       expect(mockOrderRepository.createOrderCallCount, equals(1));
+    });
+
+    testWidgets('allows selecting Card and passes CARD paymentMethod to repository', (
+      tester,
+    ) async {
+      setupViewport(tester);
+      await tester.pumpWidget(buildCheckoutHost());
+      await tester.tap(find.text('Open Checkout'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('payment_method_cash_option')), findsOneWidget);
+      expect(find.byKey(const Key('payment_method_card_option')), findsOneWidget);
+
+      // Select Card option
+      await tester.tap(find.byKey(const Key('payment_method_card_option')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('checkout_delivery_address_input')),
+        'Building 10, King Fahd Rd',
+      );
+
+      await tester.tap(find.byKey(const Key('checkout_place_order_button')));
+      await tester.pumpAndSettle();
+
+      expect(mockOrderRepository.createOrderCallCount, equals(1));
+      expect(mockOrderRepository.lastPaymentMethodParam, equals(PaymentMethod.card));
     });
   });
 }

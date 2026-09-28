@@ -56,6 +56,32 @@ class AdminUserModel {
     );
   }
 
+  AdminUserModel copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? phone,
+    UserRole? role,
+    String? rawRole,
+    String? storeId,
+    bool? isPhoneVerified,
+    bool? isActive,
+    DateTime? createdAt,
+  }) {
+    return AdminUserModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      role: role ?? this.role,
+      rawRole: rawRole ?? this.rawRole,
+      storeId: storeId ?? this.storeId,
+      isPhoneVerified: isPhoneVerified ?? this.isPhoneVerified,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

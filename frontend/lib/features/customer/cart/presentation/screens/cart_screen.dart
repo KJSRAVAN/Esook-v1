@@ -9,6 +9,7 @@ import 'package:esouq/features/customer/cart/presentation/widgets/cart_summary_b
 import 'package:esouq/features/customer/cart/presentation/widgets/cart_unavailable_banner.dart';
 import 'package:esouq/features/customer/domain/models/order_model.dart';
 import 'package:esouq/features/customer/domain/repositories/order_repository.dart';
+import 'package:esouq/features/customer/presentation/screens/customer_order_tracking_screen.dart';
 import 'package:esouq/features/customer/presentation/widgets/checkout_bottom_sheet.dart';
 import 'package:esouq/features/customer/presentation/widgets/customer_scope.dart';
 import 'package:flutter/material.dart';
@@ -182,6 +183,14 @@ class CartScreen extends StatelessWidget {
           appBar: AppBar(
             backgroundColor: AppColors.surface,
             elevation: 0,
+            leading: onExploreMarket != null
+                ? IconButton(
+                    key: const Key('cart_continue_shopping_button'),
+                    icon: const Icon(Icons.arrow_back),
+                    tooltip: 'Continue Shopping',
+                    onPressed: onExploreMarket,
+                  )
+                : null,
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -287,6 +296,18 @@ class CartScreen extends StatelessWidget {
                     );
                   }
                   onOrderPlaced?.call(order);
+                  if (context.mounted) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => CustomerOrderTrackingScreen(
+                          orderId: order.id,
+                          initialOrder: order,
+                          orderRepository: repo,
+                          currency: currency,
+                        ),
+                      ),
+                    );
+                  }
                 },
               );
             },

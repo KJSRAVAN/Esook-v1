@@ -5,6 +5,7 @@ import '../../../../core/routing/app_routes.dart';
 import '../../../../core/routing/role_routing.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
+import '../../../../core/utils/auth_phone_helper.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../widgets/auth_error_banner.dart';
 import '../widgets/auth_password_field.dart';
@@ -50,7 +51,9 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
 
     setState(() => _isSubmitting = true);
 
-    final phone = _phoneController.text.trim();
+    final phone =
+        AuthPhoneHelper.normalizeAuthPhone(_phoneController.text) ??
+        _phoneController.text.trim();
     final password = _passwordController.text;
 
     final result = await _repository.login(
@@ -122,15 +125,11 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.next,
               enabled: !_isSubmitting,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter your registered rider phone number';
-                }
-                if (value.trim().length < 8) {
-                  return 'Please enter a valid phone number';
-                }
-                return null;
-              },
+              validator: (value) => AuthPhoneHelper.validateAuthPhone(
+                value,
+                requiredMessage:
+                    'Please enter your registered rider phone number',
+              ),
             ),
 
             const SizedBox(height: AppDimensions.spacingMd),

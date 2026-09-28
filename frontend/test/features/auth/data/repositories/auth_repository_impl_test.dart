@@ -99,6 +99,22 @@ void main() {
       },
     );
 
+    test('sendOtp omits email and name from payload when not provided', () async {
+      mockTransport.statusCode = 200;
+      mockTransport.responseBody = jsonEncode({
+        'channel': 'whatsapp',
+        'message': 'Verification code sent via whatsapp',
+      });
+
+      final result = await authRepository.sendOtp(phone: '+966501234567');
+
+      expect(result.isSuccess, isTrue);
+      expect(mockTransport.lastUri?.path, equals('/api/auth/otp/send'));
+      expect(mockTransport.lastBody, contains('+966501234567'));
+      expect(mockTransport.lastBody, isNot(contains('email')));
+      expect(mockTransport.lastBody, isNot(contains('name')));
+    });
+
     test('sendOtp maps 429 rate limit error to RateLimitFailure', () async {
       mockTransport.statusCode = 429;
       mockTransport.responseBody = jsonEncode({
@@ -190,31 +206,64 @@ void main() {
     });
 
     test(
-      'signupCustomer calls /auth/signup, persists token, and returns AuthResponse',
+      'signupCustomer calls /auth/customer/signup and returns message',
       () async {
         mockTransport.statusCode = 201;
         mockTransport.responseBody = jsonEncode({
-          'user': sampleUserJson,
-          'token': 'jwt_signup_token_123',
+          'message': 'Account created. Verification code sent to your email.',
+          'email': 'ahmed@example.com',
         });
 
         final result = await authRepository.signupCustomer(
-          phoneNumber: '+966512345678',
           fullName: 'Ahmed Al-Salem',
+          email: 'ahmed@example.com',
+          phoneNumber: '+966512345678',
           password: 'password123',
-          address: 'Riyadh',
+        );
+
+        expect(result.isSuccess, isTrue);
+        expect(
+          result.dataOrNull,
+          equals('Account created. Verification code sent to your email.'),
+        );
+
+        expect(
+          mockTransport.lastUri?.path,
+          equals('/api/auth/customer/signup'),
+        );
+        expect(mockTransport.lastMethod, equals(HttpMethod.post));
+      },
+    );
+
+    test(
+      'customerLogin calls /auth/customer/login, persists tokens, and sets currentUser',
+      () async {
+        mockTransport.statusCode = 200;
+        mockTransport.responseBody = jsonEncode({
+          'user': sampleUserJson,
+          'token': 'jwt_customer_token_123',
+          'refreshToken': 'refresh_customer_token_123',
+        });
+
+        final result = await authRepository.customerLogin(
+          email: 'customer@esook.store',
+          password: 'password123',
         );
 
         expect(result.isSuccess, isTrue);
         final authResponse = result.dataOrNull!;
-        expect(authResponse.token, equals('jwt_signup_token_123'));
+        expect(authResponse.token, equals('jwt_customer_token_123'));
+        expect(authResponse.refreshToken, equals('refresh_customer_token_123'));
         expect(authResponse.user.fullName, equals('Ahmed Al-Salem'));
 
-        expect(mockTransport.lastUri?.path, equals('/api/auth/signup'));
+        expect(
+          mockTransport.lastUri?.path,
+          equals('/api/auth/customer/login'),
+        );
         expect(mockTransport.lastMethod, equals(HttpMethod.post));
 
         final storedToken = await mockStorage.read(key: StorageKeys.authToken);
-        expect(storedToken, equals('jwt_signup_token_123'));
+        expect(storedToken, equals('jwt_customer_token_123'));
       },
     );
 
@@ -255,6 +304,37 @@ void main() {
         );
         expect(storedToken, equals('jwt_login_token_456'));
         expect(storedRefreshToken, equals('uuid_login_refresh_token'));
+      },
+    );
+
+    test(
+      'login for store manager calls /auth/staff/login with phone and sets storeManager role',
+      () async {
+        mockTransport.statusCode = 200;
+        mockTransport.responseBody = jsonEncode({
+          'user': {
+            ...sampleUserJson,
+            'role': 'store_manager',
+            'store_id': 'store-mgr-101',
+          },
+          'accessToken': 'jwt_mgr_token',
+          'refreshToken': 'uuid_mgr_refresh_token',
+        });
+
+        final result = await authRepository.login(
+          phoneNumber: '+966523456789',
+          password: 'mgrPassword123',
+        );
+
+        expect(result.isSuccess, isTrue);
+        final authResponse = result.dataOrNull!;
+        expect(authResponse.user.role, equals(UserRole.storeManager));
+        expect(authRepository.currentUser?.role, equals(UserRole.storeManager));
+        expect(mockTransport.lastUri?.path, equals('/api/auth/staff/login'));
+        final sentBody =
+            jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+        expect(sentBody['phone'], equals('+966523456789'));
+        expect(sentBody['password'], equals('mgrPassword123'));
       },
     );
 
@@ -450,8 +530,9 @@ void main() {
       });
 
       final result = await authRepository.signupCustomer(
-        phoneNumber: '',
         fullName: 'Test',
+        email: 'test@example.com',
+        phoneNumber: '',
         password: '123',
       );
 
@@ -466,8 +547,9 @@ void main() {
       });
 
       final result = await authRepository.signupCustomer(
-        phoneNumber: '+966512345678',
         fullName: 'Test',
+        email: 'test@example.com',
+        phoneNumber: '+966512345678',
         password: 'password123',
       );
 

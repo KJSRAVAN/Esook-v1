@@ -272,6 +272,8 @@ class ProductCard extends StatelessWidget {
           );
         }
 
+        final canIncrement = quantity < 99;
+
         return Container(
           decoration: BoxDecoration(
             color: AppColors.background,
@@ -286,16 +288,16 @@ class ProductCard extends StatelessWidget {
                 onTap: () => notifier.setQuantity(product.id, quantity - 1),
                 borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
                 child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                  padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
                   child: Icon(
                     Icons.remove,
-                    size: 12,
+                    size: 13,
                     color: AppColors.textPrimary,
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                padding: const EdgeInsets.symmetric(horizontal: 3.0),
                 child: Text(
                   '$quantity',
                   style: AppTextStyles.bodySmall.copyWith(
@@ -307,14 +309,18 @@ class ProductCard extends StatelessWidget {
               ),
               InkWell(
                 key: Key('cart_increment_${product.id}'),
-                onTap: () => notifier.setQuantity(product.id, quantity + 1),
+                onTap: canIncrement
+                    ? () => notifier.setQuantity(product.id, quantity + 1)
+                    : null,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
                   child: Icon(
                     Icons.add,
-                    size: 12,
-                    color: AppColors.textPrimary,
+                    size: 13,
+                    color: canIncrement
+                        ? AppColors.textPrimary
+                        : AppColors.textTertiary,
                   ),
                 ),
               ),

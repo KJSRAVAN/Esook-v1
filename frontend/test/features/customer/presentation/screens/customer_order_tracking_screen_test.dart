@@ -79,10 +79,12 @@ void main() {
     Widget buildTrackingScreen({
       String orderId = 'ord-track-1',
       OrderModel? initialOrder,
+      Key? key,
     }) {
       return MaterialApp(
         theme: AppTheme.lightTheme,
         home: CustomerOrderTrackingScreen(
+          key: key ?? ValueKey('tracking_${orderId}_${initialOrder?.id}_${initialOrder?.status.name}'),
           orderId: orderId,
           initialOrder: initialOrder,
           orderRepository: mockOrderRepository,
@@ -530,6 +532,89 @@ void main() {
 
       expect(find.textContaining('loyalty points'), findsNothing);
       expect(find.textContaining('points earned'), findsNothing);
+    });
+
+    testWidgets('23. renders Cancel Order button for PENDING and ACCEPTED orders, hidden otherwise', (
+      tester,
+    ) async {
+      // Pending status: Cancel button should be visible
+      final pendingOrder = baseDeliveryOrder.copyWith(id: 'ord-pending', status: OrderStatus.pending);
+      mockOrderRepository.orderToReturn = pendingOrder;
+      await tester.pumpWidget(
+        buildTrackingScreen(orderId: 'ord-pending', initialOrder: pendingOrder),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('tracking_cancel_order_button')), findsOneWidget);
+
+      // Accepted status: Cancel button should be visible
+      final acceptedOrder = baseDeliveryOrder.copyWith(id: 'ord-accepted', status: OrderStatus.accepted);
+      mockOrderRepository.orderToReturn = acceptedOrder;
+      await tester.pumpWidget(
+        buildTrackingScreen(orderId: 'ord-accepted', initialOrder: acceptedOrder),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('tracking_cancel_order_button')), findsOneWidget);
+
+      // Preparing status: Cancel button should be HIDDEN
+      final preparingOrder = baseDeliveryOrder.copyWith(id: 'ord-prep', status: OrderStatus.preparing);
+      mockOrderRepository.orderToReturn = preparingOrder;
+      await tester.pumpWidget(
+        buildTrackingScreen(orderId: 'ord-prep', initialOrder: preparingOrder),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('tracking_cancel_order_button')), findsNothing);
+
+      // Delivered status: Cancel button should be HIDDEN
+      final deliveredOrder = baseDeliveryOrder.copyWith(id: 'ord-deliv', status: OrderStatus.delivered);
+      mockOrderRepository.orderToReturn = deliveredOrder;
+      await tester.pumpWidget(
+        buildTrackingScreen(orderId: 'ord-deliv', initialOrder: deliveredOrder),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('tracking_cancel_order_button')), findsNothing);
+    });
+
+    testWidgets('24. tapping Cancel Order opens dialog and executes cancellation with optional reason', (
+      tester,
+    ) async {
+      mockOrderRepository.orderToReturn = baseDeliveryOrder.copyWith(status: OrderStatus.pending);
+      await tester.pumpWidget(
+        buildTrackingScreen(initialOrder: baseDeliveryOrder.copyWith(status: OrderStatus.pending)),
+      );
+      await tester.pumpAndSettle();
+
+      final cancelBtn = find.byKey(const Key('tracking_cancel_order_button'));
+      expect(cancelBtn, findsOneWidget);
+
+      // Ensure visible by scrolling down
+      await tester.ensureVisible(cancelBtn);
+      await tester.pumpAndSettle();
+
+      // Tap Cancel Order button
+      await tester.tap(cancelBtn);
+      await tester.pumpAndSettle();
+
+      // Dialog is displayed
+      expect(find.byKey(const Key('cancel_order_dialog')), findsOneWidget);
+
+      // Enter optional cancellation reason
+      await tester.enterText(
+        find.byKey(const Key('cancel_order_reason_input')),
+        'Ordered by mistake',
+      );
+
+      // Confirm cancellation
+      await tester.tap(find.byKey(const Key('confirm_cancel_order_btn')));
+      await tester.pumpAndSettle();
+
+      // Verify repository call
+      expect(mockOrderRepository.cancelOrderCallCount, equals(1));
+      expect(mockOrderRepository.lastOrderIdParam, equals(baseDeliveryOrder.id));
+      expect(mockOrderRepository.lastCancelReasonParam, equals('Ordered by mistake'));
+
+      // Verify UI updated to cancelled banner
+      expect(find.byKey(const Key('tracking_cancelled_banner')), findsOneWidget);
+      expect(find.text('Order Cancelled'), findsOneWidget);
     });
   });
 }

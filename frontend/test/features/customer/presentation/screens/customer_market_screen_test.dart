@@ -29,7 +29,11 @@ void main() {
     selectedStoreNotifier.dispose();
   });
 
-  Widget buildWidget({StoreModel? initialStore, CartNotifier? cartNotifier}) {
+  Widget buildWidget({
+    StoreModel? initialStore,
+    CartNotifier? cartNotifier,
+    VoidCallback? onViewCart,
+  }) {
     if (initialStore != null) {
       selectedStoreNotifier.value = initialStore;
     }
@@ -41,6 +45,7 @@ void main() {
         productRepository: mockProductRepo,
         selectedStoreNotifier: selectedStoreNotifier,
         cartNotifier: cartNotifier,
+        onViewCart: onViewCart,
       ),
     );
   }
@@ -271,5 +276,52 @@ void main() {
         expect(mockCartRepo.lastProductIdParam, equals('prod-1'));
       },
     );
+
+    testWidgets('renders persistent bottom cart bar when cart has items, and triggers onViewCart on tap', (
+      tester,
+    ) async {
+      final store = mockStoreRepo.defaultStores.first;
+      final mockCartRepo = MockCartRepository();
+      final cartNotifier = CartNotifier(cartRepository: mockCartRepo);
+      await cartNotifier.loadForStore(store.id);
+
+      bool viewCartCalled = false;
+      await tester.pumpWidget(
+        buildWidget(
+          initialStore: store,
+          cartNotifier: cartNotifier,
+          onViewCart: () {
+            viewCartCalled = true;
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Initially cart has 3 items in defaultCart
+      expect(find.byKey(const Key('market_persistent_cart_bar')), findsOneWidget);
+      expect(find.textContaining('in cart'), findsOneWidget);
+      expect(find.byKey(const Key('market_view_cart_button')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('market_view_cart_button')));
+      await tester.pumpAndSettle();
+      expect(viewCartCalled, isTrue);
+    });
+
+    testWidgets('hides persistent bottom cart bar when cart is empty', (
+      tester,
+    ) async {
+      final store = mockStoreRepo.defaultStores.first;
+      final mockCartRepo = MockCartRepository();
+      mockCartRepo.cartToReturn = mockCartRepo.defaultCart.copyWith(items: []);
+      final cartNotifier = CartNotifier(cartRepository: mockCartRepo);
+      await cartNotifier.loadForStore(store.id);
+
+      await tester.pumpWidget(
+        buildWidget(initialStore: store, cartNotifier: cartNotifier),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('market_persistent_cart_bar')), findsNothing);
+    });
   });
 }

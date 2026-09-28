@@ -54,11 +54,18 @@ class FakeAuthRepository implements AuthRepository {
     String? name,
   }) async => Result.success('Sent');
   @override
-  Future<Result<AuthResponseModel>> signupCustomer({
-    required String phoneNumber,
+  Future<Result<String>> signupCustomer({
     required String fullName,
+    required String email,
+    required String phoneNumber,
     required String password,
-    String? address,
+  }) async =>
+      Result.failure(const UnknownFailure(message: 'Not implemented in fake'));
+  @override
+  Future<Result<AuthResponseModel>> customerLogin({
+    String? email,
+    String? phoneNumber,
+    required String password,
   }) async =>
       Result.failure(const UnknownFailure(message: 'Not implemented in fake'));
   @override
@@ -115,6 +122,9 @@ class FakeAdminUsersRepository implements AdminUsersRepository {
       ),
     );
   }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class FakeAdminDriversRepository implements AdminDriversRepository {
@@ -148,6 +158,26 @@ class FakeAdminDriversRepository implements AdminDriversRepository {
         phone: phone,
       ),
     );
+  }
+
+  @override
+  Future<Result<AdminUserModel>> updateDriverStatus({
+    required String driverId,
+    required bool isActive,
+  }) async {
+    return Result.success(
+      AdminUserModel(
+        id: driverId,
+        name: 'Updated Driver',
+        role: UserRole.deliveryRider,
+        isActive: isActive,
+      ),
+    );
+  }
+
+  @override
+  Future<Result<void>> deleteDriver(String driverId) async {
+    return Result.success(null);
   }
 }
 
@@ -197,6 +227,7 @@ class FakeAdminStoresRepository implements AdminStoresRepository {
     required String storeId,
     String? name,
     String? area,
+    String? areaId,
     String? address,
     String? phone,
     String? phoneNumber,
@@ -286,7 +317,12 @@ void main() {
         expect(find.text('Fresh Mart Riyadh'), findsOneWidget);
 
         // Tap Users tab
-        await tester.tap(find.byIcon(Icons.people_outline_rounded));
+        await tester.tap(
+          find.descendant(
+            of: find.byType(NavigationBar),
+            matching: find.byIcon(Icons.people_outline_rounded),
+          ),
+        );
         await tester.pumpAndSettle();
         expect(find.text('User Directory'), findsOneWidget);
         expect(find.text('Super Admin'), findsOneWidget);

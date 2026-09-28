@@ -45,11 +45,39 @@ void main() {
         expect(find.text('Preparing'), findsOneWidget);
         expect(find.text('eSOuQ Olaya Flagship'), findsOneWidget);
         expect(find.text('Delivery • 2 items'), findsOneWidget);
+        expect(find.text('Cash'), findsOneWidget);
         expect(find.text('12.50 SAR'), findsOneWidget);
 
         await tester.tap(find.byType(OrderCard));
         expect(wasTapped, isTrue);
       },
     );
+
+    testWidgets('renders Card payment badge when paymentMethod is card', (
+      tester,
+    ) async {
+      final cardOrder = OrderModel(
+        id: 'ord-card-1',
+        orderNumber: 'ESK-2026-CARD',
+        customerId: 'usr-1',
+        storeId: 'store-1',
+        status: OrderStatus.delivered,
+        fulfillment: FulfillmentType.pickup,
+        paymentMethod: PaymentMethod.card,
+        subtotal: 50.0,
+        total: 50.0,
+        items: const [],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(body: OrderCard(order: cardOrder)),
+        ),
+      );
+
+      expect(find.text('Card'), findsOneWidget);
+      expect(find.byKey(const Key('order_card_payment_badge_ord-card-1')), findsOneWidget);
+    });
   });
 }

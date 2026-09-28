@@ -22,6 +22,7 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   List<AdminUserModel> _drivers = const [];
+  String? _actionDriverId;
 
   AdminDriversRepository get _repo =>
       widget.driversRepository ?? AdminScope.driversRepositoryOf(context);
@@ -73,6 +74,106 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
         ),
       );
       _loadDrivers();
+    }
+  }
+
+  Future<void> _toggleDriverStatus(AdminUserModel driver, bool newStatus) async {
+    setState(() => _actionDriverId = driver.id);
+
+    final result = await _repo.updateDriverStatus(
+      driverId: driver.id,
+      isActive: newStatus,
+    );
+
+    if (!mounted) return;
+
+    setState(() => _actionDriverId = null);
+
+    if (result.isSuccess) {
+      final updated = result.dataOrNull ?? driver.copyWith(isActive: newStatus);
+      setState(() {
+        _drivers =
+            _drivers.map((d) => d.id == driver.id ? updated : d).toList();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Driver "${driver.name}" login ${newStatus ? 'enabled' : 'disabled'}',
+          ),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.failureOrNull?.message ?? 'Failed to update driver status',
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _confirmDeleteDriver(AdminUserModel driver) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const Key('delete_driver_dialog'),
+        title: const Text('Delete Driver'),
+        content: Text(
+          'Are you sure you want to permanently delete driver "${driver.name}"? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            key: const Key('delete_driver_cancel_btn'),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, AppDimensions.buttonHeight),
+            ),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            key: const Key('confirm_delete_driver_btn'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              minimumSize: const Size(0, AppDimensions.buttonHeight),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete Driver'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _actionDriverId = driver.id);
+
+    final result = await _repo.deleteDriver(driver.id);
+
+    if (!mounted) return;
+
+    setState(() => _actionDriverId = null);
+
+    if (result.isSuccess) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Driver "${driver.name}" deleted successfully'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      await _loadDrivers();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.failureOrNull?.message ?? 'Failed to delete driver',
+          ),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 
@@ -221,7 +322,10 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
           const SizedBox(height: AppDimensions.spacingSm),
       itemBuilder: (context, index) {
         final driver = _drivers[index];
+        final isProcessing = _actionDriverId == driver.id;
+
         return Card(
+          key: Key('driver_card_${driver.id}'),
           child: Padding(
             padding: const EdgeInsets.all(AppDimensions.spacingMd),
             child: Row(
@@ -263,13 +367,15 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.1),
+                              color: driver.isActive
+                                  ? AppColors.success.withValues(alpha: 0.1)
+                                  : AppColors.error.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(
                                 AppDimensions.radiusFull,
                               ),
                             ),
                             child: Text(
-                              driver.isActive ? 'Active' : 'Inactive',
+                              driver.isActive ? 'Active' : 'Disabled',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
@@ -302,6 +408,42 @@ class _AdminDriversScreenState extends State<AdminDriversScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
+                if (isProcessing)
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFEA580C),
+                      ),
+                    ),
+                  )
+                else ...[
+                  Tooltip(
+                    message: driver.isActive ? 'Disable login' : 'Enable login',
+                    child: Transform.scale(
+                      scale: 0.85,
+                      child: Switch.adaptive(
+                        key: Key('driver_toggle_${driver.id}'),
+                        value: driver.isActive,
+                        activeThumbColor: const Color(0xFFEA580C),
+                        onChanged: (val) => _toggleDriverStatus(driver, val),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    key: Key('driver_delete_btn_${driver.id}'),
+                    icon: const Icon(
+                      Icons.delete_outline_rounded,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
+                    tooltip: 'Delete Driver',
+                    onPressed: () => _confirmDeleteDriver(driver),
+                  ),
+                ],
               ],
             ),
           ),

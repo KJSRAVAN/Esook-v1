@@ -8,7 +8,8 @@ import 'package:esouq/features/auth/domain/repositories/auth_repository.dart';
 class MockAuthRepository implements AuthRepository {
   Result<String>? sendOtpResult;
   Result<AuthResponseModel>? verifyOtpResult;
-  Result<AuthResponseModel>? signupResult;
+  Result<String>? signupCustomerResult;
+  Result<AuthResponseModel>? customerLoginResult;
   Result<AuthResponseModel>? loginResult;
   Result<String>? requestMagicLinkResult;
   Result<AuthResponseModel>? verifyMagicLinkResult;
@@ -18,6 +19,7 @@ class MockAuthRepository implements AuthRepository {
   int sendOtpCallCount = 0;
   int verifyOtpCallCount = 0;
   int signupCallCount = 0;
+  int customerLoginCallCount = 0;
   int loginCallCount = 0;
   int requestMagicLinkCallCount = 0;
   int verifyMagicLinkCallCount = 0;
@@ -29,13 +31,16 @@ class MockAuthRepository implements AuthRepository {
   String? lastSendOtpName;
   String? lastVerifyOtpPhone;
   String? lastVerifyOtpCode;
+  String? lastCustomerLoginEmail;
+  String? lastCustomerLoginPhone;
+  String? lastCustomerLoginPassword;
   String? lastLoginPhone;
   String? lastLoginEmail;
   String? lastLoginPassword;
   String? lastSignupPhone;
+  String? lastSignupEmail;
   String? lastSignupName;
   String? lastSignupPassword;
-  String? lastSignupAddress;
   String? lastMagicLinkEmail;
   String? lastVerifyToken;
 
@@ -80,26 +85,44 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Result<AuthResponseModel>> signupCustomer({
-    required String phoneNumber,
+  Future<Result<String>> signupCustomer({
     required String fullName,
+    required String email,
+    required String phoneNumber,
     required String password,
-    String? address,
   }) async {
     signupCallCount++;
     lastSignupPhone = phoneNumber;
+    lastSignupEmail = email;
     lastSignupName = fullName;
     lastSignupPassword = password;
-    lastSignupAddress = address;
 
-    if (signupResult != null) return signupResult!;
+    if (signupCustomerResult != null) return signupCustomerResult!;
+
+    return Result.success(
+      'Account created successfully. You can now log in.',
+    );
+  }
+
+  @override
+  Future<Result<AuthResponseModel>> customerLogin({
+    String? email,
+    String? phoneNumber,
+    required String password,
+  }) async {
+    customerLoginCallCount++;
+    lastCustomerLoginEmail = email;
+    lastCustomerLoginPhone = phoneNumber;
+    lastCustomerLoginPassword = password;
+
+    if (customerLoginResult != null) return customerLoginResult!;
 
     final user = UserModel(
       id: 'cust_1',
-      phoneNumber: phoneNumber,
-      fullName: fullName,
+      phoneNumber: phoneNumber ?? '+966501234567',
+      email: email ?? 'customer@example.com',
+      fullName: 'Customer User',
       role: UserRole.customer,
-      address: address,
     );
     currentUser = user;
     return Result.success(

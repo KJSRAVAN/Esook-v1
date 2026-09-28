@@ -135,7 +135,7 @@ class OrderCard extends StatelessWidget {
 
               const Divider(height: 16.0, color: AppColors.borderSubtle),
 
-              // Footer: Fulfillment badge & Total price
+              // Footer: Fulfillment badge, Payment badge & Total price
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -153,6 +153,42 @@ class OrderCard extends StatelessWidget {
                         '${order.fulfillment.displayName} • ${order.itemCount} ${order.itemCount == 1 ? 'item' : 'items'}',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 6.0),
+                      Container(
+                        key: Key('order_card_payment_badge_${order.id}'),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6.0,
+                          vertical: 2.0,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusSm,
+                          ),
+                          border: Border.all(color: AppColors.borderSubtle),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              order.paymentMethod == PaymentMethod.card
+                                  ? Icons.credit_card_rounded
+                                  : Icons.payments_outlined,
+                              size: 12.0,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 3.0),
+                            Text(
+                              order.paymentMethod.displayName,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

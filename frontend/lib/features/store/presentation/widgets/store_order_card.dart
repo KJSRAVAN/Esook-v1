@@ -166,6 +166,29 @@ class StoreOrderCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: order.paymentMethod == PaymentMethod.card
+                          ? const Color(0xFFEFF6FF)
+                          : const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      order.paymentMethod.displayName,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: order.paymentMethod == PaymentMethod.card
+                            ? const Color(0xFF1D4ED8)
+                            : const Color(0xFFB45309),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
                   if (order.createdAt != null) ...[
                     const SizedBox(width: 8),
                     Text(
@@ -200,7 +223,7 @@ class StoreOrderCard extends StatelessWidget {
               ),
 
               // Quick action buttons if applicable
-              if (_hasQuickAction(order.status)) ...[
+              if (_hasQuickAction(order.status, isPickup)) ...[
                 const Divider(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -214,15 +237,20 @@ class StoreOrderCard extends StatelessWidget {
     );
   }
 
-  bool _hasQuickAction(OrderStatus status) {
-    return status == OrderStatus.pending ||
+  bool _hasQuickAction(OrderStatus status, bool isPickup) {
+    if (status == OrderStatus.pending ||
         status == OrderStatus.accepted ||
-        status == OrderStatus.preparing ||
-        status == OrderStatus.outForDelivery ||
-        status == OrderStatus.ready;
+        status == OrderStatus.preparing) {
+      return true;
+    }
+    if (status == OrderStatus.ready && isPickup) {
+      return true;
+    }
+    return false;
   }
 
   Widget _buildQuickActionButton(BuildContext context) {
+    final isPickup = order.fulfillment == FulfillmentType.pickup;
     switch (order.status) {
       case OrderStatus.pending:
         return Row(
@@ -273,60 +301,41 @@ class StoreOrderCard extends StatelessWidget {
           child: const Text('Start Preparing'),
         );
       case OrderStatus.preparing:
-        final isPickup = order.fulfillment == FulfillmentType.pickup;
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (!isPickup) ...[
-              ElevatedButton(
-                key: Key('order_out_for_delivery_btn_${order.id}'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEA580C),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                onPressed: () =>
-                    onQuickStatusChange?.call(OrderStatus.outForDelivery),
-                child: const Text('Out for Delivery'),
-              ),
-              const SizedBox(width: 8),
-            ],
-            ElevatedButton(
-              key: Key('order_complete_btn_${order.id}'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.success,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () => onQuickStatusChange?.call(OrderStatus.delivered),
-              child: const Text('Complete Order'),
-            ),
-          ],
-        );
-      case OrderStatus.outForDelivery:
-      case OrderStatus.ready:
         return ElevatedButton(
-          key: Key('order_deliver_btn_${order.id}'),
+          key: Key(
+            isPickup
+                ? 'order_ready_pickup_btn_${order.id}'
+                : 'order_ready_delivery_btn_${order.id}',
+          ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.success,
+            backgroundColor: const Color(0xFF7E22CE),
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 6,
+            ),
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          onPressed: () => onQuickStatusChange?.call(OrderStatus.delivered),
-          child: const Text('Complete Order'),
+          onPressed: () => onQuickStatusChange?.call(OrderStatus.ready),
+          child: Text(isPickup ? 'Ready for Pickup' : 'Mark Ready'),
         );
+      case OrderStatus.ready:
+        if (isPickup) {
+          return ElevatedButton(
+            key: Key('order_complete_pickup_btn_${order.id}'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.success,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: () => onQuickStatusChange?.call(OrderStatus.delivered),
+            child: const Text('Complete Pickup'),
+          );
+        }
+        return const SizedBox.shrink();
       default:
         return const SizedBox.shrink();
     }

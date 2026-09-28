@@ -4,6 +4,7 @@ import 'package:esouq/features/auth/domain/models/user_role.dart';
 import 'package:esouq/features/auth/domain/repositories/auth_repository.dart';
 import 'package:esouq/features/customer/domain/models/order_model.dart';
 import 'package:esouq/features/customer/domain/models/product_model.dart';
+import 'package:esouq/features/store/domain/models/csv_import_result_model.dart';
 import 'package:esouq/features/store/domain/models/store_category_model.dart';
 import 'package:esouq/features/store/domain/repositories/store_categories_repository.dart';
 import 'package:esouq/features/store/domain/repositories/store_orders_repository.dart';
@@ -156,6 +157,15 @@ class FakeStoreProductsRepository implements StoreProductsRepository {
     deleteCalled = true;
     products.removeWhere((p) => p.id == productId);
     return Result.success(null);
+  }
+
+  @override
+  Future<Result<CsvImportResultModel>> importCsv({
+    required String storeId,
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    return Result.success(const CsvImportResultModel());
   }
 }
 
@@ -313,7 +323,7 @@ void main() {
     );
 
     testWidgets(
-      'Staff user CANNOT see add product, edit product, or add category FABs',
+      'Staff user CAN manage products (add, edit, toggle) but CANNOT add categories',
       (tester) async {
         await tester.pumpWidget(createTestWidget(user: staffUser));
         await tester.pumpAndSettle();
@@ -321,9 +331,9 @@ void main() {
         // Go to Products
         await tester.tap(find.text('Products'));
         await tester.pumpAndSettle();
-        expect(find.byKey(const Key('store_add_product_fab')), findsNothing);
-        expect(find.byKey(const Key('product_edit_btn_prod-1')), findsNothing);
-        expect(find.byKey(const Key('product_toggle_prod-1')), findsNothing);
+        expect(find.byKey(const Key('store_add_product_fab')), findsOneWidget);
+        expect(find.byKey(const Key('product_edit_btn_prod-1')), findsOneWidget);
+        expect(find.byKey(const Key('product_toggle_prod-1')), findsOneWidget);
 
         // Go to Categories
         await tester.tap(find.text('Categories'));

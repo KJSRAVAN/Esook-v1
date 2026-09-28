@@ -93,4 +93,57 @@ class AdminDriversRepositoryImpl implements AdminDriversRepository {
       );
     }
   }
+
+  @override
+  Future<Result<AdminUserModel>> updateDriverStatus({
+    required String driverId,
+    required bool isActive,
+  }) async {
+    try {
+      final response = await _apiClient.patch<dynamic>(
+        '/users/$driverId',
+        body: {
+          'is_active': isActive,
+          'isActive': isActive,
+        },
+      );
+
+      final dynamic rawData = response.data;
+      final Map<String, dynamic> rawUser;
+      if (rawData is Map<String, dynamic>) {
+        if (rawData['user'] is Map<String, dynamic>) {
+          rawUser = rawData['user'] as Map<String, dynamic>;
+        } else if (rawData['data'] is Map<String, dynamic>) {
+          rawUser = rawData['data'] as Map<String, dynamic>;
+        } else {
+          rawUser = rawData;
+        }
+      } else {
+        rawUser = const {};
+      }
+
+      final driver = AdminUserModel.fromJson(rawUser);
+      return Result.success(driver);
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(
+        UnknownFailure(message: 'Failed to update driver status: $e'),
+      );
+    }
+  }
+
+  @override
+  Future<Result<void>> deleteDriver(String driverId) async {
+    try {
+      await _apiClient.delete<dynamic>('/users/drivers/$driverId');
+      return Result.success(null);
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(
+        UnknownFailure(message: 'Failed to delete driver: $e'),
+      );
+    }
+  }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 
+import '../../../store/domain/repositories/store_categories_repository.dart';
 import '../../../store/domain/repositories/store_orders_repository.dart';
+import '../../../store/domain/repositories/store_products_repository.dart';
 import '../../domain/repositories/admin_drivers_repository.dart';
 import '../../domain/repositories/admin_stores_repository.dart';
 import '../../domain/repositories/admin_users_repository.dart';
@@ -11,6 +13,8 @@ class AdminScope extends InheritedWidget {
   final AdminDriversRepository driversRepository;
   final AdminStoresRepository storesRepository;
   final StoreOrdersRepository? ordersRepository;
+  final StoreProductsRepository? productsRepository;
+  final StoreCategoriesRepository? categoriesRepository;
 
   const AdminScope({
     super.key,
@@ -18,6 +22,8 @@ class AdminScope extends InheritedWidget {
     required this.driversRepository,
     required this.storesRepository,
     this.ordersRepository,
+    this.productsRepository,
+    this.categoriesRepository,
     required super.child,
   });
 
@@ -39,12 +45,19 @@ class AdminScope extends InheritedWidget {
       of(context).storesRepository;
   static StoreOrdersRepository? ordersRepositoryOf(BuildContext context) =>
       maybeOf(context)?.ordersRepository;
+  static StoreProductsRepository? productsRepositoryOf(BuildContext context) =>
+      maybeOf(context)?.productsRepository;
+  static StoreCategoriesRepository? categoriesRepositoryOf(
+    BuildContext context,
+  ) => maybeOf(context)?.categoriesRepository;
 
   @override
   bool updateShouldNotify(AdminScope oldWidget) {
     return usersRepository != oldWidget.usersRepository ||
         driversRepository != oldWidget.driversRepository ||
         storesRepository != oldWidget.storesRepository ||
-        ordersRepository != oldWidget.ordersRepository;
+        ordersRepository != oldWidget.ordersRepository ||
+        productsRepository != oldWidget.productsRepository ||
+        categoriesRepository != oldWidget.categoriesRepository;
   }
 }

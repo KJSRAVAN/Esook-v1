@@ -13,10 +13,12 @@ abstract final class AppRoutes {
 
   // Role Home Dashboards (temporary placeholders for subsequent phases)
   static const String customerHome = '/customer/home';
+  static const String customerOrderHistory = '/customer/order-history';
   static const String profileSetup = '/customer/profile-setup';
   static const String riderHome = '/rider/home';
   static const String storeHome = '/store/home';
   static const String adminHome = '/admin/home';
+  static const String adminStoreStaff = '/admin/stores/staff';
 
   // Development/Debug-Only Routes (guarded by kDebugMode)
   static const String devCustomerPreview = '/dev/customer-preview';

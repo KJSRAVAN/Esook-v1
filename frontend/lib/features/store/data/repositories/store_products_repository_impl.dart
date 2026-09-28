@@ -3,6 +3,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/result.dart';
 import '../../../customer/domain/models/product_model.dart';
+import '../../domain/models/csv_import_result_model.dart';
 import '../../domain/repositories/store_products_repository.dart';
 
 /// Concrete implementation of [StoreProductsRepository] interacting with `/products/store/:storeId` and `/products/:id`.
@@ -192,6 +193,32 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     } catch (e) {
       return Result.failure(
         UnknownFailure(message: 'Failed to delete item: $e'),
+      );
+    }
+  }
+
+  @override
+  Future<Result<CsvImportResultModel>> importCsv({
+    required String storeId,
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    try {
+      final response = await _apiClient.postMultipart<dynamic>(
+        '/stores/$storeId/items/import-csv',
+        fileBytes: fileBytes,
+        filename: fileName,
+        fileField: 'file',
+      );
+
+      final dynamic rawData = response.data;
+      final result = CsvImportResultModel.fromJson(rawData);
+      return Result.success(result);
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(
+        UnknownFailure(message: 'Failed to import CSV catalog: $e'),
       );
     }
   }

@@ -121,5 +121,63 @@ void main() {
         );
       },
     );
+
+    test(
+      'updateDriverStatus sends PATCH /users/:id and returns updated driver',
+      () async {
+        mockTransport.statusCode = 200;
+        mockTransport.responseBody = jsonEncode({
+          'id': 'd-1',
+          'name': 'Driver One',
+          'phone': '+966501111111',
+          'role': 'DRIVER',
+          'isActive': false,
+        });
+
+        final result = await driversRepository.updateDriverStatus(
+          driverId: 'd-1',
+          isActive: false,
+        );
+
+        expect(result.isSuccess, isTrue);
+        final driver = result.dataOrNull!;
+        expect(driver.id, 'd-1');
+        expect(driver.isActive, isFalse);
+        expect(mockTransport.lastUri?.path, '/users/d-1');
+        expect(mockTransport.lastMethod, HttpMethod.patch);
+
+        final sentBody = jsonDecode(mockTransport.lastBody!);
+        expect(sentBody['isActive'], isFalse);
+        expect(sentBody['is_active'], isFalse);
+      },
+    );
+
+    test(
+      'deleteDriver sends DELETE /users/drivers/:id and returns success',
+      () async {
+        mockTransport.statusCode = 204;
+        mockTransport.responseBody = '';
+
+        final result = await driversRepository.deleteDriver('d-1');
+
+        expect(result.isSuccess, isTrue);
+        expect(mockTransport.lastUri?.path, '/users/drivers/d-1');
+        expect(mockTransport.lastMethod, HttpMethod.delete);
+      },
+    );
+
+    test(
+      'deleteDriver returns failure on server error',
+      () async {
+        mockTransport.statusCode = 404;
+        mockTransport.responseBody = jsonEncode({
+          'error': 'Driver not found',
+        });
+
+        final result = await driversRepository.deleteDriver('d-unknown');
+
+        expect(result.isFailure, isTrue);
+      },
+    );
   });
 }

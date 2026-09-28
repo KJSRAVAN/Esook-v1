@@ -1,5 +1,6 @@
 import '../../../../core/utils/result.dart';
 import '../../../customer/domain/models/product_model.dart';
+import '../models/csv_import_result_model.dart';
 
 /// Repository interface for Store Item/Product catalog operations.
 abstract interface class StoreProductsRepository {
@@ -46,5 +47,13 @@ abstract interface class StoreProductsRepository {
   Future<Result<void>> deleteProduct({
     required String storeId,
     required String productId,
+  });
+
+  /// Bulk import items for a store from a CSV file (`POST /stores/:storeId/items/import-csv`).
+  /// Permitted for Super Admin.
+  Future<Result<CsvImportResultModel>> importCsv({
+    required String storeId,
+    required List<int> fileBytes,
+    required String fileName,
   });
 }

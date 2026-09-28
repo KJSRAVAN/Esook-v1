@@ -38,6 +38,17 @@ abstract interface class ApiClient {
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
   });
+
+  Future<ApiResponse<T>> postMultipart<T>(
+    String path, {
+    required List<int> fileBytes,
+    required String filename,
+    String fileField = 'file',
+    Map<String, String>? fields,
+    Map<String, String>? headers,
+    Map<String, dynamic>? queryParameters,
+    T Function(dynamic json)? fromJson,
+  });
 }
 
 /// Default implementation of [ApiClient].
@@ -51,7 +62,7 @@ class DefaultApiClient implements ApiClient {
     required this.baseUrl,
     HttpTransport? transport,
     Future<String?> Function()? tokenProvider,
-    this.timeout = const Duration(seconds: 15),
+    this.timeout = const Duration(seconds: 35),
   }) : _transport = transport ?? PackageHttpTransport(),
        _tokenProvider = tokenProvider;
 
@@ -117,6 +128,41 @@ class DefaultApiClient implements ApiClient {
     fromJson: fromJson,
   );
 
+  @override
+  Future<ApiResponse<T>> postMultipart<T>(
+    String path, {
+    required List<int> fileBytes,
+    required String filename,
+    String fileField = 'file',
+    Map<String, String>? fields,
+    Map<String, String>? headers,
+    Map<String, dynamic>? queryParameters,
+    T Function(dynamic json)? fromJson,
+  }) async {
+    final uri = _buildUri(path, queryParameters);
+    final requestHeaders = await _buildHeaders(headers, isMultipart: true);
+
+    final HttpResponseData responseData;
+    if (_transport is MultipartHttpTransport) {
+      responseData = await (_transport as MultipartHttpTransport).sendMultipart(
+        uri: uri,
+        method: HttpMethod.post,
+        headers: requestHeaders,
+        fileBytes: fileBytes,
+        filename: filename,
+        fileField: fileField,
+        fields: fields,
+        timeout: timeout,
+      );
+    } else {
+      throw UnsupportedError(
+        'The configured HttpTransport does not support multipart requests',
+      );
+    }
+
+    return _handleResponse<T>(responseData, fromJson);
+  }
+
   Future<ApiResponse<T>> _request<T>({
     required String path,
     required HttpMethod method,
@@ -162,10 +208,11 @@ class DefaultApiClient implements ApiClient {
   }
 
   Future<Map<String, String>> _buildHeaders(
-    Map<String, String>? customHeaders,
-  ) async {
+    Map<String, String>? customHeaders, {
+    bool isMultipart = false,
+  }) async {
     final headers = <String, String>{
-      'Content-Type': 'application/json',
+      if (!isMultipart) 'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
 

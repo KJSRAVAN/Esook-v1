@@ -212,7 +212,7 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                   // Delivery Area Dropdown (Riyadh / Jeddah)
                   DropdownButtonFormField<String>(
                     key: const Key('edit_store_area_dropdown'),
-                    value: _selectedAreaId,
+                    initialValue: _selectedAreaId,
                     decoration: InputDecoration(
                       labelText: 'Delivery Area',
                       hintText: 'Select delivery area',
@@ -294,7 +294,7 @@ class _EditStoreDialogState extends State<EditStoreDialog> {
                   SwitchListTile(
                     key: const Key('edit_store_active_switch'),
                     value: _isActive,
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Store Active Status'),
                     subtitle: Text(
