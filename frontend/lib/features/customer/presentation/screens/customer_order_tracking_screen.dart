@@ -1111,6 +1111,27 @@ class _CustomerOrderTrackingScreenState
                 ],
               ),
             ],
+            if (order.pointsDiscount > 0) ...[
+              const SizedBox(height: 4.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    order.redeemedPoints > 0
+                        ? 'Points Discount (${order.redeemedPoints} pts)'
+                        : 'Points Discount',
+                    style: AppTextStyles.bodyMedium,
+                  ),
+                  Text(
+                    '-${order.pointsDiscount.toStringAsFixed(2)} ${widget.currency}',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.success,
+                    ),
+                  ),
+                ],
+              ),
+            ],
             if (order.deliveryFee > 0) ...[
               const SizedBox(height: 4.0),
               Row(

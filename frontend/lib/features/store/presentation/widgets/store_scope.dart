@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../../../../core/network/api_client.dart';
 import '../../../auth/domain/models/user_model.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../domain/repositories/store_categories_repository.dart';
@@ -8,6 +9,7 @@ import '../../domain/repositories/store_products_repository.dart';
 
 /// Scoped provider for store staff repositories and session state across the store feature tree.
 class StoreScope extends InheritedWidget {
+  final ApiClient? apiClient;
   final StoreOrdersRepository ordersRepository;
   final StoreProductsRepository productsRepository;
   final StoreCategoriesRepository categoriesRepository;
@@ -17,6 +19,7 @@ class StoreScope extends InheritedWidget {
 
   const StoreScope({
     super.key,
+    this.apiClient,
     required this.ordersRepository,
     required this.productsRepository,
     required this.categoriesRepository,
@@ -35,6 +38,9 @@ class StoreScope extends InheritedWidget {
   static StoreScope? maybeOf(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<StoreScope>();
   }
+
+  static ApiClient? apiClientOf(BuildContext context) =>
+      maybeOf(context)?.apiClient;
 
   static StoreOrdersRepository ordersRepositoryOf(BuildContext context) =>
       of(context).ordersRepository;

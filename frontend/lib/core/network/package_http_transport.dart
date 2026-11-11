@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import '../error/exceptions.dart';
 import 'http_method.dart';
@@ -92,11 +93,24 @@ class PackageHttpTransport implements HttpTransport, MultipartHttpTransport {
         request.fields.addAll(fields);
       }
 
+      MediaType? contentType;
+      final lowerName = filename.toLowerCase();
+      if (lowerName.endsWith('.csv')) {
+        contentType = MediaType('text', 'csv');
+      } else if (lowerName.endsWith('.png')) {
+        contentType = MediaType('image', 'png');
+      } else if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) {
+        contentType = MediaType('image', 'jpeg');
+      } else if (lowerName.endsWith('.webp')) {
+        contentType = MediaType('image', 'webp');
+      }
+
       request.files.add(
         http.MultipartFile.fromBytes(
           fileField,
           fileBytes,
           filename: filename,
+          contentType: contentType,
         ),
       );
 

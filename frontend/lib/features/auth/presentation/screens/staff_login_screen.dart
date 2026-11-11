@@ -7,7 +7,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/auth_phone_helper.dart';
 import '../../domain/models/auth_response_model.dart';
-import '../../domain/models/user_role.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../widgets/auth_error_banner.dart';
 import '../widgets/auth_password_field.dart';
@@ -86,7 +85,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
       final authResponse = result.dataOrNull!;
       final role = authResponse.user.role;
 
-      if (role != UserRole.storeStaff && role != UserRole.storeManager) {
+      if (!role.isStoreStaff && !role.isSuperAdmin) {
         setState(() {
           _isSubmitting = false;
           _failure = const ForbiddenFailure(
@@ -164,6 +163,7 @@ class _StaffLoginScreenState extends State<StaffLoginScreen> {
                 prefixIcon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
                 textInputAction: TextInputAction.next,
+                letterSpacing: 0.0,
                 enabled: !_isSubmitting,
                 validator: (value) => AuthPhoneHelper.validateAuthPhone(
                   value,

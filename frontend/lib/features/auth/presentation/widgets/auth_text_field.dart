@@ -21,6 +21,8 @@ class AuthTextField extends StatelessWidget {
   final void Function(String)? onChanged;
   final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
+  final double? letterSpacing;
+  final TextStyle? textStyle;
 
   const AuthTextField({
     super.key,
@@ -38,10 +40,14 @@ class AuthTextField extends StatelessWidget {
     this.onChanged,
     this.inputFormatters,
     this.maxLines = 1,
+    this.letterSpacing,
+    this.textStyle,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveLetterSpacing = letterSpacing ?? 0.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -64,13 +70,16 @@ class AuthTextField extends StatelessWidget {
           onChanged: onChanged,
           inputFormatters: inputFormatters,
           maxLines: maxLines,
-          style: AppTextStyles.bodyLarge.copyWith(
+          cursorColor: AppColors.primary,
+          style: (textStyle ?? AppTextStyles.bodyLarge).copyWith(
             color: enabled ? AppColors.textPrimary : AppColors.textTertiary,
+            letterSpacing: effectiveLetterSpacing,
           ),
           decoration: InputDecoration(
             hintText: hintText,
             hintStyle: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textTertiary,
+              letterSpacing: effectiveLetterSpacing,
             ),
             prefixIcon: prefixIcon != null
                 ? Icon(prefixIcon, color: AppColors.textSecondary, size: 20)

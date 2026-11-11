@@ -43,6 +43,8 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    if (_isSubmitting) return;
+
     setState(() => _failure = null);
 
     if (!_formKey.currentState!.validate()) {
@@ -124,6 +126,7 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
               prefixIcon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.next,
+              letterSpacing: 0.0,
               enabled: !_isSubmitting,
               validator: (value) => AuthPhoneHelper.validateAuthPhone(
                 value,

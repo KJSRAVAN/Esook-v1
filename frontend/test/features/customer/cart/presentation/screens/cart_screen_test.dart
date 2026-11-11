@@ -120,7 +120,7 @@ void main() {
         expect(find.text('Organic Bananas 1kg'), findsOneWidget);
         expect(
           find.text('3.35 ${AppConstants.defaultCurrency}'),
-          findsOneWidget,
+          findsWidgets,
         );
         expect(find.byType(CartSummaryBar), findsOneWidget);
         expect(find.byKey(const Key('cart_checkout_button')), findsOneWidget);

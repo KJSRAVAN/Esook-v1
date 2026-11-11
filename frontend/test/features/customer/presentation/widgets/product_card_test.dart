@@ -147,4 +147,48 @@ void main() {
     expect(find.text('Unavailable'), findsOneWidget);
     expect(find.text('Add'), findsNothing);
   });
+
+  testWidgets(
+    'ProductCard renders discount badge on top-left and points badge on top-right without overlapping',
+    (tester) async {
+      const offerProductWithPoints = ProductModel(
+        id: 'prod-offer-pts',
+        storeId: 'store-1',
+        name: 'Discounted Milk with Points',
+        price: 20.0,
+        offerPrice: 15.0, // 25% off
+        isAvailable: true,
+        loyaltyPointsPerUnit: 10,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 180,
+                height: 260,
+                child: ProductCard(product: offerProductWithPoints),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final discountFinder = find.text('-25%');
+      final pointsFinder = find.text('+10 pts');
+
+      expect(discountFinder, findsOneWidget);
+      expect(pointsFinder, findsOneWidget);
+
+      final discountRect = tester.getRect(discountFinder);
+      final pointsRect = tester.getRect(pointsFinder);
+
+      // Discount badge is on the left; points badge is on the right
+      expect(discountRect.right, lessThan(pointsRect.left));
+      // They do not intersect
+      expect(discountRect.overlaps(pointsRect), isFalse);
+    },
+  );
 }

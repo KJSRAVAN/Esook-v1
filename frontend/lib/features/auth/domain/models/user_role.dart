@@ -13,19 +13,26 @@ enum UserRole {
   /// Safe parsing that prevents crashes on unexpected or new backend roles.
   static UserRole fromString(String? role) {
     if (role == null) return UserRole.unknown;
-    switch (role.trim().toLowerCase()) {
+    final normalized = role.trim().toLowerCase().replaceAll('-', '_').replaceAll(' ', '_');
+    switch (normalized) {
       case 'customer':
         return UserRole.customer;
       case 'store_staff':
+      case 'storestaff':
       case 'staff':
         return UserRole.storeStaff;
       case 'store_manager':
+      case 'storemanager':
       case 'manager':
         return UserRole.storeManager;
       case 'delivery_rider':
+      case 'deliveryrider':
       case 'driver':
+      case 'rider':
         return UserRole.deliveryRider;
       case 'super_admin':
+      case 'superadmin':
+      case 'admin':
         return UserRole.superAdmin;
       default:
         return UserRole.unknown;

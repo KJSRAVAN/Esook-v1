@@ -76,6 +76,56 @@ class RiderCustomerInfo {
   int get hashCode => phone.hashCode ^ (name?.hashCode ?? 0);
 }
 
+/// Nested order item model for driver delivery checklist.
+class RiderOrderItem {
+  final String id;
+  final String name;
+  final int quantity;
+  final double? price;
+
+  const RiderOrderItem({
+    required this.id,
+    required this.name,
+    required this.quantity,
+    this.price,
+  });
+
+  factory RiderOrderItem.fromJson(Map<String, dynamic> json) {
+    final rawPrice = json['itemPrice'] ?? json['price'];
+    double? parsedPrice;
+    if (rawPrice is num) {
+      parsedPrice = rawPrice.toDouble();
+    } else if (rawPrice is String) {
+      parsedPrice = double.tryParse(rawPrice);
+    }
+
+    return RiderOrderItem(
+      id: json['id'] as String? ?? '',
+      name: json['itemName'] as String? ?? json['name'] as String? ?? 'Item',
+      quantity: json['quantity'] as int? ?? (json['quantity'] as num?)?.toInt() ?? 1,
+      price: parsedPrice,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'itemName': name,
+    'quantity': quantity,
+    if (price != null) 'itemPrice': price,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RiderOrderItem &&
+          id == other.id &&
+          name == other.name &&
+          quantity == other.quantity;
+
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode ^ quantity.hashCode;
+}
+
 /// Status of a driver order within the delivery lifecycle.
 enum RiderOrderStatus {
   ready,
@@ -137,8 +187,10 @@ class RiderOrderModel {
   final String? driverId;
   final double? totalAmount;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
   final RiderStoreInfo store;
   final RiderCustomerInfo customer;
+  final List<RiderOrderItem> items;
 
   const RiderOrderModel({
     required this.id,
@@ -151,8 +203,10 @@ class RiderOrderModel {
     this.driverId,
     this.totalAmount,
     this.createdAt,
+    this.updatedAt,
     required this.store,
     required this.customer,
+    this.items = const [],
   });
 
   factory RiderOrderModel.fromJson(Map<String, dynamic> json) {
@@ -160,6 +214,12 @@ class RiderOrderModel {
     final rawCreatedAt = json['createdAt'] ?? json['created_at'];
     if (rawCreatedAt is String && rawCreatedAt.isNotEmpty) {
       parsedCreatedAt = DateTime.tryParse(rawCreatedAt);
+    }
+
+    DateTime? parsedUpdatedAt;
+    final rawUpdatedAt = json['updatedAt'] ?? json['updated_at'];
+    if (rawUpdatedAt is String && rawUpdatedAt.isNotEmpty) {
+      parsedUpdatedAt = DateTime.tryParse(rawUpdatedAt);
     }
 
     final rawStatus = json['status'] as String?;
@@ -195,6 +255,15 @@ class RiderOrderModel {
       parsedTotal = double.tryParse(rawTotal);
     }
 
+    List<RiderOrderItem> parsedItems = const [];
+    final rawItems = json['items'];
+    if (rawItems is List) {
+      parsedItems = rawItems
+          .whereType<Map<String, dynamic>>()
+          .map(RiderOrderItem.fromJson)
+          .toList();
+    }
+
     return RiderOrderModel(
       id: json['id'] as String? ?? '',
       orderNumber:
@@ -215,8 +284,10 @@ class RiderOrderModel {
           json['driverId'] as String?,
       totalAmount: parsedTotal,
       createdAt: parsedCreatedAt,
+      updatedAt: parsedUpdatedAt,
       store: RiderStoreInfo.fromJson(storeJson),
       customer: RiderCustomerInfo.fromJson(customerJson),
+      items: parsedItems,
     );
   }
 
@@ -230,8 +301,10 @@ class RiderOrderModel {
     if (driverId != null) 'driver_id': driverId,
     if (totalAmount != null) 'total_amount': totalAmount,
     if (createdAt != null) 'created_at': createdAt?.toIso8601String(),
+    if (updatedAt != null) 'updated_at': updatedAt?.toIso8601String(),
     'store': store.toJson(),
     'customer': customer.toJson(),
+    'items': items.map((i) => i.toJson()).toList(),
   };
 
   RiderOrderModel copyWith({
@@ -245,8 +318,10 @@ class RiderOrderModel {
     String? driverId,
     double? totalAmount,
     DateTime? createdAt,
+    DateTime? updatedAt,
     RiderStoreInfo? store,
     RiderCustomerInfo? customer,
+    List<RiderOrderItem>? items,
   }) {
     return RiderOrderModel(
       id: id ?? this.id,
@@ -259,8 +334,10 @@ class RiderOrderModel {
       driverId: driverId ?? this.driverId,
       totalAmount: totalAmount ?? this.totalAmount,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       store: store ?? this.store,
       customer: customer ?? this.customer,
+      items: items ?? this.items,
     );
   }
 

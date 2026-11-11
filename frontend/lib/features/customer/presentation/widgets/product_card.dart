@@ -81,15 +81,47 @@ class ProductCard extends StatelessWidget {
                         : _buildFallbackImage(),
                   ),
 
-                  // Loyalty Points Badge
-                  if (product.loyaltyPointsPerUnit > 0)
+                  // Promotional Discount Badge (Top-Left)
+                  if (product.hasOffer && product.discountPercentage != null)
                     Positioned(
                       top: AppDimensions.spacingSm,
                       left: AppDimensions.spacingSm,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppDimensions.spacingSm,
-                          vertical: 2.0,
+                          horizontal: 6,
+                          vertical: 2.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDC2626),
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(30),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          '-${product.discountPercentage}%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Loyalty Points Badge (Top-Right, Non-overlapping)
+                  if (product.loyaltyPointsPerUnit > 0)
+                    Positioned(
+                      top: AppDimensions.spacingSm,
+                      right: AppDimensions.spacingSm,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6.0,
+                          vertical: 2.5,
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.primaryLight,
@@ -97,8 +129,16 @@ class ProductCard extends StatelessWidget {
                             AppDimensions.radiusFull,
                           ),
                           border: Border.all(
-                            color: AppColors.primary.withAlpha(80),
+                            color: AppColors.primary.withAlpha(100),
+                            width: 1.0,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(25),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -194,16 +234,43 @@ class ProductCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Flexible(
-                          child: Text(
-                            '${product.price.toStringAsFixed(2)} $currency',
-                            style: AppTextStyles.titleMedium.copyWith(
-                              color: AppColors.primaryDark,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 13,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: product.hasOffer
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '${product.price.toStringAsFixed(2)} $currency',
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.textTertiary,
+                                        fontSize: 10,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      '${product.offerPrice!.toStringAsFixed(2)} $currency',
+                                      style: AppTextStyles.titleMedium.copyWith(
+                                        color: const Color(0xFFDC2626),
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 13,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                )
+                              : Text(
+                                  '${product.price.toStringAsFixed(2)} $currency',
+                                  style: AppTextStyles.titleMedium.copyWith(
+                                    color: AppColors.primaryDark,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 13,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                         ),
                         const SizedBox(width: 4),
                         if (effectiveCartNotifier != null &&
@@ -242,7 +309,11 @@ class ProductCard extends StatelessWidget {
         if (quantity == 0) {
           return InkWell(
             key: Key('add_to_cart_${product.id}'),
-            onTap: () => notifier.addItem(product.id, 1),
+            onTap: () => notifier.addItem(
+              product.primaryVariantOrProductId,
+              1,
+              product.storeId,
+            ),
             borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
             child: Container(
               padding: const EdgeInsets.symmetric(

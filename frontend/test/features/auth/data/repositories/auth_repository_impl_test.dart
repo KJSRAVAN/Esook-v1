@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:esouq/core/constants/storage_keys.dart';
+import 'package:esouq/core/error/exceptions.dart';
 import 'package:esouq/core/error/failures.dart';
 import 'package:esouq/core/network/api_client.dart';
 import 'package:esouq/core/network/http_method.dart';
@@ -18,6 +19,7 @@ class MockHttpTransport implements HttpTransport {
   Uri? lastUri;
   String? lastBody;
   HttpMethod? lastMethod;
+  Exception? exceptionToThrow;
 
   @override
   Future<HttpResponseData> send({
@@ -27,6 +29,10 @@ class MockHttpTransport implements HttpTransport {
     String? body,
     Duration? timeout,
   }) async {
+    if (exceptionToThrow != null) {
+      throw exceptionToThrow!;
+    }
+
     lastUri = uri;
     lastMethod = method;
     lastHeaders = headers;
@@ -519,6 +525,35 @@ void main() {
         expect(storedToken, isNull);
       },
     );
+
+    test('checkSession returns null and treats "null" string as no session', () async {
+      await mockStorage.write(key: StorageKeys.authToken, value: 'null');
+      final result = await authRepository.checkSession();
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, isNull);
+    });
+
+    test('checkSession retains session and returns NetworkFailure on connection error', () async {
+      await mockStorage.write(key: StorageKeys.authToken, value: 'active_token');
+      mockTransport.exceptionToThrow = const NetworkException(message: 'Connection timed out');
+
+      final result = await authRepository.checkSession();
+      expect(result.isFailure, isTrue);
+      expect(result.failureOrNull, isA<NetworkFailure>());
+      // Credentials must be retained on transient network failure
+      expect(await mockStorage.read(key: StorageKeys.authToken), equals('active_token'));
+    });
+
+    test('checkSession clears session and returns null on 403 Forbidden', () async {
+      await mockStorage.write(key: StorageKeys.authToken, value: 'banned_token');
+      mockTransport.statusCode = 403;
+      mockTransport.responseBody = jsonEncode({'error': 'Forbidden: Account inactive'});
+
+      final result = await authRepository.checkSession();
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull, isNull);
+      expect(await mockStorage.read(key: StorageKeys.authToken), isNull);
+    });
 
     test('maps 400 validation error correctly', () async {
       mockTransport.statusCode = 400;

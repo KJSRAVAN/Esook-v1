@@ -105,5 +105,31 @@ void main() {
       expect(updated.itemId, equals('prod-1'));
       expect(updated.itemName, equals('Milk'));
     });
+
+    test('OrderItemModel parses pointsValue and points_value correctly', () {
+      final json1 = {
+        'id': 'line-pv1',
+        'itemId': 'prod-pv1',
+        'itemName': 'Coffee Beans',
+        'itemPrice': 30.0,
+        'quantity': 2,
+        'pointsValue': 25,
+      };
+      final item1 = OrderItemModel.fromJson(json1);
+      expect(item1.loyaltyPointsPerUnit, equals(25));
+      expect(item1.subtotalPoints, equals(50));
+
+      final json2 = {
+        'id': 'line-pv2',
+        'itemId': 'prod-pv2',
+        'itemName': 'Tea Bags',
+        'itemPrice': 15.0,
+        'quantity': 1,
+        'points_value': 10,
+      };
+      final item2 = OrderItemModel.fromJson(json2);
+      expect(item2.loyaltyPointsPerUnit, equals(10));
+      expect(item2.subtotalPoints, equals(10));
+    });
   });
 }

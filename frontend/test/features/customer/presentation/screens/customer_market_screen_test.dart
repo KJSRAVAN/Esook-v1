@@ -2,15 +2,19 @@ import 'package:esouq/core/constants/app_constants.dart';
 import 'package:esouq/core/error/failures.dart';
 import 'package:esouq/core/theme/app_theme.dart';
 import 'package:esouq/core/utils/result.dart';
+import 'package:esouq/features/customer/application/points_notifier.dart';
+import 'package:esouq/features/customer/cart/application/cart_notifier.dart';
 import 'package:esouq/features/customer/domain/models/store_model.dart';
+import 'package:esouq/features/customer/domain/repositories/order_repository.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_market_screen.dart';
 import 'package:esouq/features/customer/presentation/widgets/category_filter_bar.dart';
+import 'package:esouq/features/customer/presentation/widgets/customer_points_badge.dart';
 import 'package:esouq/features/customer/presentation/widgets/product_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:esouq/features/customer/cart/application/cart_notifier.dart';
 import '../../mocks/mock_cart_repository.dart';
+import '../../mocks/mock_order_repository.dart';
 import '../../mocks/mock_product_repository.dart';
 import '../../mocks/mock_store_repository.dart';
 
@@ -32,6 +36,7 @@ void main() {
   Widget buildWidget({
     StoreModel? initialStore,
     CartNotifier? cartNotifier,
+    PointsNotifier? pointsNotifier,
     VoidCallback? onViewCart,
   }) {
     if (initialStore != null) {
@@ -45,6 +50,7 @@ void main() {
         productRepository: mockProductRepo,
         selectedStoreNotifier: selectedStoreNotifier,
         cartNotifier: cartNotifier,
+        pointsNotifier: pointsNotifier,
         onViewCart: onViewCart,
       ),
     );
@@ -322,6 +328,61 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('market_persistent_cart_bar')), findsNothing);
+    });
+
+    testWidgets('displays CustomerPointsBadge in market header when store is selected', (
+      tester,
+    ) async {
+      final store = mockStoreRepo.defaultStores.first;
+      final mockOrderRepo = MockOrderRepository();
+      final pointsNotifier = PointsNotifier(
+        orderRepository: mockOrderRepo,
+        initialPointsInfo: const CustomerPointsInfo(
+          isEnabled: true,
+          balance: 320,
+        ),
+      );
+
+      await tester.pumpWidget(
+        buildWidget(
+          initialStore: store,
+          pointsNotifier: pointsNotifier,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CustomerPointsBadge), findsOneWidget);
+      expect(find.byKey(const Key('customer_points_badge')), findsOneWidget);
+      expect(find.text('320 pts'), findsOneWidget);
+
+      pointsNotifier.dispose();
+    });
+
+    testWidgets('displays CustomerPointsBadge in market header when no store is selected', (
+      tester,
+    ) async {
+      final mockOrderRepo = MockOrderRepository();
+      final pointsNotifier = PointsNotifier(
+        orderRepository: mockOrderRepo,
+        initialPointsInfo: const CustomerPointsInfo(
+          isEnabled: true,
+          balance: 140,
+        ),
+      );
+
+      await tester.pumpWidget(
+        buildWidget(
+          initialStore: null,
+          pointsNotifier: pointsNotifier,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CustomerPointsBadge), findsOneWidget);
+      expect(find.byKey(const Key('customer_points_badge')), findsOneWidget);
+      expect(find.text('140 pts'), findsOneWidget);
+
+      pointsNotifier.dispose();
     });
   });
 }

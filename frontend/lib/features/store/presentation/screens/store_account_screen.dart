@@ -5,7 +5,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/domain/models/user_model.dart';
+import '../../../auth/domain/models/user_role.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
+import '../../../admin/presentation/widgets/store_loyalty_dialog.dart';
 import '../widgets/store_scope.dart';
 
 /// Account and profile screen for Store Staff and Managers.
@@ -187,6 +189,39 @@ class _StoreAccountScreenState extends State<StoreAccountScreen> {
                         ],
                       ),
                     ),
+                    if (_currentUser?.role == UserRole.storeManager ||
+                        _currentUser?.role == UserRole.superAdmin) ...[
+                      const SizedBox(height: AppDimensions.spacingMd),
+                      Card(
+                        child: ListTile(
+                          key: const Key('store_account_loyalty_settings_tile'),
+                          leading: const CircleAvatar(
+                            backgroundColor: Color(0xFFFEF3C7),
+                            child: Icon(Icons.stars_rounded, color: Color(0xFFD97706)),
+                          ),
+                          title: const Text(
+                            'Store Loyalty Settings',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          subtitle: const Text(
+                            'Configure earning rates, redemption values and limits',
+                          ),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () {
+                            final targetStoreId =
+                                StoreScope.storeIdOf(context) ?? _currentUser?.storeId;
+                            if (targetStoreId != null) {
+                              StoreLoyaltyDialog.show(
+                                context,
+                                storeId: targetStoreId,
+                                storeName: 'My Store',
+                                apiClient: StoreScope.apiClientOf(context),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: AppDimensions.spacingLg),
 
                     // Sign Out Button

@@ -30,6 +30,8 @@ class MockAdminDriversRepository implements AdminDriversRepository {
   String? lastDeletedDriverId;
   bool shouldFailUpdate = false;
   bool shouldFailDelete = false;
+  bool shouldFailRegister = false;
+  String? registerFailureMessage;
 
   @override
   Future<Result<List<AdminUserModel>>> getDrivers({int page = 1, int limit = 50}) async {
@@ -43,6 +45,11 @@ class MockAdminDriversRepository implements AdminDriversRepository {
     required String password,
     String? storeId,
   }) async {
+    if (shouldFailRegister) {
+      return Result.failure(ServerFailure(
+        message: registerFailureMessage ?? 'Phone number already registered',
+      ));
+    }
     final newDriver = AdminUserModel(
       id: 'driver-${drivers.length + 1}',
       name: name,
@@ -195,5 +202,74 @@ void main() {
 
     expect(find.text('Failed to delete driver'), findsOneWidget);
     expect(find.text('Ahmed Driver'), findsOneWidget); // Driver remains in list
+  });
+
+  testWidgets('FAB opens CreateDriverDialog and validates form inputs', (tester) async {
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    final fab = find.byKey(const Key('add_driver_fab'));
+    expect(fab, findsOneWidget);
+    await tester.tap(fab);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Register Driver'), findsOneWidget);
+    expect(find.byKey(const Key('driver_name_field')), findsOneWidget);
+    expect(find.byKey(const Key('driver_phone_field')), findsOneWidget);
+    expect(find.byKey(const Key('driver_password_field')), findsOneWidget);
+    expect(find.byKey(const Key('driver_confirm_password_field')), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const Key('submit_driver_button')));
+    await tester.tap(find.byKey(const Key('submit_driver_button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Please enter driver name'), findsOneWidget);
+    expect(find.text('Please enter phone number'), findsOneWidget);
+    expect(find.text('Please enter a password'), findsOneWidget);
+  });
+
+  testWidgets('CreateDriverDialog shows error message when server registration fails', (tester) async {
+    mockRepo.shouldFailRegister = true;
+    mockRepo.registerFailureMessage = 'Phone number already registered';
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('add_driver_fab')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('driver_name_field')), 'Salim Driver');
+    await tester.enterText(find.byKey(const Key('driver_phone_field')), '+966501112233');
+    await tester.enterText(find.byKey(const Key('driver_password_field')), 'SecretPass1');
+    await tester.enterText(find.byKey(const Key('driver_confirm_password_field')), 'SecretPass1');
+
+    await tester.ensureVisible(find.byKey(const Key('submit_driver_button')));
+    await tester.tap(find.byKey(const Key('submit_driver_button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Phone number already registered'), findsOneWidget);
+    expect(find.text('Register Driver'), findsOneWidget);
+  });
+
+  testWidgets('CreateDriverDialog registers driver successfully and updates drivers list', (tester) async {
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('add_driver_fab')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byKey(const Key('driver_name_field')), 'Tariq NewDriver');
+    await tester.enterText(find.byKey(const Key('driver_phone_field')), '+966508889900');
+    await tester.enterText(find.byKey(const Key('driver_password_field')), 'SecretPass1');
+    await tester.enterText(find.byKey(const Key('driver_confirm_password_field')), 'SecretPass1');
+
+    await tester.ensureVisible(find.byKey(const Key('submit_driver_button')));
+    await tester.tap(find.byKey(const Key('submit_driver_button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Register Driver'), findsNothing);
+    expect(find.text('Tariq NewDriver'), findsOneWidget);
+    expect(find.text('+966508889900'), findsOneWidget);
+    expect(find.text('Driver "Tariq NewDriver" registered successfully!'), findsOneWidget);
   });
 }

@@ -14,6 +14,7 @@ import '../../domain/repositories/order_repository.dart';
 /// select fulfillment, provide delivery details, and place their order.
 class CheckoutBottomSheet extends StatefulWidget {
   final CartModel cart;
+  final String? storeId;
   final String? storeName;
   final OrderRepository orderRepository;
   final String currency;
@@ -22,6 +23,7 @@ class CheckoutBottomSheet extends StatefulWidget {
   const CheckoutBottomSheet({
     super.key,
     required this.cart,
+    this.storeId,
     this.storeName,
     required this.orderRepository,
     this.currency = AppConstants.defaultCurrency,
@@ -31,6 +33,7 @@ class CheckoutBottomSheet extends StatefulWidget {
   static Future<OrderModel?> show(
     BuildContext context, {
     required CartModel cart,
+    String? storeId,
     String? storeName,
     required OrderRepository orderRepository,
     String currency = AppConstants.defaultCurrency,
@@ -42,6 +45,7 @@ class CheckoutBottomSheet extends StatefulWidget {
       backgroundColor: Colors.transparent,
       builder: (ctx) => CheckoutBottomSheet(
         cart: cart,
+        storeId: storeId,
         storeName: storeName,
         orderRepository: orderRepository,
         currency: currency,
@@ -58,25 +62,127 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   final _addressController = TextEditingController();
   final _notesController = TextEditingController();
-  final _couponController = TextEditingController();
 
   FulfillmentType _fulfillment = FulfillmentType.delivery;
   PaymentMethod _paymentMethod = PaymentMethod.cash;
   bool _isSubmitting = false;
   String? _errorMessage;
   late final String _idempotencyKey;
+  CustomerPointsInfo? _pointsInfo;
+  bool _usePoints = false;
+  final _customPointsController = TextEditingController();
+  int? _customPointsToRedeem;
 
   @override
   void initState() {
     super.initState();
     _idempotencyKey = UuidHelper.generateV4();
+    _loadPointsInfo();
+  }
+
+  String get _effectiveStoreId {
+    if (widget.storeId != null && widget.storeId!.trim().isNotEmpty) {
+      return widget.storeId!.trim();
+    }
+    if (widget.cart.storeId != null && widget.cart.storeId!.trim().isNotEmpty) {
+      return widget.cart.storeId!.trim();
+    }
+    if (widget.cart.store.id.trim().isNotEmpty) {
+      return widget.cart.store.id.trim();
+    }
+    return '';
+  }
+
+  Future<void> _loadPointsInfo() async {
+    final targetStoreId = _effectiveStoreId;
+    if (targetStoreId.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _pointsInfo = const CustomerPointsInfo(isEnabled: false);
+        });
+      }
+      return;
+    }
+    final res = await widget.orderRepository.getStorePointsInfo(targetStoreId);
+    if (mounted) {
+      setState(() {
+        _pointsInfo = res.dataOrNull;
+      });
+    }
+  }
+
+  int get _maxEligiblePoints {
+    if (_pointsInfo == null ||
+        !_pointsInfo!.isEnabled ||
+        _pointsInfo!.balance <= 0) {
+      return 0;
+    }
+    if (_pointsInfo!.balance < _pointsInfo!.minPointsToRedeem) {
+      return 0;
+    }
+
+    final subtotal = widget.cart.subtotal;
+    final valueOfOnePoint = _pointsInfo!.monetaryValueOfOnePoint;
+    if (valueOfOnePoint <= 0) return 0;
+
+    int points = _pointsInfo!.balance;
+
+    if (_pointsInfo!.maxPointsPerOrder != null &&
+        points > _pointsInfo!.maxPointsPerOrder!) {
+      points = _pointsInfo!.maxPointsPerOrder!;
+    }
+
+    if (_pointsInfo!.maxDiscountPercent < 100.0) {
+      final maxAllowedDiscount =
+          subtotal * (_pointsInfo!.maxDiscountPercent / 100.0);
+      final maxPointsForDiscount = (maxAllowedDiscount / valueOfOnePoint).floor();
+      if (points > maxPointsForDiscount) {
+        points = maxPointsForDiscount;
+      }
+    }
+
+    final availableWorth = points * valueOfOnePoint;
+    if (availableWorth <= subtotal) {
+      return points;
+    } else {
+      return (subtotal / valueOfOnePoint).floor();
+    }
+  }
+
+  int get _pointsToRedeem {
+    if (!_usePoints) return 0;
+    final maxPts = _maxEligiblePoints;
+    if (maxPts <= 0) return 0;
+    if (_customPointsToRedeem != null) {
+      return _customPointsToRedeem!.clamp(0, maxPts);
+    }
+    return maxPts;
+  }
+
+  String get _conversionRateDisplay {
+    if (_pointsInfo == null) return '';
+    final val = _pointsInfo!.monetaryValueOfOnePoint;
+    if (val <= 0) return '';
+    final ptsPerSar = (1.0 / val).round();
+    return '$ptsPerSar pts = 1 ${widget.currency}';
+  }
+
+  double get _pointsDiscountAmount {
+    if (_pointsToRedeem == 0 || _pointsInfo == null) return 0.0;
+    final raw = _pointsToRedeem * _pointsInfo!.monetaryValueOfOnePoint;
+    return raw > widget.cart.subtotal ? widget.cart.subtotal : raw;
+  }
+
+  double get _payableTotal {
+    final total = widget.cart.subtotal - _pointsDiscountAmount;
+    return total < 0 ? 0.0 : total;
   }
 
   @override
   void dispose() {
+    _customPointsController.dispose();
     _addressController.dispose();
     _notesController.dispose();
-    _couponController.dispose();
     super.dispose();
   }
 
@@ -92,7 +198,14 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
       _errorMessage = null;
     });
 
-    final targetStoreId = widget.cart.storeId ?? widget.cart.store.id;
+    final targetStoreId = _effectiveStoreId;
+    if (targetStoreId.isEmpty) {
+      setState(() {
+        _isSubmitting = false;
+        _errorMessage = 'Store information is missing. Please refresh your cart.';
+      });
+      return;
+    }
     final itemsInput = widget.cart.items
         .map(
           (item) =>
@@ -107,9 +220,7 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
       deliveryAddress: _fulfillment == FulfillmentType.delivery
           ? _addressController.text.trim()
           : null,
-      couponCode: _couponController.text.trim().isNotEmpty
-          ? _couponController.text.trim()
-          : null,
+      redeemPoints: _usePoints && _pointsToRedeem > 0 ? _pointsToRedeem : null,
       notes: _notesController.text.trim().isNotEmpty
           ? _notesController.text.trim()
           : null,
@@ -406,28 +517,198 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                       ),
                       const SizedBox(height: AppDimensions.spacingLg),
 
-                      // Optional Coupon Code
-                      Text(
-                        'Coupon Code (Optional)',
-                        style: AppTextStyles.titleMedium.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXs),
-                      TextFormField(
-                        key: const Key('checkout_coupon_input'),
-                        controller: _couponController,
-                        enabled: !_isSubmitting,
-                        textCapitalization: TextCapitalization.characters,
-                        decoration: const InputDecoration(
-                          hintText: 'e.g. WELCOME10',
-                          prefixIcon: Icon(
-                            Icons.local_offer_outlined,
-                            color: AppColors.textTertiary,
+                      // Loyalty Points Redemption Card
+                      if (_pointsInfo != null) ...[
+                        Container(
+                          key: const Key('checkout_loyalty_points_card'),
+                          padding: const EdgeInsets.all(
+                            AppDimensions.spacingMd,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _usePoints && _pointsInfo!.isEnabled && _pointsInfo!.balance > 0
+                                ? const Color(0xFFF0FDF4)
+                                : AppColors.surface,
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusMd,
+                            ),
+                            border: Border.all(
+                              color: _usePoints && _pointsInfo!.isEnabled && _pointsInfo!.balance > 0
+                                  ? AppColors.success
+                                  : AppColors.borderSubtle,
+                              width: _usePoints && _pointsInfo!.isEnabled && _pointsInfo!.balance > 0 ? 1.5 : 1.0,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF3C7),
+                                  borderRadius: BorderRadius.circular(
+                                    AppDimensions.radiusSm,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.stars_rounded,
+                                  color: Color(0xFFD97706),
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: AppDimensions.spacingMd),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Redeem Loyalty Points',
+                                      style: AppTextStyles.titleMedium.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    if (!_pointsInfo!.isEnabled)
+                                      Text(
+                                        'Loyalty points redemption is disabled for this store.',
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      )
+                                    else if (_pointsInfo!.balance <= 0)
+                                      Text(
+                                        '0 loyalty points available. Earn points on orders.',
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      )
+                                    else if (_pointsInfo!.balance < _pointsInfo!.minPointsToRedeem)
+                                      Text(
+                                        '${_pointsInfo!.balance} pts available (Min ${_pointsInfo!.minPointsToRedeem} required to redeem)',
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      )
+                                    else ...[
+                                      Text(
+                                        'Available: ${_pointsInfo!.balance} pts (worth ${_pointsInfo!.monetaryValue.toStringAsFixed(2)} ${widget.currency})',
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                      if (_conversionRateDisplay.isNotEmpty) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Rate: $_conversionRateDisplay (${_pointsInfo!.monetaryValueOfOnePoint.toStringAsFixed(2)} ${widget.currency}/pt)',
+                                          style: AppTextStyles.bodySmall.copyWith(
+                                            color: const Color(0xFFD97706),
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ],
+                                      if (_usePoints &&
+                                          _pointsDiscountAmount > 0) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Redeeming $_pointsToRedeem pts (-${_pointsDiscountAmount.toStringAsFixed(2)} ${widget.currency})',
+                                          style: AppTextStyles.bodySmall.copyWith(
+                                            color: AppColors.success,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              'Points:',
+                                              style: AppTextStyles.bodySmall.copyWith(
+                                                fontWeight: FontWeight.w500,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            SizedBox(
+                                              width: 75,
+                                              height: 30,
+                                              child: TextFormField(
+                                                key: const Key('checkout_points_input'),
+                                                controller: _customPointsController,
+                                                keyboardType: TextInputType.number,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                                decoration: InputDecoration(
+                                                  isDense: true,
+                                                  contentPadding: const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 6,
+                                                  ),
+                                                  border: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(
+                                                      AppDimensions.radiusSm,
+                                                    ),
+                                                  ),
+                                                ),
+                                                onChanged: (val) {
+                                                  final parsed = int.tryParse(val.trim());
+                                                  setState(() {
+                                                    _customPointsToRedeem = parsed != null
+                                                        ? parsed.clamp(0, _maxEligiblePoints)
+                                                        : 0;
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '/ $_maxEligiblePoints max',
+                                              style: AppTextStyles.bodySmall.copyWith(
+                                                color: AppColors.textTertiary,
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              Switch.adaptive(
+                                key: const Key('checkout_use_points_switch'),
+                                value: _usePoints &&
+                                    _pointsInfo!.isEnabled &&
+                                    _pointsInfo!.balance > 0 &&
+                                    _pointsInfo!.balance >=
+                                        _pointsInfo!.minPointsToRedeem,
+                                activeTrackColor: AppColors.success,
+                                onChanged: (_isSubmitting ||
+                                        !_pointsInfo!.isEnabled ||
+                                        _pointsInfo!.balance <= 0 ||
+                                        _pointsInfo!.balance <
+                                            _pointsInfo!.minPointsToRedeem)
+                                    ? null
+                                    : (val) {
+                                        setState(() {
+                                          _usePoints = val;
+                                          if (val) {
+                                            _customPointsToRedeem = _maxEligiblePoints;
+                                            _customPointsController.text =
+                                                _maxEligiblePoints.toString();
+                                          } else {
+                                            _customPointsToRedeem = null;
+                                            _customPointsController.clear();
+                                          }
+                                        });
+                                      },
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: AppDimensions.spacingLg),
+                        const SizedBox(height: AppDimensions.spacingLg),
+                      ],
 
                       // Order Items Summary
                       Text(
@@ -515,6 +796,29 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                                 ),
                               ],
                             ),
+                            if (_usePoints && _pointsDiscountAmount > 0) ...[
+                              const SizedBox(height: 4.0),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Points Discount',
+                                    style: TextStyle(
+                                      color: AppColors.success,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    '-${_pointsDiscountAmount.toStringAsFixed(2)} ${widget.currency}',
+                                    style: const TextStyle(
+                                      color: AppColors.success,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                             const Divider(
                               height: 16.0,
                               color: AppColors.borderSubtle,
@@ -527,7 +831,7 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                                   style: AppTextStyles.titleMedium,
                                 ),
                                 Text(
-                                  '${widget.cart.subtotal.toStringAsFixed(2)} ${widget.currency}',
+                                  '${_payableTotal.toStringAsFixed(2)} ${widget.currency}',
                                   style: AppTextStyles.titleMedium.copyWith(
                                     fontWeight: FontWeight.w800,
                                     color: AppColors.primaryDark,
@@ -575,7 +879,7 @@ class _CheckoutBottomSheetState extends State<CheckoutBottomSheet> {
                             ),
                           )
                         : Text(
-                            'Place Order • ${widget.cart.subtotal.toStringAsFixed(2)} ${widget.currency}',
+                            'Place Order • ${_payableTotal.toStringAsFixed(2)} ${widget.currency}',
                             style: AppTextStyles.bodyMedium.copyWith(
                               fontWeight: FontWeight.w700,
                               color: Colors.white,

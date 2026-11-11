@@ -48,16 +48,24 @@ class _SessionBootstrapScreenState extends State<SessionBootstrapScreen> {
         // Valid active session -> route to assigned role home
         RoleRouting.navigateForRole(context, user.role, clearStack: true);
       } else {
-        // No token or expired -> route to customer login
+        // No token or expired -> route directly to customer login
         Navigator.of(context).pushReplacementNamed(AppRoutes.login);
       }
     } else {
       final failure = result.failureOrNull;
-      // If temporary network or server error, retain token and allow retry
-      setState(() {
-        _isLoading = false;
-        _transientError = failure;
-      });
+      // Only display the retry connection card for genuine transient transport/server errors
+      if (failure is NetworkFailure || failure is ServerFailure) {
+        setState(() {
+          _isLoading = false;
+          _transientError = failure;
+        });
+      } else {
+        // Corrupted session, invalid token, or unrecoverable error:
+        // Clear local credentials and redirect directly to login
+        await _repository.logout();
+        if (!mounted) return;
+        Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+      }
     }
   }
 

@@ -54,7 +54,7 @@ class StoreModel {
 
     int? parseItemCount(dynamic countVal, dynamic explicitCount) {
       if (countVal is Map<String, dynamic>) {
-        final items = countVal['items'];
+        final items = countVal['items'] ?? countVal['products'];
         if (items is num) return items.toInt();
         if (items is String) return int.tryParse(items);
       }

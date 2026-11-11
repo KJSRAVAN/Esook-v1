@@ -4,8 +4,10 @@ import 'package:esouq/core/routing/role_routing.dart';
 import 'package:esouq/core/theme/app_theme.dart';
 import 'package:esouq/features/auth/domain/models/user_role.dart';
 import 'package:esouq/features/auth/presentation/widgets/auth_scope.dart';
+import 'package:esouq/features/customer/application/points_notifier.dart';
 import 'package:esouq/features/customer/cart/presentation/screens/cart_screen.dart';
 import 'package:esouq/features/customer/domain/models/store_model.dart';
+import 'package:esouq/features/customer/domain/repositories/order_repository.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_account_screen.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_chat_screen.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_market_screen.dart';
@@ -100,13 +102,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(CustomerChatScreen), findsOneWidget);
-      expect(find.text('No Active Messages'), findsOneWidget);
-      expect(
-        find.text(
-          'Direct messaging with store staff and delivery riders will be available during active orders.',
-        ),
-        findsOneWidget,
-      );
+      expect(find.text('Chat Coming Soon'), findsOneWidget);
     });
 
     testWidgets('switches to Cart tab when tapped', (tester) async {
@@ -313,6 +309,58 @@ void main() {
         );
 
         ordersNotifier.dispose();
+      },
+    );
+
+    testWidgets(
+      'order placement triggers pointsNotifier refresh',
+      (tester) async {
+        final store = mockStoreRepository.defaultStores.first;
+        mockOrderRepository.pointsInfoToReturn = const CustomerPointsInfo(
+          isEnabled: true,
+          pointsPerCurrencyUnit: 0.10,
+          balance: 100,
+        );
+        final pointsNotifier = PointsNotifier(orderRepository: mockOrderRepository);
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: AuthScope(
+              repository: mockAuthRepository,
+              child: CustomerShell(
+                initialIndex: 2, // Cart tab
+                authRepository: mockAuthRepository,
+                storeRepository: mockStoreRepository,
+                productRepository: mockProductRepository,
+                cartRepository: mockCartRepository,
+                orderRepository: mockOrderRepository,
+                initialSelectedStore: store,
+                pointsNotifier: pointsNotifier,
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Initial points load happened for store
+        final initialPointsCalls = mockOrderRepository.getStorePointsInfoCallCount;
+        expect(initialPointsCalls, greaterThanOrEqualTo(1));
+
+        // Find CartScreen and invoke onOrderPlaced
+        final cartScreen = tester.widget<CartScreen>(find.byType(CartScreen));
+        expect(cartScreen.onOrderPlaced, isNotNull);
+
+        cartScreen.onOrderPlaced!(mockOrderRepository.defaultOrder);
+        await tester.pumpAndSettle();
+
+        // Points refresh was called
+        expect(
+          mockOrderRepository.getStorePointsInfoCallCount,
+          equals(initialPointsCalls + 1),
+        );
+
+        pointsNotifier.dispose();
       },
     );
   });

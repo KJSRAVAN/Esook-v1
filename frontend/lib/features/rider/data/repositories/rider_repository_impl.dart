@@ -162,4 +162,86 @@ class RiderRepositoryImpl implements RiderRepository {
       );
     }
   }
+
+  @override
+  Future<Result<List<RiderOrderModel>>> getHistory() async {
+    try {
+      final response = await _apiClient.get<dynamic>('/drivers/orders/history');
+      final dynamic rawData = response.data;
+      final List<dynamic> rawList;
+
+      if (rawData is List) {
+        rawList = rawData;
+      } else if (rawData is Map<String, dynamic>) {
+        if (rawData['data'] is List) {
+          rawList = rawData['data'] as List;
+        } else if (rawData['orders'] is List) {
+          rawList = rawData['orders'] as List;
+        } else {
+          rawList = const [];
+        }
+      } else {
+        rawList = const [];
+      }
+
+      final orders = rawList
+          .whereType<Map<String, dynamic>>()
+          .map(RiderOrderModel.fromJson)
+          .toList();
+
+      return Result.success(orders);
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(
+        UnknownFailure(message: 'Failed to load delivery history: $e'),
+      );
+    }
+  }
+
+  @override
+  Future<Result<bool>> toggleAvailability(bool isOnline) async {
+    try {
+      final response = await _apiClient.patch<dynamic>(
+        '/drivers/status',
+        body: {'isOnline': isOnline},
+      );
+
+      final dynamic rawData = response.data;
+      bool status = isOnline;
+      if (rawData is Map<String, dynamic>) {
+        if (rawData['isOnline'] is bool) {
+          status = rawData['isOnline'] as bool;
+        } else if (rawData['isActive'] is bool) {
+          status = rawData['isActive'] as bool;
+        }
+      }
+
+      return Result.success(status);
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(
+        UnknownFailure(message: 'Failed to update driver status: $e'),
+      );
+    }
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> getProfile() async {
+    try {
+      final response = await _apiClient.get<dynamic>('/drivers/profile');
+      final dynamic rawData = response.data;
+      if (rawData is Map<String, dynamic>) {
+        return Result.success(rawData);
+      }
+      return Result.success(const {});
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(
+        UnknownFailure(message: 'Failed to load driver profile: $e'),
+      );
+    }
+  }
 }

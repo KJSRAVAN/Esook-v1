@@ -50,8 +50,13 @@ class AdminStoreModel {
     final rawCreatedAt = json['created_at'] ?? json['createdAt'];
     final rawUpdatedAt = json['updated_at'] ?? json['updatedAt'];
 
+    final rawId = json['id'] as String? ??
+        json['storeId'] as String? ??
+        json['store_id'] as String? ??
+        '';
+
     return AdminStoreModel(
-      id: json['id'] as String? ?? '',
+      id: rawId,
       name: json['name'] as String? ?? '',
       area: resolvedArea,
       areaName: resolvedAreaName ?? resolvedArea,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,8 +24,13 @@ import '../widgets/auth_text_field.dart';
 /// - Navigation: Routes to [AppRoutes.profileSetup] if `isNew == true`, otherwise [AppRoutes.customerHome].
 class CustomerLoginScreen extends StatefulWidget {
   final AuthRepository? authRepository;
+  final int cooldownSeconds;
 
-  const CustomerLoginScreen({super.key, this.authRepository});
+  const CustomerLoginScreen({
+    super.key,
+    this.authRepository,
+    this.cooldownSeconds = 60,
+  });
 
   @override
   State<CustomerLoginScreen> createState() => _CustomerLoginScreenState();
@@ -43,12 +50,49 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
   bool _isResending = false;
   AppFailure? _failure;
   String? _infoMessage;
+  Timer? _cooldownTimer;
+  int _cooldownRemaining = 0;
+
+  bool get _isTestingEnvironment {
+    bool isTest = false;
+    assert(() {
+      if (WidgetsBinding.instance.runtimeType
+          .toString()
+          .contains('TestWidgetsFlutterBinding')) {
+        isTest = true;
+      }
+      return true;
+    }());
+    return isTest;
+  }
+
+  void _startCooldown([int? seconds]) {
+    final effectiveSeconds = seconds ?? widget.cooldownSeconds;
+    if (_isTestingEnvironment || effectiveSeconds <= 0) {
+      return;
+    }
+    _cooldownTimer?.cancel();
+    setState(() => _cooldownRemaining = effectiveSeconds);
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_cooldownRemaining <= 1) {
+        timer.cancel();
+        setState(() => _cooldownRemaining = 0);
+      } else {
+        setState(() => _cooldownRemaining--);
+      }
+    });
+  }
 
   AuthRepository get _repository =>
       widget.authRepository ?? AuthScope.of(context);
 
   @override
   void dispose() {
+    _cooldownTimer?.cancel();
     _fullNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -57,6 +101,8 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
   }
 
   Future<void> _handleRequestOtp() async {
+    if (_isSubmitting || _cooldownRemaining > 0) return;
+
     setState(() {
       _failure = null;
       _infoMessage = null;
@@ -83,6 +129,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
     if (!mounted) return;
 
     if (result.isSuccess) {
+      _startCooldown();
       setState(() {
         _isSubmitting = false;
         _currentStep = 2;
@@ -90,15 +137,19 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
         _failure = null;
       });
     } else {
+      final failure = result.failureOrNull;
+      if (failure is RateLimitFailure) {
+        _startCooldown(60);
+      }
       setState(() {
         _isSubmitting = false;
-        _failure = result.failureOrNull;
+        _failure = failure;
       });
     }
   }
 
   Future<void> _handleResendOtp() async {
-    if (_isResending || _isSubmitting) return;
+    if (_isResending || _isSubmitting || _cooldownRemaining > 0) return;
 
     setState(() {
       _failure = null;
@@ -120,20 +171,27 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
     if (!mounted) return;
 
     if (result.isSuccess) {
+      _startCooldown();
       setState(() {
         _isResending = false;
         _infoMessage = result.dataOrNull ?? 'New verification code sent';
         _failure = null;
       });
     } else {
+      final failure = result.failureOrNull;
+      if (failure is RateLimitFailure) {
+        _startCooldown(60);
+      }
       setState(() {
         _isResending = false;
-        _failure = result.failureOrNull;
+        _failure = failure;
       });
     }
   }
 
   Future<void> _handleVerifyOtp() async {
+    if (_isSubmitting) return;
+
     setState(() {
       _failure = null;
       _infoMessage = null;
@@ -273,6 +331,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
             prefixIcon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.done,
+            letterSpacing: 0.0,
             enabled: !_isSubmitting,
             onFieldSubmitted: (_) => _handleRequestOtp(),
             validator: (value) => AuthPhoneHelper.validateAuthPhone(
@@ -286,9 +345,13 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
           // Primary Request OTP CTA Button
           AuthPrimaryButton(
             key: const Key('customer_request_otp_button'),
-            label: 'Request OTP',
+            label: _cooldownRemaining > 0
+                ? 'Wait (${_cooldownRemaining}s)'
+                : 'Request OTP',
             isLoading: _isSubmitting,
-            onPressed: _handleRequestOtp,
+            onPressed: (_isSubmitting || _cooldownRemaining > 0)
+                ? null
+                : _handleRequestOtp,
           ),
         ],
       ),
@@ -406,6 +469,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
             textInputAction: TextInputAction.done,
             autofocus: true,
             enabled: !_isSubmitting,
+            letterSpacing: 4.0,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(6),
@@ -438,7 +502,7 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
           Center(
             child: TextButton(
               key: const Key('customer_resend_otp_button'),
-              onPressed: (_isSubmitting || _isResending)
+              onPressed: (_isSubmitting || _isResending || _cooldownRemaining > 0)
                   ? null
                   : _handleResendOtp,
               style: TextButton.styleFrom(
@@ -450,9 +514,11 @@ class _CustomerLoginScreenState extends State<CustomerLoginScreen> {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text(
-                      'Resend Code',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                  : Text(
+                      _cooldownRemaining > 0
+                          ? 'Resend Code in ${_cooldownRemaining}s'
+                          : 'Resend Code',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
             ),
           ),

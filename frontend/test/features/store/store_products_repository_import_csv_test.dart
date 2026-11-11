@@ -11,6 +11,7 @@ class MockMultipartHttpTransport implements HttpTransport, MultipartHttpTranspor
   String responseBody = '{}';
   Uri? lastUri;
   HttpMethod? lastMethod;
+  String? lastBody;
   String? lastFileField;
   String? lastFilename;
   List<int>? lastFileBytes;
@@ -24,6 +25,10 @@ class MockMultipartHttpTransport implements HttpTransport, MultipartHttpTranspor
     String? body,
     Duration? timeout,
   }) async {
+    lastUri = uri;
+    lastMethod = method;
+    lastHeaders = headers;
+    lastBody = body;
     return HttpResponseData(
       statusCode: statusCode,
       body: responseBody,
@@ -154,6 +159,144 @@ void main() {
 
       expect(result.isSuccess, isFalse);
       expect(result.failureOrNull?.message, contains('Import failed with status 500'));
+    });
+  });
+
+  group('StoreProductsRepositoryImpl.uploadProductImage', () {
+    late MockMultipartHttpTransport mockTransport;
+    late ApiClient apiClient;
+    late StoreProductsRepositoryImpl repository;
+
+    setUp(() {
+      mockTransport = MockMultipartHttpTransport();
+      apiClient = DefaultApiClient(
+        baseUrl: 'https://api.esouq.com',
+        transport: mockTransport,
+      );
+      repository = StoreProductsRepositoryImpl(apiClient: apiClient);
+    });
+
+    test('sends multipart POST to /stores/:storeId/items/upload-image and returns imageUrl', () async {
+      mockTransport.statusCode = 201;
+      mockTransport.responseBody = jsonEncode({
+        'imageUrl': 'https://supabase.co/storage/v1/object/public/item-images/store-123/img-1.jpg',
+      });
+
+      final bytes = [0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01];
+      final result = await repository.uploadProductImage(
+        storeId: 'store-123',
+        fileBytes: bytes,
+        fileName: 'product.jpg',
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(
+        result.dataOrNull,
+        'https://supabase.co/storage/v1/object/public/item-images/store-123/img-1.jpg',
+      );
+      expect(mockTransport.lastUri?.path, '/stores/store-123/items/upload-image');
+      expect(mockTransport.lastMethod, HttpMethod.post);
+      expect(mockTransport.lastFileField, 'file');
+      expect(mockTransport.lastFilename, 'product.jpg');
+      expect(mockTransport.lastFileBytes, equals(bytes));
+    });
+
+    test('returns failure when server response lacks imageUrl', () async {
+      mockTransport.statusCode = 200;
+      mockTransport.responseBody = jsonEncode({'status': 'ok'});
+
+      final result = await repository.uploadProductImage(
+        storeId: 'store-123',
+        fileBytes: [1, 2, 3],
+        fileName: 'product.png',
+      );
+
+      expect(result.isFailure, isTrue);
+      expect(result.failureOrNull?.message, contains('missing imageUrl'));
+    });
+
+    test('returns failure on server error 500', () async {
+      mockTransport.statusCode = 500;
+      mockTransport.responseBody = jsonEncode({'message': 'Internal Server Error'});
+
+      final result = await repository.uploadProductImage(
+        storeId: 'store-123',
+        fileBytes: [1, 2, 3],
+        fileName: 'product.png',
+      );
+
+      expect(result.isFailure, isTrue);
+    });
+  });
+
+  group('StoreProductsRepositoryImpl.createProduct & updateProduct with offerPrice', () {
+    late MockMultipartHttpTransport mockTransport;
+    late ApiClient apiClient;
+    late StoreProductsRepositoryImpl repository;
+
+    setUp(() {
+      mockTransport = MockMultipartHttpTransport();
+      apiClient = DefaultApiClient(
+        baseUrl: 'https://api.esouq.com',
+        transport: mockTransport,
+      );
+      repository = StoreProductsRepositoryImpl(apiClient: apiClient);
+    });
+
+    test('createProduct includes offerPrice in POST body when provided', () async {
+      mockTransport.statusCode = 201;
+      mockTransport.responseBody = jsonEncode({
+        'id': 'p-new-1',
+        'storeId': 'store-123',
+        'name': 'Premium Dates',
+        'price': 40.0,
+        'offerPrice': 32.0,
+        'isAvailable': true,
+      });
+
+      final result = await repository.createProduct(
+        storeId: 'store-123',
+        name: 'Premium Dates',
+        price: 40.0,
+        offerPrice: 32.0,
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull?.offerPrice, equals(32.0));
+      expect(result.dataOrNull?.effectivePrice, equals(32.0));
+      expect(mockTransport.lastUri?.path, '/stores/store-123/items');
+      expect(mockTransport.lastMethod, HttpMethod.post);
+
+      final decoded = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+      expect(decoded['name'], 'Premium Dates');
+      expect(decoded['price'], 40.0);
+      expect(decoded['offerPrice'], 32.0);
+    });
+
+    test('updateProduct sends offerPrice in PATCH body when provided', () async {
+      mockTransport.statusCode = 200;
+      mockTransport.responseBody = jsonEncode({
+        'id': 'p-1',
+        'storeId': 'store-123',
+        'name': 'Premium Dates',
+        'price': 40.0,
+        'offerPrice': 30.0,
+        'isAvailable': true,
+      });
+
+      final result = await repository.updateProduct(
+        storeId: 'store-123',
+        productId: 'p-1',
+        offerPrice: 30.0,
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull?.offerPrice, equals(30.0));
+      expect(mockTransport.lastUri?.path, '/stores/store-123/items/p-1');
+      expect(mockTransport.lastMethod, HttpMethod.patch);
+
+      final decoded = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+      expect(decoded['offerPrice'], 30.0);
     });
   });
 }

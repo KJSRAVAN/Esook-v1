@@ -84,6 +84,30 @@ void main() {
     );
 
     test(
+      'registerDriver normalizes phone number with AuthPhoneHelper before sending',
+      () async {
+        mockTransport.statusCode = 201;
+        mockTransport.responseBody = jsonEncode({
+          'id': 'd-102',
+          'name': 'Ali Driver',
+          'phone': '+966509876543',
+          'role': 'DRIVER',
+          'isActive': true,
+        });
+
+        final result = await driversRepository.registerDriver(
+          name: 'Ali Driver',
+          phone: '00966 50 987 6543',
+          password: 'Password@123',
+        );
+
+        expect(result.isSuccess, isTrue);
+        final sentBody = jsonDecode(mockTransport.lastBody!);
+        expect(sentBody['phone'], '+966509876543');
+      },
+    );
+
+    test(
       'getDrivers queries /users without role filter and returns filtered driver list',
       () async {
         mockTransport.statusCode = 200;
@@ -123,7 +147,7 @@ void main() {
     );
 
     test(
-      'updateDriverStatus sends PATCH /users/:id and returns updated driver',
+      'updateDriverStatus sends PATCH /users/drivers/:id/status and returns updated driver',
       () async {
         mockTransport.statusCode = 200;
         mockTransport.responseBody = jsonEncode({
@@ -143,7 +167,7 @@ void main() {
         final driver = result.dataOrNull!;
         expect(driver.id, 'd-1');
         expect(driver.isActive, isFalse);
-        expect(mockTransport.lastUri?.path, '/users/d-1');
+        expect(mockTransport.lastUri?.path, '/users/drivers/d-1/status');
         expect(mockTransport.lastMethod, HttpMethod.patch);
 
         final sentBody = jsonDecode(mockTransport.lastBody!);

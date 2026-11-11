@@ -48,6 +48,7 @@ class StoreShell extends StatefulWidget {
 
 class _StoreShellState extends State<StoreShell> {
   late int _currentIndex;
+  late final ApiClient _apiClient;
   late final AuthRepository _authRepository;
   late final StoreOrdersRepository _ordersRepository;
   late final StoreProductsRepository _productsRepository;
@@ -63,27 +64,28 @@ class _StoreShellState extends State<StoreShell> {
 
     final config = AppConfig.fromEnvironment();
     final secureStorage = const FlutterSecureStorageImpl();
-    final apiClient = DefaultApiClient(
+    _apiClient = DefaultApiClient(
       baseUrl: config.apiBaseUrl,
       tokenProvider: () => secureStorage.read(key: StorageKeys.authToken),
+      secureStorage: secureStorage,
       timeout: config.connectTimeout,
     );
 
     _authRepository =
         widget.authRepository ??
-        AuthRepositoryImpl(apiClient: apiClient, secureStorage: secureStorage);
+        AuthRepositoryImpl(apiClient: _apiClient, secureStorage: secureStorage);
 
     _ordersRepository =
         widget.ordersRepository ??
-        StoreOrdersRepositoryImpl(apiClient: apiClient);
+        StoreOrdersRepositoryImpl(apiClient: _apiClient);
 
     _productsRepository =
         widget.productsRepository ??
-        StoreProductsRepositoryImpl(apiClient: apiClient);
+        StoreProductsRepositoryImpl(apiClient: _apiClient);
 
     _categoriesRepository =
         widget.categoriesRepository ??
-        StoreCategoriesRepositoryImpl(apiClient: apiClient);
+        StoreCategoriesRepositoryImpl(apiClient: _apiClient);
 
     if (widget.initialUser != null) {
       _currentUser = widget.initialUser;
@@ -138,6 +140,7 @@ class _StoreShellState extends State<StoreShell> {
     }
 
     return StoreScope(
+      apiClient: _apiClient,
       ordersRepository: _ordersRepository,
       productsRepository: _productsRepository,
       categoriesRepository: _categoriesRepository,

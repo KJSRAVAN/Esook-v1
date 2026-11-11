@@ -57,6 +57,7 @@ class AdminShell extends StatefulWidget {
 class _AdminShellState extends State<AdminShell> {
   late int _currentIndex;
 
+  late final ApiClient _apiClient;
   late final AdminUsersRepository _usersRepository;
   late final AdminDriversRepository _driversRepository;
   late final AdminStoresRepository _storesRepository;
@@ -70,31 +71,32 @@ class _AdminShellState extends State<AdminShell> {
     _currentIndex = widget.initialIndex;
 
     final config = AppConfig.fromEnvironment();
-    final apiClient = DefaultApiClient(
+    const secureStorage = FlutterSecureStorageImpl();
+    _apiClient = DefaultApiClient(
       baseUrl: config.apiBaseUrl,
-      tokenProvider: () =>
-          const FlutterSecureStorageImpl().read(key: StorageKeys.authToken),
+      tokenProvider: () => secureStorage.read(key: StorageKeys.authToken),
+      secureStorage: secureStorage,
       timeout: config.connectTimeout,
     );
 
     _usersRepository =
         widget.usersRepository ??
-        AdminUsersRepositoryImpl(apiClient: apiClient);
+        AdminUsersRepositoryImpl(apiClient: _apiClient);
     _driversRepository =
         widget.driversRepository ??
-        AdminDriversRepositoryImpl(apiClient: apiClient);
+        AdminDriversRepositoryImpl(apiClient: _apiClient);
     _storesRepository =
         widget.storesRepository ??
-        AdminStoresRepositoryImpl(apiClient: apiClient);
+        AdminStoresRepositoryImpl(apiClient: _apiClient);
     _ordersRepository =
         widget.ordersRepository ??
-        StoreOrdersRepositoryImpl(apiClient: apiClient);
+        StoreOrdersRepositoryImpl(apiClient: _apiClient);
     _productsRepository =
         widget.productsRepository ??
-        StoreProductsRepositoryImpl(apiClient: apiClient);
+        StoreProductsRepositoryImpl(apiClient: _apiClient);
     _categoriesRepository =
         widget.categoriesRepository ??
-        StoreCategoriesRepositoryImpl(apiClient: apiClient);
+        StoreCategoriesRepositoryImpl(apiClient: _apiClient);
   }
 
   void _onTabSelected(int index) {
@@ -116,6 +118,7 @@ class _AdminShellState extends State<AdminShell> {
   @override
   Widget build(BuildContext context) {
     return AdminScope(
+      apiClient: _apiClient,
       usersRepository: _usersRepository,
       driversRepository: _driversRepository,
       storesRepository: _storesRepository,

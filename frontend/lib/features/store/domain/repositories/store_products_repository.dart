@@ -14,6 +14,8 @@ abstract interface class StoreProductsRepository {
     required String name,
     String? description,
     required double price,
+    double? offerPrice,
+    int? pointsValue,
     String? categoryId,
     String? category,
     String? imageUrl,
@@ -28,6 +30,9 @@ abstract interface class StoreProductsRepository {
     String? name,
     String? description,
     double? price,
+    double? offerPrice,
+    bool clearOfferPrice = false,
+    int? pointsValue,
     String? categoryId,
     String? category,
     String? imageUrl,
@@ -50,8 +55,17 @@ abstract interface class StoreProductsRepository {
   });
 
   /// Bulk import items for a store from a CSV file (`POST /stores/:storeId/items/import-csv`).
-  /// Permitted for Super Admin.
+  /// Permitted for Super Admin and Store Manager.
   Future<Result<CsvImportResultModel>> importCsv({
+    required String storeId,
+    required List<int> fileBytes,
+    required String fileName,
+  });
+
+  /// Upload a product image file (`POST /stores/:storeId/items/upload-image`).
+  /// Permitted for Store Staff, Store Manager, and Super Admin.
+  /// Returns the public URL string of the uploaded image.
+  Future<Result<String>> uploadProductImage({
     required String storeId,
     required List<int> fileBytes,
     required String fileName,

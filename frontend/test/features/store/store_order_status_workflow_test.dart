@@ -393,5 +393,101 @@ void main() {
         expect(find.text('Card'), findsWidgets);
       },
     );
+
+    testWidgets(
+      'Displays customer notes in StoreOrderDetailsSheet when notes are non-empty',
+      (tester) async {
+        final mockRepo = MockStoreOrdersRepository();
+        final orderWithNotes = createTestOrder(
+          id: 'order-with-notes',
+          status: OrderStatus.pending,
+          fulfillment: FulfillmentType.delivery,
+        ).copyWith(notes: 'Please double-bag frozen items');
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: StoreOrderDetailsSheet(
+                order: orderWithNotes,
+                ordersRepository: mockRepo,
+              ),
+            ),
+          ),
+        );
+
+        expect(find.byKey(const Key('store_order_notes_card')), findsOneWidget);
+        expect(find.text('Customer Notes'), findsOneWidget);
+        expect(find.text('Please double-bag frozen items'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Hides customer notes in StoreOrderDetailsSheet when notes are null, empty, or whitespace',
+      (tester) async {
+        final mockRepo = MockStoreOrdersRepository();
+
+        // 1. null notes
+        final orderNullNotes = createTestOrder(
+          id: 'order-null-notes',
+          status: OrderStatus.pending,
+          fulfillment: FulfillmentType.delivery,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: StoreOrderDetailsSheet(
+                order: orderNullNotes,
+                ordersRepository: mockRepo,
+              ),
+            ),
+          ),
+        );
+        expect(find.byKey(const Key('store_order_notes_card')), findsNothing);
+
+        // 2. whitespace notes
+        final orderWhitespaceNotes = orderNullNotes.copyWith(notes: '   ');
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: StoreOrderDetailsSheet(
+                order: orderWhitespaceNotes,
+                ordersRepository: mockRepo,
+              ),
+            ),
+          ),
+        );
+        expect(find.byKey(const Key('store_order_notes_card')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'renders Points Discount row in store order details sheet when pointsDiscount > 0',
+      (tester) async {
+        final mockRepo = MockStoreOrdersRepository();
+        final orderWithPoints = createTestOrder(
+          id: 'order-pts-store',
+          status: OrderStatus.accepted,
+          fulfillment: FulfillmentType.delivery,
+        ).copyWith(
+          pointsDiscount: 15.0,
+          redeemedPoints: 1500,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: StoreOrderDetailsSheet(
+                order: orderWithPoints,
+                ordersRepository: mockRepo,
+              ),
+            ),
+          ),
+        );
+
+        expect(find.text('Points Discount (1500 pts)'), findsOneWidget);
+        expect(find.text('-15.00 AED'), findsOneWidget);
+      },
+    );
   });
 }

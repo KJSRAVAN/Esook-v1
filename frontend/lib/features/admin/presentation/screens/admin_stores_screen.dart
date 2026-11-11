@@ -8,6 +8,7 @@ import '../../domain/repositories/admin_stores_repository.dart';
 import '../widgets/admin_scope.dart';
 import '../widgets/create_store_dialog.dart';
 import '../widgets/edit_store_dialog.dart';
+import '../widgets/store_loyalty_dialog.dart';
 import 'admin_store_catalog_screen.dart';
 import 'admin_store_staff_screen.dart';
 
@@ -448,6 +449,30 @@ class _AdminStoresScreenState extends State<AdminStoresScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    OutlinedButton.icon(
+                      key: Key('manage_loyalty_btn_${store.id}'),
+                      icon: const Icon(Icons.stars_rounded, size: 16, color: Color(0xFFD97706)),
+                      label: const Text('Loyalty'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFD97706),
+                        side: const BorderSide(color: Color(0xFFD97706)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () {
+                        StoreLoyaltyDialog.show(
+                          context,
+                          storeId: store.id,
+                          storeName: store.name,
+                          apiClient: AdminScope.apiClientOf(context),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: AppDimensions.spacingSm),
                     OutlinedButton.icon(
                       key: Key('manage_staff_btn_${store.id}'),
                       icon: const Icon(Icons.people_outline_rounded, size: 16),

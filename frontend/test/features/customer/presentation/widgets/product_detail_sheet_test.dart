@@ -1,4 +1,5 @@
 import 'package:esouq/core/constants/app_constants.dart';
+import 'package:esouq/core/error/failures.dart';
 import 'package:esouq/core/theme/app_theme.dart';
 import 'package:esouq/features/customer/cart/application/cart_notifier.dart';
 import 'package:esouq/features/customer/domain/models/product_model.dart';
@@ -239,5 +240,202 @@ void main() {
       expect(find.byKey(const Key('product_detail_sheet')), findsNothing);
       expect(find.byKey(const Key('open_sheet_button')), findsOneWidget);
     });
+
+    testWidgets(
+      'renders discount badge on top-left and points badge on top-right without overlapping',
+      (tester) async {
+        const offerWithPoints = ProductModel(
+          id: 'prod-offer-detail',
+          storeId: 'store-1',
+          name: 'Special Honey',
+          price: 50.0,
+          offerPrice: 35.0, // 30% off
+          isAvailable: true,
+          loyaltyPointsPerUnit: 25,
+        );
+
+        await tester.pumpWidget(buildTestWidget(product: offerWithPoints));
+
+        await tester.tap(find.byKey(const Key('open_sheet_button')));
+        await tester.pumpAndSettle();
+
+        final discountFinder = find.text('-30%').first;
+        final pointsFinder = find.text('+25 pts');
+
+        expect(discountFinder, findsOneWidget);
+        expect(pointsFinder, findsOneWidget);
+
+        final discountRect = tester.getRect(discountFinder);
+        final pointsRect = tester.getRect(pointsFinder);
+
+        expect(discountRect.right, lessThan(pointsRect.left));
+        expect(discountRect.overlaps(pointsRect), isFalse);
+      },
+    );
+
+    testWidgets(
+      'allows selecting quantity > 1 with dynamic price updates and auto-closes on success',
+      (tester) async {
+        final mockRepo = MockCartRepository();
+        final notifier = CartNotifier(cartRepository: mockRepo);
+        await notifier.loadForStore('store-1');
+
+        await tester.pumpWidget(
+          buildTestWidget(product: testProduct, cartNotifier: notifier),
+        );
+
+        await tester.tap(find.byKey(const Key('open_sheet_button')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('product_detail_sheet')), findsOneWidget);
+        expect(find.byKey(const Key('detail_selected_quantity')), findsOneWidget);
+        expect(find.text('1'), findsOneWidget);
+        expect(
+          find.text('Add to Cart — 3.50 ${AppConstants.defaultCurrency}'),
+          findsOneWidget,
+        );
+
+        // Tap increment button twice: 1 -> 2 -> 3
+        await tester.tap(find.byKey(const Key('detail_quantity_increment')));
+        await tester.pumpAndSettle();
+        expect(find.text('2'), findsOneWidget);
+        expect(
+          find.text('Add to Cart — 7.00 ${AppConstants.defaultCurrency}'),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('detail_quantity_increment')));
+        await tester.pumpAndSettle();
+        expect(find.text('3'), findsOneWidget);
+        expect(
+          find.text('Add to Cart — 10.50 ${AppConstants.defaultCurrency}'),
+          findsOneWidget,
+        );
+
+        // Tap decrement button once: 3 -> 2
+        await tester.tap(find.byKey(const Key('detail_quantity_decrement')));
+        await tester.pumpAndSettle();
+        expect(find.text('2'), findsOneWidget);
+        expect(
+          find.text('Add to Cart — 7.00 ${AppConstants.defaultCurrency}'),
+          findsOneWidget,
+        );
+
+        // Tap Add to Cart
+        await tester.tap(find.byKey(const Key('detail_add_to_cart_button')));
+        await tester.pumpAndSettle();
+
+        expect(mockRepo.addItemCallCount, equals(1));
+        expect(mockRepo.lastProductIdParam, equals('prod-detail-1'));
+        expect(mockRepo.lastQuantityParam, equals(2));
+
+        // SnackBar feedback
+        expect(
+          find.text('Added 2 x "Organic Whole Milk 1L" to cart'),
+          findsOneWidget,
+        );
+
+        // Sheet automatically closed
+        expect(find.byKey(const Key('product_detail_sheet')), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'quantity decrement is disabled at minimum quantity 1',
+      (tester) async {
+        final mockRepo = MockCartRepository();
+        final notifier = CartNotifier(cartRepository: mockRepo);
+        await notifier.loadForStore('store-1');
+
+        await tester.pumpWidget(
+          buildTestWidget(product: testProduct, cartNotifier: notifier),
+        );
+
+        await tester.tap(find.byKey(const Key('open_sheet_button')));
+        await tester.pumpAndSettle();
+
+        final decrBtnFinder = find.byKey(const Key('detail_quantity_decrement'));
+        expect(decrBtnFinder, findsOneWidget);
+
+        final decrBtn = tester.widget<IconButton>(decrBtnFinder);
+        expect(decrBtn.onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'calculates total price respecting promotional offer price',
+      (tester) async {
+        final mockRepo = MockCartRepository();
+        final notifier = CartNotifier(cartRepository: mockRepo);
+        await notifier.loadForStore('store-1');
+
+        const offerProduct = ProductModel(
+          id: 'prod-offer-calc',
+          storeId: 'store-1',
+          name: 'Premium Olive Oil',
+          price: 50.0,
+          offerPrice: 35.0,
+          isAvailable: true,
+        );
+
+        await tester.pumpWidget(
+          buildTestWidget(product: offerProduct, cartNotifier: notifier),
+        );
+
+        await tester.tap(find.byKey(const Key('open_sheet_button')));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Add to Cart — 35.00 ${AppConstants.defaultCurrency}'),
+          findsOneWidget,
+        );
+
+        // Increment to 3 units: 3 x 35.00 = 105.00
+        await tester.tap(find.byKey(const Key('detail_quantity_increment')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('detail_quantity_increment')));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Add to Cart — 105.00 ${AppConstants.defaultCurrency}'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'keeps sheet open and shows error when adding to cart fails',
+      (tester) async {
+        final mockRepo = MockCartRepository();
+        mockRepo.failureToReturn = const ServerFailure(
+          message: 'Failed to add item. Inventory unavailable.',
+        );
+        final notifier = CartNotifier(cartRepository: mockRepo);
+        await notifier.loadForStore('store-1');
+
+        await tester.pumpWidget(
+          buildTestWidget(product: testProduct, cartNotifier: notifier),
+        );
+
+        await tester.tap(find.byKey(const Key('open_sheet_button')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('product_detail_sheet')), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('detail_add_to_cart_button')));
+        await tester.pumpAndSettle();
+
+        expect(mockRepo.addItemCallCount, equals(1));
+
+        // Error message displayed
+        expect(
+          find.text('Failed to add item. Inventory unavailable.'),
+          findsOneWidget,
+        );
+
+        // Sheet MUST REMAIN OPEN on error
+        expect(find.byKey(const Key('product_detail_sheet')), findsOneWidget);
+      },
+    );
   });
 }

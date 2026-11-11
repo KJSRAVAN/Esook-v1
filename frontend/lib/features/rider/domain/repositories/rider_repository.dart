@@ -22,4 +22,13 @@ abstract interface class RiderRepository {
 
   /// Mark an active delivery as delivered (PATCH /drivers/orders/:orderId/status with { "status": "DELIVERED" }).
   Future<Result<RiderOrderModel>> markDelivered(String orderId);
+
+  /// Fetch history of completed deliveries (GET /drivers/orders/history).
+  Future<Result<List<RiderOrderModel>>> getHistory();
+
+  /// Toggle driver online/offline availability (PATCH /drivers/status with { "isOnline": isOnline }).
+  Future<Result<bool>> toggleAvailability(bool isOnline);
+
+  /// Fetch driver profile and current status (GET /drivers/profile).
+  Future<Result<Map<String, dynamic>>> getProfile();
 }

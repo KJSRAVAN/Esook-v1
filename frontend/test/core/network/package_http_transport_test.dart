@@ -83,5 +83,34 @@ void main() {
         ),
       );
     });
+
+    test('sendMultipart sends multipart request with inferred MIME content type', () async {
+      final mockClient = MockClient((request) async {
+        expect(request.method, equals('POST'));
+        expect(request.url.path, equals('/stores/s-1/items/import-csv'));
+        expect(request.headers['content-type'], contains('multipart/form-data'));
+        expect(request.headers['authorization'], equals('Bearer test-token'));
+        expect(request.body, contains('filename="items.csv"'));
+        expect(
+          request.body,
+          contains(RegExp(r'content-type:\s*text/csv', caseSensitive: false)),
+        );
+
+        return http.Response('{"imported": 5}', 200);
+      });
+
+      final transport = PackageHttpTransport(client: mockClient);
+      final response = await transport.sendMultipart(
+        uri: Uri.parse('https://api.esouq.com/stores/s-1/items/import-csv'),
+        method: HttpMethod.post,
+        headers: {'Authorization': 'Bearer test-token'},
+        fileBytes: utf8.encode('name,price\nApple,5'),
+        filename: 'items.csv',
+        fileField: 'file',
+      );
+
+      expect(response.statusCode, equals(200));
+      expect(response.body, contains('"imported": 5'));
+    });
   });
 }

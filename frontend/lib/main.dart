@@ -24,6 +24,7 @@ void main() {
   final apiClient = DefaultApiClient(
     baseUrl: config.apiBaseUrl,
     tokenProvider: () => secureStorage.read(key: StorageKeys.authToken),
+    secureStorage: secureStorage,
     timeout: config.connectTimeout,
   );
 

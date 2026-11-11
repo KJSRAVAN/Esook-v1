@@ -30,6 +30,7 @@ class AdminDashboardScreen extends StatefulWidget {
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   bool _isLoading = true;
   String? _errorMessage;
+  String? _warningMessage;
 
   List<AdminUserModel> _users = const [];
   List<AdminStoreModel> _stores = const [];
@@ -51,6 +52,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _warningMessage = null;
     });
 
     final usersResult = await _usersRepo.getUsers(page: 1, limit: 100);
@@ -58,6 +60,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     if (!mounted) return;
 
+    // Both succeeded
     if (usersResult.isSuccess && storesResult.isSuccess) {
       final userPage = usersResult.dataOrNull!;
       setState(() {
@@ -65,17 +68,51 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         _totalUsersCount = userPage.total;
         _stores = storesResult.dataOrNull ?? [];
         _isLoading = false;
+        _errorMessage = null;
+        _warningMessage = null;
       });
-    } else {
-      final error =
-          usersResult.failureOrNull?.message ??
-          storesResult.failureOrNull?.message ??
-          'Failed to load dashboard metrics';
-      setState(() {
-        _isLoading = false;
-        _errorMessage = error;
-      });
+      return;
     }
+
+    // Partial success: Users succeeded, Stores failed
+    if (usersResult.isSuccess && !storesResult.isSuccess) {
+      final userPage = usersResult.dataOrNull!;
+      setState(() {
+        _users = userPage.users;
+        _totalUsersCount = userPage.total;
+        _stores = const [];
+        _isLoading = false;
+        _errorMessage = null;
+        _warningMessage =
+            'Store statistics unavailable: ${storesResult.failureOrNull?.message ?? "Database schema mismatch"}. User metrics are live.';
+      });
+      return;
+    }
+
+    // Partial success: Stores succeeded, Users failed
+    if (!usersResult.isSuccess && storesResult.isSuccess) {
+      setState(() {
+        _users = const [];
+        _totalUsersCount = 0;
+        _stores = storesResult.dataOrNull ?? [];
+        _isLoading = false;
+        _errorMessage = null;
+        _warningMessage =
+            'User statistics unavailable: ${usersResult.failureOrNull?.message ?? "Failed to load users"}. Store data is live.';
+      });
+      return;
+    }
+
+    // Total failure: Both failed
+    final error =
+        usersResult.failureOrNull?.message ??
+        storesResult.failureOrNull?.message ??
+        'Failed to load dashboard metrics';
+    setState(() {
+      _isLoading = false;
+      _errorMessage = error;
+      _warningMessage = null;
+    });
   }
 
   @override
@@ -175,6 +212,40 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
           const SizedBox(height: AppDimensions.spacingMd),
 
+          if (_warningMessage != null) ...[
+            Container(
+              key: const Key('dashboard_warning_banner'),
+              margin: const EdgeInsets.only(bottom: AppDimensions.spacingMd),
+              padding: const EdgeInsets.all(AppDimensions.spacingSm + 4),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: AppColors.warning,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppDimensions.spacingSm),
+                  Expanded(
+                    child: Text(
+                      _warningMessage!,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           // Stat Grid
           LayoutBuilder(
             builder: (context, constraints) {
@@ -183,6 +254,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   : constraints.maxWidth > 500
                   ? 2
                   : 2;
+
+              final isStoresUnavailable = _stores.isEmpty &&
+                  _warningMessage != null &&
+                  _warningMessage!.contains('Store');
 
               return GridView.count(
                 shrinkWrap: true,
@@ -194,8 +269,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 children: [
                   AdminStatCard(
                     title: 'Stores',
-                    value: '${_stores.length}',
-                    subtitle: '$activeStoreCount Active',
+                    value: isStoresUnavailable ? '--' : '${_stores.length}',
+                    subtitle: isStoresUnavailable
+                        ? 'Unavailable'
+                        : '$activeStoreCount Active',
                     icon: Icons.storefront_rounded,
                     iconColor: AppColors.primary,
                     iconBgColor: AppColors.primaryLight,

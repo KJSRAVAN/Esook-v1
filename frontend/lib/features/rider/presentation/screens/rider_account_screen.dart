@@ -2,19 +2,23 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/routing/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimensions.dart';
 import '../../../auth/domain/models/user_model.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 
 /// Account screen for the Rider portal.
-///
-/// Displays driver profile (name, phone, role badge) and logout.
-/// Does NOT include fake shift status or unsupported features.
 class RiderAccountScreen extends StatefulWidget {
   final AuthRepository? authRepository;
   final UserModel? currentUser;
+  final bool isOnline;
+  final ValueChanged<bool>? onToggleOnline;
 
-  const RiderAccountScreen({super.key, this.authRepository, this.currentUser});
+  const RiderAccountScreen({
+    super.key,
+    this.authRepository,
+    this.currentUser,
+    this.isOnline = true,
+    this.onToggleOnline,
+  });
 
   @override
   State<RiderAccountScreen> createState() => _RiderAccountScreenState();
@@ -29,18 +33,21 @@ class _RiderAccountScreenState extends State<RiderAccountScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w700)),
+        content: const Text('Are you sure you want to sign out of the Driver Portal?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              elevation: 0,
             ),
             child: const Text('Sign Out'),
           ),
@@ -63,27 +70,36 @@ class _RiderAccountScreenState extends State<RiderAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final user = widget.currentUser;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Account'),
-        backgroundColor: AppColors.surface,
+        title: const Text(
+          'Driver Profile',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+        ),
+        backgroundColor: Colors.white,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
       ),
       body: ListView(
-        padding: AppDimensions.paddingScreen,
+        padding: const EdgeInsets.all(16),
         children: [
-          // Profile card
+          // 1. Profile Card
           Container(
-            padding: const EdgeInsets.all(AppDimensions.spacingLg),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              border: Border.all(color: AppColors.borderSubtle),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x06000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -93,62 +109,47 @@ class _RiderAccountScreenState extends State<RiderAccountScreen> {
                   height: 72,
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF7ED),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-                    border: Border.all(
-                      color: const Color(0xFFFED7AA),
-                      width: 2,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFFED7AA), width: 2),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.delivery_dining_rounded,
+                      size: 36,
+                      color: Color(0xFFEA580C),
                     ),
                   ),
-                  child: const Icon(
-                    Icons.delivery_dining_rounded,
-                    color: Color(0xFFEA580C),
-                    size: 36,
-                  ),
                 ),
+                const SizedBox(height: 14),
 
-                const SizedBox(height: AppDimensions.spacingMd),
-
-                // Name
                 Text(
-                  user?.fullName ?? 'Rider',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+                  user?.name ?? 'Delivery Partner',
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
                 ),
+                const SizedBox(height: 4),
 
-                const SizedBox(height: AppDimensions.spacingXs),
-
-                // Phone
-                if (user?.phoneNumber != null && user!.phoneNumber.isNotEmpty)
+                if (user?.phone != null && user!.phone.isNotEmpty)
                   Text(
-                    user.phoneNumber,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                    user.phone,
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF64748B)),
                   ),
+                const SizedBox(height: 10),
 
-                const SizedBox(height: AppDimensions.spacingSm),
-
-                // Role badge
+                // Driver badge
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF7ED),
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.radiusFull,
-                    ),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: const Color(0xFFFED7AA)),
                   ),
                   child: const Text(
                     'Delivery Rider',
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFFEA580C),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFC2410C),
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -156,47 +157,103 @@ class _RiderAccountScreenState extends State<RiderAccountScreen> {
             ),
           ),
 
-          const SizedBox(height: AppDimensions.spacingMd),
+          const SizedBox(height: 16),
 
-          // Account info
+          // 2. Online/Offline Status Control
           Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              border: Border.all(color: AppColors.borderSubtle),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            child: Column(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildInfoTile(
-                  icon: Icons.badge_outlined,
-                  label: 'User ID',
-                  value: user?.id ?? 'N/A',
+                Expanded(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: widget.isOnline ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          widget.isOnline ? Icons.power_rounded : Icons.power_off_rounded,
+                          color: widget.isOnline ? const Color(0xFF16A34A) : const Color(0xFF64748B),
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.isOnline ? 'Duty: ONLINE' : 'Duty: OFFLINE',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                                color: widget.isOnline ? const Color(0xFF15803D) : const Color(0xFF475569),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.isOnline ? 'Receiving pickup orders' : 'Not receiving orders',
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const Divider(height: 1, indent: 56),
-                _buildInfoTile(
-                  icon: Icons.email_outlined,
-                  label: 'Email',
-                  value: user?.email ?? 'Not set',
-                ),
-                const Divider(height: 1, indent: 56),
-                _buildInfoTile(
-                  icon: Icons.verified_user_outlined,
-                  label: 'Status',
-                  value: (user?.isActive ?? false) ? 'Active' : 'Inactive',
-                  valueColor: (user?.isActive ?? false)
-                      ? AppColors.success
-                      : AppColors.error,
+                const SizedBox(width: 8),
+                Switch(
+                  key: const Key('rider_duty_toggle_switch'),
+                  value: widget.isOnline,
+                  activeThumbColor: const Color(0xFF16A34A),
+                  onChanged: (val) => widget.onToggleOnline?.call(val),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: AppDimensions.spacingLg),
+          const SizedBox(height: 16),
 
-          // Sign out button
+          // 3. App Details
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.info_outline_rounded, color: Color(0xFF64748B)),
+                  title: const Text('App Version', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  trailing: const Text('2.0.0-dev', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13)),
+                ),
+                const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                ListTile(
+                  leading: const Icon(Icons.verified_user_outlined, color: Color(0xFF64748B)),
+                  title: const Text('Role', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  trailing: const Text('DRIVER', style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFFEA580C), fontSize: 13)),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // 4. Sign Out Button
           SizedBox(
             width: double.infinity,
-            height: AppDimensions.buttonHeight,
+            height: 50,
             child: OutlinedButton.icon(
               key: const Key('rider_logout_btn'),
               onPressed: _isLoggingOut ? null : _handleLogout,
@@ -206,45 +263,18 @@ class _RiderAccountScreenState extends State<RiderAccountScreen> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.logout_rounded),
-              label: Text(_isLoggingOut ? 'Signing out…' : 'Sign Out'),
+                  : const Icon(Icons.logout_rounded, color: AppColors.error),
+              label: Text(
+                _isLoggingOut ? 'Signing out...' : 'Sign Out',
+                style: const TextStyle(color: AppColors.error, fontWeight: FontWeight.w700, fontSize: 15),
+              ),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
-                side: const BorderSide(color: AppColors.error),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                ),
+                side: const BorderSide(color: Color(0xFFFECACA)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildInfoTile({
-    required IconData icon,
-    required String label,
-    required String value,
-    Color? valueColor,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.textSecondary, size: 22),
-      title: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 12,
-          color: AppColors.textTertiary,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      subtitle: Text(
-        value,
-        style: TextStyle(
-          fontSize: 14,
-          color: valueColor ?? AppColors.textPrimary,
-          fontWeight: FontWeight.w500,
-        ),
       ),
     );
   }

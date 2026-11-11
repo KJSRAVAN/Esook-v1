@@ -58,19 +58,26 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     required String name,
     String? description,
     required double price,
+    double? offerPrice,
+    int? pointsValue,
     String? categoryId,
     String? category,
     String? imageUrl,
     int? sortOrder,
   }) async {
     try {
+      final resolvedCatId = (categoryId != null && categoryId.trim().isNotEmpty)
+          ? categoryId.trim()
+          : (category != null && category.trim().isNotEmpty ? category.trim() : null);
+
       final body = <String, dynamic>{
         'name': name.trim(),
         'price': price,
+        if (offerPrice != null) 'offerPrice': offerPrice,
+        if (pointsValue != null) 'pointsValue': pointsValue,
         if (description != null && description.trim().isNotEmpty)
           'description': description.trim(),
-        if (categoryId != null && categoryId.trim().isNotEmpty)
-          'categoryId': categoryId.trim(),
+        if (resolvedCatId != null) 'categoryId': resolvedCatId,
         if (imageUrl != null && imageUrl.trim().isNotEmpty)
           'imageUrl': imageUrl.trim(),
         if (sortOrder != null) 'sortOrder': sortOrder,
@@ -116,6 +123,9 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     String? name,
     String? description,
     double? price,
+    double? offerPrice,
+    bool clearOfferPrice = false,
+    int? pointsValue,
     String? categoryId,
     String? category,
     String? imageUrl,
@@ -123,12 +133,18 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     bool? isAvailable,
   }) async {
     try {
+      final resolvedCatId = (categoryId != null && categoryId.trim().isNotEmpty)
+          ? categoryId.trim()
+          : (category != null && category.trim().isNotEmpty ? category.trim() : null);
+
       final body = <String, dynamic>{
         if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
         if (description != null) 'description': description.trim(),
         if (price != null) 'price': price,
-        if (categoryId != null && categoryId.trim().isNotEmpty)
-          'categoryId': categoryId.trim(),
+        if (offerPrice != null) 'offerPrice': offerPrice,
+        if (offerPrice == null && clearOfferPrice) 'offerPrice': null,
+        if (pointsValue != null) 'pointsValue': pointsValue,
+        if (resolvedCatId != null) 'categoryId': resolvedCatId,
         if (imageUrl != null) 'imageUrl': imageUrl.trim(),
         if (isAvailable != null) 'isAvailable': isAvailable,
         if (sortOrder != null) 'sortOrder': sortOrder,
@@ -209,6 +225,7 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
         fileBytes: fileBytes,
         filename: fileName,
         fileField: 'file',
+        timeout: const Duration(seconds: 120),
       );
 
       final dynamic rawData = response.data;
@@ -219,6 +236,45 @@ class StoreProductsRepositoryImpl implements StoreProductsRepository {
     } catch (e) {
       return Result.failure(
         UnknownFailure(message: 'Failed to import CSV catalog: $e'),
+      );
+    }
+  }
+
+  @override
+  Future<Result<String>> uploadProductImage({
+    required String storeId,
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    try {
+      final response = await _apiClient.postMultipart<dynamic>(
+        '/stores/$storeId/items/upload-image',
+        fileBytes: fileBytes,
+        filename: fileName,
+        fileField: 'file',
+      );
+
+      final dynamic rawData = response.data;
+      String? imageUrl;
+      if (rawData is Map<String, dynamic>) {
+        imageUrl = rawData['imageUrl'] as String? ??
+            (rawData['data'] is Map<String, dynamic>
+                ? (rawData['data'] as Map<String, dynamic>)['imageUrl'] as String?
+                : null);
+      }
+
+      if (imageUrl != null && imageUrl.isNotEmpty) {
+        return Result.success(imageUrl);
+      }
+
+      return Result.failure(
+        const ServerFailure(message: 'Invalid server response: missing imageUrl'),
+      );
+    } on AppException catch (e) {
+      return Result.failure(AppFailure.fromException(e));
+    } catch (e) {
+      return Result.failure(
+        UnknownFailure(message: 'Failed to upload product image: $e'),
       );
     }
   }

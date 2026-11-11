@@ -20,6 +20,7 @@ class OrderRepositoryImpl implements OrderRepository {
     required PaymentMethod paymentMethod,
     String? deliveryAddress,
     String? couponCode,
+    int? redeemPoints,
     String? notes,
     required List<OrderItemInput> items,
     String? idempotencyKey,
@@ -42,6 +43,8 @@ class OrderRepositoryImpl implements OrderRepository {
           'deliveryAddress': deliveryAddress.trim(),
         if (couponCode != null && couponCode.trim().isNotEmpty)
           'couponCode': couponCode.trim(),
+        if (redeemPoints != null && redeemPoints > 0)
+          'redeemPoints': redeemPoints,
         if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
         'items': items.map((i) => i.toJson()).toList(),
       };
@@ -194,6 +197,93 @@ class OrderRepositoryImpl implements OrderRepository {
       return Result.failure(
         UnknownFailure(message: 'Failed to cancel order: $e'),
       );
+    }
+  }
+
+  @override
+  Future<Result<CustomerPointsInfo>> getStorePointsInfo(String storeId) async {
+    try {
+      final cleanStoreId = storeId.trim();
+      if (cleanStoreId.isEmpty) {
+        return Result.success(const CustomerPointsInfo(isEnabled: false));
+      }
+
+      bool isEnabled = false;
+      double rate = 0.10;
+      int balance = 0;
+      int minPoints = 0;
+      double maxDiscount = 100.0;
+      int? maxPoints;
+      double earnedRate = 1.0;
+
+      double parseDouble(dynamic val, double fallback) {
+        if (val is num) return val.toDouble();
+        if (val != null) return double.tryParse(val.toString()) ?? fallback;
+        return fallback;
+      }
+
+      int parseInt(dynamic val, int fallback) {
+        if (val is num) return val.toInt();
+        if (val != null) return int.tryParse(val.toString()) ?? fallback;
+        return fallback;
+      }
+
+      int? parseNullableInt(dynamic val) {
+        if (val is num) return val.toInt();
+        if (val != null) return int.tryParse(val.toString());
+        return null;
+      }
+
+      try {
+        final configRes = await _apiClient.get<dynamic>(
+          '/stores/$cleanStoreId/points/config',
+        );
+        if (configRes.data is Map<String, dynamic>) {
+          final data = configRes.data as Map<String, dynamic>;
+          final rawEnabled = data['isEnabled'];
+          if (rawEnabled is bool) {
+            isEnabled = rawEnabled;
+          } else if (rawEnabled != null) {
+            isEnabled = rawEnabled.toString().toLowerCase() == 'true';
+          } else {
+            isEnabled = true;
+          }
+
+          rate = parseDouble(data['pointsPerCurrencyUnit'], 0.10);
+          earnedRate = parseDouble(data['pointsEarnedPerCurrency'], 1.0);
+          minPoints = parseInt(data['minPointsToRedeem'], 0);
+          maxDiscount = parseDouble(data['maxDiscountPercent'], 100.0);
+          maxPoints = parseNullableInt(data['maxPointsPerOrder']);
+        }
+      } catch (_) {
+        // Points config may be null if unconfigured
+      }
+
+      try {
+        final balRes = await _apiClient.get<dynamic>(
+          '/stores/$cleanStoreId/points/my-balance',
+        );
+        if (balRes.data is Map<String, dynamic>) {
+          final data = balRes.data as Map<String, dynamic>;
+          balance = parseInt(data['balance'], 0);
+        }
+      } catch (_) {
+        // User may have no balance record yet
+      }
+
+      return Result.success(
+        CustomerPointsInfo(
+          isEnabled: isEnabled,
+          pointsPerCurrencyUnit: rate,
+          balance: balance,
+          minPointsToRedeem: minPoints,
+          maxDiscountPercent: maxDiscount,
+          maxPointsPerOrder: maxPoints,
+          pointsEarnedPerCurrency: earnedRate,
+        ),
+      );
+    } catch (e) {
+      return Result.success(const CustomerPointsInfo());
     }
   }
 }

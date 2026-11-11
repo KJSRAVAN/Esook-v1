@@ -50,6 +50,8 @@ class _CustomerSignupScreenState extends State<CustomerSignupScreen> {
   }
 
   Future<void> _handleSignup() async {
+    if (_isSubmitting) return;
+
     setState(() {
       _failure = null;
       _successMessage = null;
@@ -203,6 +205,7 @@ class _CustomerSignupScreenState extends State<CustomerSignupScreen> {
             prefixIcon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
             textInputAction: TextInputAction.next,
+            letterSpacing: 0.0,
             enabled: !_isSubmitting,
             validator: (value) => AuthPhoneHelper.validateAuthPhone(
               value,

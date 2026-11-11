@@ -12,6 +12,9 @@ class UserModel {
   final bool isActive;
   final DateTime? createdAt;
 
+  String get name => fullName;
+  String get phone => phoneNumber;
+
   const UserModel({
     required this.id,
     required this.phoneNumber,

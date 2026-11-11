@@ -4,6 +4,7 @@ import 'package:esouq/core/utils/result.dart';
 import 'package:esouq/features/customer/cart/domain/cart_item_model.dart';
 import 'package:esouq/features/customer/cart/domain/cart_model.dart';
 import 'package:esouq/features/customer/domain/models/order_model.dart';
+import 'package:esouq/features/customer/domain/repositories/order_repository.dart';
 import 'package:esouq/features/customer/presentation/widgets/checkout_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -85,7 +86,8 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('checkout_notes_input')), findsOneWidget);
-      expect(find.byKey(const Key('checkout_coupon_input')), findsOneWidget);
+      expect(find.byKey(const Key('checkout_coupon_input')), findsNothing);
+      expect(find.text('Coupon Code (Optional)'), findsNothing);
       expect(find.text('Order Summary (3 items)'), findsOneWidget);
       expect(find.text('2x Fresh Whole Milk 1L'), findsOneWidget);
       expect(find.text('1x Organic Bananas 1kg'), findsOneWidget);
@@ -151,7 +153,7 @@ void main() {
       },
     );
 
-    testWidgets('places delivery order with address, notes, and coupon code', (
+    testWidgets('places delivery order with address and notes without coupon', (
       tester,
     ) async {
       setupViewport(tester);
@@ -170,10 +172,9 @@ void main() {
         find.byKey(const Key('checkout_notes_input')),
         'Please call on arrival',
       );
-      await tester.enterText(
-        find.byKey(const Key('checkout_coupon_input')),
-        'SAVE10',
-      );
+
+      // Verify coupon input is absent from UI
+      expect(find.byKey(const Key('checkout_coupon_input')), findsNothing);
 
       await tester.tap(find.byKey(const Key('checkout_place_order_button')));
       await tester.pumpAndSettle();
@@ -192,7 +193,7 @@ void main() {
         mockOrderRepository.lastNotesParam,
         equals('Please call on arrival'),
       );
-      expect(mockOrderRepository.lastCouponCodeParam, equals('SAVE10'));
+      expect(mockOrderRepository.lastCouponCodeParam, isNull);
       expect(mockOrderRepository.lastIdempotencyKeyParam, isNotNull);
       expect(
         mockOrderRepository.lastIdempotencyKeyParam!.length,
@@ -242,6 +243,7 @@ void main() {
             couponCode,
             notes,
             required items,
+            redeemPoints,
             idempotencyKey,
           }) async {
             await Future.delayed(const Duration(milliseconds: 100));
@@ -293,5 +295,245 @@ void main() {
       expect(mockOrderRepository.createOrderCallCount, equals(1));
       expect(mockOrderRepository.lastPaymentMethodParam, equals(PaymentMethod.card));
     });
+
+    testWidgets(
+      'displays loyalty points redemption card and applies points discount when toggled',
+      (tester) async {
+        setupViewport(tester);
+        // Configure mock repository with available points
+        mockOrderRepository.pointsInfoToReturn = const CustomerPointsInfo(
+          isEnabled: true,
+          pointsPerCurrencyUnit: 0.10,
+          balance: 20, // 20 points * 0.10 = 2.00 currency discount
+        );
+
+        await tester.pumpWidget(buildCheckoutHost());
+        await tester.tap(find.text('Open Checkout'));
+        await tester.pumpAndSettle();
+
+        // Verify points card is displayed
+        expect(find.byKey(const Key('checkout_loyalty_points_card')), findsOneWidget);
+        expect(find.text('Redeem Loyalty Points'), findsOneWidget);
+        expect(find.text('Available: 20 pts (worth 2.00 SAR)'), findsOneWidget);
+
+        // Before toggle: Points Discount row should not be shown
+        expect(find.text('Points Discount'), findsNothing);
+
+        // Toggle points ON
+        await tester.tap(find.byKey(const Key('checkout_use_points_switch')));
+        await tester.pumpAndSettle();
+
+        // After toggle: Points Discount row and redeeming summary appear
+        expect(find.text('Redeeming 20 pts (-2.00 SAR)'), findsOneWidget);
+        expect(find.text('Points Discount'), findsOneWidget);
+        expect(find.text('-2.00 SAR'), findsOneWidget);
+
+        // Fill delivery address and submit
+        await tester.enterText(
+          find.byKey(const Key('checkout_delivery_address_input')),
+          'Building 10, King Fahd Rd',
+        );
+
+        await tester.tap(find.byKey(const Key('checkout_place_order_button')));
+        await tester.pumpAndSettle();
+
+        expect(mockOrderRepository.createOrderCallCount, equals(1));
+        expect(mockOrderRepository.lastRedeemPointsParam, equals(20));
+      },
+    );
+
+    testWidgets(
+      'does not pass redeemPoints when loyalty points switch is OFF',
+      (tester) async {
+        setupViewport(tester);
+        mockOrderRepository.pointsInfoToReturn = const CustomerPointsInfo(
+          isEnabled: true,
+          pointsPerCurrencyUnit: 0.10,
+          balance: 50,
+        );
+
+        await tester.pumpWidget(buildCheckoutHost());
+        await tester.tap(find.text('Open Checkout'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('checkout_loyalty_points_card')), findsOneWidget);
+
+        await tester.enterText(
+          find.byKey(const Key('checkout_delivery_address_input')),
+          'Building 10, King Fahd Rd',
+        );
+
+        await tester.tap(find.byKey(const Key('checkout_place_order_button')));
+        await tester.pumpAndSettle();
+
+        expect(mockOrderRepository.createOrderCallCount, equals(1));
+        expect(mockOrderRepository.lastRedeemPointsParam, isNull);
+      },
+    );
+
+    testWidgets(
+      'displays disabled message when store loyalty is disabled',
+      (tester) async {
+        setupViewport(tester);
+        mockOrderRepository.pointsInfoToReturn = const CustomerPointsInfo(
+          isEnabled: false,
+          balance: 100,
+        );
+
+        await tester.pumpWidget(buildCheckoutHost());
+        await tester.tap(find.text('Open Checkout'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Loyalty points redemption is disabled for this store.'),
+          findsOneWidget,
+        );
+
+        final switchFinder = find.byKey(const Key('checkout_use_points_switch'));
+        expect(switchFinder, findsOneWidget);
+        final switchWidget = tester.widget<Switch>(switchFinder);
+        expect(switchWidget.onChanged, isNull);
+      },
+    );
+
+    testWidgets(
+      'displays 0 points message when customer has no points balance',
+      (tester) async {
+        setupViewport(tester);
+        mockOrderRepository.pointsInfoToReturn = const CustomerPointsInfo(
+          isEnabled: true,
+          balance: 0,
+        );
+
+        await tester.pumpWidget(buildCheckoutHost());
+        await tester.tap(find.text('Open Checkout'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('0 loyalty points available. Earn points on orders.'),
+          findsOneWidget,
+        );
+
+        final switchFinder = find.byKey(const Key('checkout_use_points_switch'));
+        final switchWidget = tester.widget<Switch>(switchFinder);
+        expect(switchWidget.onChanged, isNull);
+      },
+    );
+
+    testWidgets(
+      'displays minimum threshold message when points balance is below minPointsToRedeem',
+      (tester) async {
+        setupViewport(tester);
+        mockOrderRepository.pointsInfoToReturn = const CustomerPointsInfo(
+          isEnabled: true,
+          balance: 30,
+          minPointsToRedeem: 50,
+        );
+
+        await tester.pumpWidget(buildCheckoutHost());
+        await tester.tap(find.text('Open Checkout'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('30 pts available (Min 50 required to redeem)'),
+          findsOneWidget,
+        );
+
+        final switchFinder = find.byKey(const Key('checkout_use_points_switch'));
+        final switchWidget = tester.widget<Switch>(switchFinder);
+        expect(switchWidget.onChanged, isNull);
+      },
+    );
+
+    testWidgets(
+      'uses explicit storeId passed to CheckoutBottomSheet',
+      (tester) async {
+        setupViewport(tester);
+        mockOrderRepository.pointsInfoToReturn = const CustomerPointsInfo(
+          isEnabled: true,
+          balance: 200,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.lightTheme,
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => ElevatedButton(
+                  onPressed: () {
+                    CheckoutBottomSheet.show(
+                      context,
+                      cart: testCart,
+                      storeId: 'store-esook-local-1',
+                      storeName: 'Fresh Mart Riyadh',
+                      orderRepository: mockOrderRepository,
+                    );
+                  },
+                  child: const Text('Open Custom Checkout'),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Open Custom Checkout'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('checkout_delivery_address_input')),
+          'King Fahd Rd, Riyadh',
+        );
+        await tester.tap(find.byKey(const Key('checkout_place_order_button')));
+        await tester.pumpAndSettle();
+
+        expect(mockOrderRepository.lastStoreIdParam, equals('store-esook-local-1'));
+      },
+    );
+
+    testWidgets(
+      'displays conversion rate and allows customer to enter custom points to redeem',
+      (tester) async {
+        setupViewport(tester);
+        mockOrderRepository.pointsInfoToReturn = const CustomerPointsInfo(
+          isEnabled: true,
+          pointsPerCurrencyUnit: 0.10, // 10 pts = 1 SAR
+          balance: 30, // 30 pts * 0.10 = 3.00 SAR <= subtotal 3.35
+        );
+
+        await tester.pumpWidget(buildCheckoutHost());
+        await tester.tap(find.text('Open Checkout'));
+        await tester.pumpAndSettle();
+
+        // Verify conversion rate is displayed
+        expect(find.text('Rate: 10 pts = 1 SAR (0.10 SAR/pt)'), findsOneWidget);
+        expect(find.text('Available: 30 pts (worth 3.00 SAR)'), findsOneWidget);
+
+        // Toggle points ON
+        await tester.tap(find.byKey(const Key('checkout_use_points_switch')));
+        await tester.pumpAndSettle();
+
+        // Default: redeems eligible points (30 pts = 3.00 SAR)
+        expect(find.text('Redeeming 30 pts (-3.00 SAR)'), findsOneWidget);
+
+        // Enter custom points: 15 pts (worth 1.50 SAR)
+        final pointsInput = find.byKey(const Key('checkout_points_input'));
+        expect(pointsInput, findsOneWidget);
+        await tester.enterText(pointsInput, '15');
+        await tester.pumpAndSettle();
+
+        // Verify updated discount
+        expect(find.text('Redeeming 15 pts (-1.50 SAR)'), findsOneWidget);
+        expect(find.text('-1.50 SAR'), findsOneWidget);
+
+        // Place order and verify custom points passed
+        await tester.enterText(
+          find.byKey(const Key('checkout_delivery_address_input')),
+          'Olaya St, Riyadh',
+        );
+        await tester.tap(find.byKey(const Key('checkout_place_order_button')));
+        await tester.pumpAndSettle();
+
+        expect(mockOrderRepository.lastRedeemPointsParam, equals(15));
+      },
+    );
   });
 }

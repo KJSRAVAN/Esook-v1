@@ -1,10 +1,14 @@
 import 'dart:convert';
 
+import '../constants/storage_keys.dart';
 import '../error/exceptions.dart';
+import '../storage/secure_storage.dart';
 import 'api_response.dart';
 import 'http_method.dart';
 import 'http_transport.dart';
 import 'package_http_transport.dart';
+
+export 'api_response.dart';
 
 /// Contract for the application's central API client.
 abstract interface class ApiClient {
@@ -16,6 +20,14 @@ abstract interface class ApiClient {
   });
 
   Future<ApiResponse<T>> post<T>(
+    String path, {
+    dynamic body,
+    Map<String, String>? headers,
+    Map<String, dynamic>? queryParameters,
+    T Function(dynamic json)? fromJson,
+  });
+
+  Future<ApiResponse<T>> put<T>(
     String path, {
     dynamic body,
     Map<String, String>? headers,
@@ -48,6 +60,7 @@ abstract interface class ApiClient {
     Map<String, String>? headers,
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
+    Duration? timeout,
   });
 }
 
@@ -56,15 +69,26 @@ class DefaultApiClient implements ApiClient {
   final String baseUrl;
   final HttpTransport _transport;
   final Future<String?> Function()? _tokenProvider;
+  final Future<bool> Function()? tokenRefresher;
+  final Future<void> Function()? onSessionExpired;
+  final SecureStorage? secureStorage;
   final Duration timeout;
+
+  Future<bool>? _inFlightRefresh;
 
   DefaultApiClient({
     required this.baseUrl,
     HttpTransport? transport,
     Future<String?> Function()? tokenProvider,
+    this.tokenRefresher,
+    this.onSessionExpired,
+    this.secureStorage,
     this.timeout = const Duration(seconds: 35),
   }) : _transport = transport ?? PackageHttpTransport(),
-       _tokenProvider = tokenProvider;
+       _tokenProvider = tokenProvider ??
+           (secureStorage != null
+               ? () => secureStorage.read(key: StorageKeys.authToken)
+               : null);
 
   @override
   Future<ApiResponse<T>> get<T>(
@@ -90,6 +114,22 @@ class DefaultApiClient implements ApiClient {
   }) => _request<T>(
     path: path,
     method: HttpMethod.post,
+    body: body,
+    headers: headers,
+    queryParameters: queryParameters,
+    fromJson: fromJson,
+  );
+
+  @override
+  Future<ApiResponse<T>> put<T>(
+    String path, {
+    dynamic body,
+    Map<String, String>? headers,
+    Map<String, dynamic>? queryParameters,
+    T Function(dynamic json)? fromJson,
+  }) => _request<T>(
+    path: path,
+    method: HttpMethod.put,
     body: body,
     headers: headers,
     queryParameters: queryParameters,
@@ -138,7 +178,10 @@ class DefaultApiClient implements ApiClient {
     Map<String, String>? headers,
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
+    Duration? timeout,
+    bool isRetry = false,
   }) async {
+    final effectiveTimeout = timeout ?? this.timeout;
     final uri = _buildUri(path, queryParameters);
     final requestHeaders = await _buildHeaders(headers, isMultipart: true);
 
@@ -152,12 +195,30 @@ class DefaultApiClient implements ApiClient {
         filename: filename,
         fileField: fileField,
         fields: fields,
-        timeout: timeout,
+        timeout: effectiveTimeout,
       );
     } else {
       throw UnsupportedError(
         'The configured HttpTransport does not support multipart requests',
       );
+    }
+
+    if (responseData.statusCode == 401 && !isRetry && !_isAuthEndpoint(path)) {
+      final refreshed = await _performTokenRefresh();
+      if (refreshed) {
+        return postMultipart<T>(
+          path,
+          fileBytes: fileBytes,
+          filename: filename,
+          fileField: fileField,
+          fields: fields,
+          headers: headers,
+          queryParameters: queryParameters,
+          fromJson: fromJson,
+          timeout: timeout,
+          isRetry: true,
+        );
+      }
     }
 
     return _handleResponse<T>(responseData, fromJson);
@@ -170,6 +231,7 @@ class DefaultApiClient implements ApiClient {
     Map<String, String>? headers,
     Map<String, dynamic>? queryParameters,
     T Function(dynamic json)? fromJson,
+    bool isRetry = false,
   }) async {
     final uri = _buildUri(path, queryParameters);
     final requestHeaders = await _buildHeaders(headers);
@@ -183,7 +245,151 @@ class DefaultApiClient implements ApiClient {
       timeout: timeout,
     );
 
+    if (responseData.statusCode == 401 && !isRetry && !_isAuthEndpoint(path)) {
+      final refreshed = await _performTokenRefresh();
+      if (refreshed) {
+        return _request<T>(
+          path: path,
+          method: method,
+          body: body,
+          headers: headers,
+          queryParameters: queryParameters,
+          fromJson: fromJson,
+          isRetry: true,
+        );
+      }
+    }
+
     return _handleResponse<T>(responseData, fromJson);
+  }
+
+  bool _isAuthEndpoint(String path) {
+    final clean = path.toLowerCase();
+    return clean.contains('/auth/login') ||
+        clean.contains('/auth/staff-login') ||
+        clean.contains('/auth/staff/login') ||
+        clean.contains('/auth/customer/login') ||
+        clean.contains('/auth/customer/signup') ||
+        clean.contains('/auth/send-otp') ||
+        clean.contains('/auth/otp/send') ||
+        clean.contains('/auth/verify-otp') ||
+        clean.contains('/auth/otp/verify') ||
+        clean.contains('/auth/refresh') ||
+        clean.contains('/auth/logout') ||
+        clean.contains('/auth/register');
+  }
+
+  Future<bool> _performTokenRefresh() async {
+    if (_inFlightRefresh != null) {
+      return _inFlightRefresh!;
+    }
+
+    final future = _executeTokenRefresh();
+    _inFlightRefresh = future;
+    try {
+      return await future;
+    } finally {
+      _inFlightRefresh = null;
+    }
+  }
+
+  Future<bool> _executeTokenRefresh() async {
+    if (tokenRefresher != null) {
+      try {
+        final success = await tokenRefresher!();
+        if (!success) {
+          await _clearSession();
+        }
+        return success;
+      } catch (_) {
+        await _clearSession();
+        return false;
+      }
+    }
+
+    if (secureStorage == null) {
+      return false;
+    }
+
+    try {
+      final storedRefreshToken = await secureStorage!.read(
+        key: StorageKeys.refreshToken,
+      );
+      if (storedRefreshToken == null || storedRefreshToken.trim().isEmpty) {
+        await _clearSession();
+        return false;
+      }
+
+      final refreshUri = _buildUri('/auth/refresh', null);
+      final refreshHeaders = <String, String>{
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      };
+      final refreshBody = jsonEncode({
+        'refreshToken': storedRefreshToken.trim(),
+      });
+
+      final responseData = await _transport.send(
+        uri: refreshUri,
+        method: HttpMethod.post,
+        headers: refreshHeaders,
+        body: refreshBody,
+        timeout: timeout,
+      );
+
+      if (responseData.statusCode >= 200 && responseData.statusCode < 300) {
+        dynamic decoded;
+        try {
+          decoded = jsonDecode(responseData.body);
+        } catch (_) {
+          decoded = null;
+        }
+
+        if (decoded is Map<String, dynamic>) {
+          final newAccessToken =
+              decoded['accessToken'] as String? ??
+              decoded['token'] as String?;
+          final newRefreshToken =
+              decoded['refreshToken'] as String? ?? storedRefreshToken;
+
+          if (newAccessToken != null && newAccessToken.isNotEmpty) {
+            await secureStorage!.write(
+              key: StorageKeys.authToken,
+              value: newAccessToken,
+            );
+          }
+          if (newRefreshToken.isNotEmpty) {
+            await secureStorage!.write(
+              key: StorageKeys.refreshToken,
+              value: newRefreshToken,
+            );
+          }
+          return true;
+        }
+      }
+
+      await _clearSession();
+      return false;
+    } catch (_) {
+      await _clearSession();
+      return false;
+    }
+  }
+
+  Future<void> _clearSession() async {
+    if (onSessionExpired != null) {
+      try {
+        await onSessionExpired!();
+      } catch (_) {}
+    }
+    if (secureStorage != null) {
+      try {
+        await secureStorage!.delete(key: StorageKeys.authToken);
+        await secureStorage!.delete(key: StorageKeys.refreshToken);
+        await secureStorage!.delete(key: StorageKeys.userId);
+        await secureStorage!.delete(key: StorageKeys.userRole);
+      } catch (_) {}
+    }
   }
 
   Uri _buildUri(String path, Map<String, dynamic>? queryParameters) {

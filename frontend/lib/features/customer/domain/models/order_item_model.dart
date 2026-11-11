@@ -78,7 +78,9 @@ class OrderItemModel {
         : (price * quantity);
 
     final pointsPerUnit = parseInt(
-      json['loyaltyPointsPerUnit'] ??
+      json['pointsValue'] ??
+          json['points_value'] ??
+          json['loyaltyPointsPerUnit'] ??
           json['loyalty_points_per_unit'] ??
           json['pointsPerUnit'] ??
           json['points_per_unit'],

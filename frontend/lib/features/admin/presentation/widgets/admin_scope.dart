@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../../../../core/network/api_client.dart';
 import '../../../store/domain/repositories/store_categories_repository.dart';
 import '../../../store/domain/repositories/store_orders_repository.dart';
 import '../../../store/domain/repositories/store_products_repository.dart';
@@ -9,6 +10,7 @@ import '../../domain/repositories/admin_users_repository.dart';
 
 /// Scoped provider for admin repositories across the admin feature tree.
 class AdminScope extends InheritedWidget {
+  final ApiClient? apiClient;
   final AdminUsersRepository usersRepository;
   final AdminDriversRepository driversRepository;
   final AdminStoresRepository storesRepository;
@@ -18,6 +20,7 @@ class AdminScope extends InheritedWidget {
 
   const AdminScope({
     super.key,
+    this.apiClient,
     required this.usersRepository,
     required this.driversRepository,
     required this.storesRepository,
@@ -37,6 +40,8 @@ class AdminScope extends InheritedWidget {
     return context.dependOnInheritedWidgetOfExactType<AdminScope>();
   }
 
+  static ApiClient? apiClientOf(BuildContext context) =>
+      maybeOf(context)?.apiClient;
   static AdminUsersRepository usersRepositoryOf(BuildContext context) =>
       of(context).usersRepository;
   static AdminDriversRepository driversRepositoryOf(BuildContext context) =>
@@ -53,7 +58,8 @@ class AdminScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(AdminScope oldWidget) {
-    return usersRepository != oldWidget.usersRepository ||
+    return apiClient != oldWidget.apiClient ||
+        usersRepository != oldWidget.usersRepository ||
         driversRepository != oldWidget.driversRepository ||
         storesRepository != oldWidget.storesRepository ||
         ordersRepository != oldWidget.ordersRepository ||

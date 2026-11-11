@@ -381,6 +381,59 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
                       const SizedBox(height: AppDimensions.spacingMd),
                     ],
 
+                    // Customer Order Notes / Special Instructions
+                    if (_currentOrder.notes != null &&
+                        _currentOrder.notes!.trim().isNotEmpty) ...[
+                      Card(
+                        key: const Key('store_order_notes_card'),
+                        color: const Color(0xFFFFFBEB),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusMd,
+                          ),
+                          side: const BorderSide(color: Color(0xFFFDE68A)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(
+                            AppDimensions.spacingMd,
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.notes_rounded,
+                                color: Color(0xFFD97706),
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Customer Notes',
+                                      style: AppTextStyles.labelLarge.copyWith(
+                                        color: const Color(0xFF92400E),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _currentOrder.notes!.trim(),
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: const Color(0xFF78350F),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingMd),
+                    ],
+
                     // Order Items
                     Text(
                       'Items (${_currentOrder.itemCount})',
@@ -439,6 +492,14 @@ class _StoreOrderDetailsSheetState extends State<StoreOrderDetailsSheet> {
                               _buildPriceRow(
                                 'Discount',
                                 '-${_currentOrder.discount.toStringAsFixed(2)} AED',
+                                isDiscount: true,
+                              ),
+                            if (_currentOrder.pointsDiscount > 0)
+                              _buildPriceRow(
+                                _currentOrder.redeemedPoints > 0
+                                    ? 'Points Discount (${_currentOrder.redeemedPoints} pts)'
+                                    : 'Points Discount',
+                                '-${_currentOrder.pointsDiscount.toStringAsFixed(2)} AED',
                                 isDiscount: true,
                               ),
                             const Divider(height: 16),

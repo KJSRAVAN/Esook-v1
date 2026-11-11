@@ -75,6 +75,21 @@ class FakeRiderRepository implements RiderRepository {
     activeOrder = null;
     return Result.success(delivered);
   }
+
+  @override
+  Future<Result<List<RiderOrderModel>>> getHistory() async {
+    return Result.success([]);
+  }
+
+  @override
+  Future<Result<bool>> toggleAvailability(bool isOnline) async {
+    return Result.success(isOnline);
+  }
+
+  @override
+  Future<Result<Map<String, dynamic>>> getProfile() async {
+    return Result.success({'isOnline': true});
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -160,7 +175,7 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('renders mobile navigation with 3 tabs', (tester) async {
+    testWidgets('renders mobile navigation with 4 tabs', (tester) async {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -170,8 +185,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Active'), findsOneWidget);
       expect(find.text('Available'), findsOneWidget);
+      expect(find.text('Active'), findsOneWidget);
+      expect(find.text('History'), findsOneWidget);
       expect(find.text('Account'), findsOneWidget);
     });
 
@@ -188,7 +204,7 @@ void main() {
       expect(find.byType(NavigationRail), findsOneWidget);
     });
 
-    testWidgets('shows Active Delivery tab by default with empty state', (
+    testWidgets('shows Available Orders tab by default with empty state', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(400, 800);
@@ -200,14 +216,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('No Active Delivery'), findsOneWidget);
-      expect(
-        find.text('Accept an available order to start a delivery.'),
-        findsOneWidget,
-      );
+      expect(find.text('Available Orders'), findsOneWidget);
+      expect(find.text('No Orders Available'), findsOneWidget);
     });
 
-    testWidgets('shows active order when one exists', (tester) async {
+    testWidgets('shows active order when one exists on Active tab', (tester) async {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -215,7 +228,11 @@ void main() {
       fakeRider.activeOrder = _sampleActiveOrder;
 
       await tester.pumpWidget(
-        buildTestWidget(authRepository: fakeAuth, riderRepository: fakeRider),
+        buildTestWidget(
+          authRepository: fakeAuth,
+          riderRepository: fakeRider,
+          initialIndex: 1,
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -224,7 +241,7 @@ void main() {
       expect(find.text('Mark as Delivered'), findsOneWidget);
     });
 
-    testWidgets('navigates to Available Orders tab', (tester) async {
+    testWidgets('navigates to Active Delivery tab', (tester) async {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -234,11 +251,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Tap Available tab
-      await tester.tap(find.text('Available'));
+      // Tap Active tab
+      await tester.tap(find.text('Active'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Available Orders'), findsOneWidget);
+      expect(find.text('No Active Delivery'), findsOneWidget);
     });
 
     testWidgets('shows available orders list', (tester) async {
@@ -252,7 +269,7 @@ void main() {
         buildTestWidget(
           authRepository: fakeAuth,
           riderRepository: fakeRider,
-          initialIndex: 1,
+          initialIndex: 0,
         ),
       );
       await tester.pumpAndSettle();
@@ -270,7 +287,7 @@ void main() {
         buildTestWidget(
           authRepository: fakeAuth,
           riderRepository: fakeRider,
-          initialIndex: 1,
+          initialIndex: 0,
         ),
       );
       await tester.pumpAndSettle();
@@ -289,7 +306,7 @@ void main() {
         buildTestWidget(
           authRepository: fakeAuth,
           riderRepository: fakeRider,
-          initialIndex: 2,
+          initialIndex: 3,
         ),
       );
       await tester.pumpAndSettle();
@@ -310,7 +327,7 @@ void main() {
         buildTestWidget(
           authRepository: fakeAuth,
           riderRepository: fakeRider,
-          initialIndex: 2,
+          initialIndex: 3,
         ),
       );
       await tester.pumpAndSettle();
@@ -345,7 +362,11 @@ void main() {
       fakeRider.activeOrder = _sampleActiveOrder;
 
       await tester.pumpWidget(
-        buildTestWidget(authRepository: fakeAuth, riderRepository: fakeRider),
+        buildTestWidget(
+          authRepository: fakeAuth,
+          riderRepository: fakeRider,
+          initialIndex: 1,
+        ),
       );
       await tester.pumpAndSettle();
 

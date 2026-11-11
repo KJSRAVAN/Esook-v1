@@ -81,6 +81,28 @@ void main() {
       expect(notifier.cart?.isEmpty, isTrue);
     });
 
+    test('clear calls repository even if currentStoreId is null', () async {
+      await notifier.clear();
+
+      expect(mockRepo.clearCartCallCount, equals(1));
+      expect(notifier.cart?.isEmpty, isTrue);
+    });
+
+    test('reset wipes in-memory cart state completely for logout or account switch', () async {
+      await notifier.loadForStore('store-1');
+      expect(notifier.cart, isNotNull);
+      expect(notifier.currentStoreId, equals('store-1'));
+
+      notifier.reset();
+
+      expect(notifier.cart, isNull);
+      expect(notifier.currentStoreId, isNull);
+      expect(notifier.isLoading, isFalse);
+      expect(notifier.error, isNull);
+      expect(notifier.itemCount, equals(0));
+      expect(notifier.subtotal, equals(0.0));
+    });
+
     test(
       'failed mutation preserves previous cart and exposes failure',
       () async {

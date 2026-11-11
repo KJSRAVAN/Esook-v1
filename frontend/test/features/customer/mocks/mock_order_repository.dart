@@ -7,6 +7,7 @@ import 'package:esouq/features/customer/domain/repositories/order_repository.dar
 class MockOrderRepository implements OrderRepository {
   OrderModel? orderToReturn;
   List<OrderModel>? ordersToReturn;
+  CustomerPointsInfo? pointsInfoToReturn;
   AppFailure? failureToReturn;
 
   Future<Result<OrderModel>> Function({
@@ -17,6 +18,7 @@ class MockOrderRepository implements OrderRepository {
     String? couponCode,
     String? notes,
     required List<OrderItemInput> items,
+    int? redeemPoints,
     String? idempotencyKey,
   })?
   customCreateOrderHandler;
@@ -37,10 +39,14 @@ class MockOrderRepository implements OrderRepository {
   })?
   customCancelOrderHandler;
 
+  Future<Result<CustomerPointsInfo>> Function(String storeId)?
+  customGetStorePointsInfoHandler;
+
   int createOrderCallCount = 0;
   int getMyOrdersCallCount = 0;
   int getOrderByIdCallCount = 0;
   int cancelOrderCallCount = 0;
+  int getStorePointsInfoCallCount = 0;
 
   String? lastStoreIdParam;
   FulfillmentType? lastFulfillmentParam;
@@ -49,6 +55,7 @@ class MockOrderRepository implements OrderRepository {
   String? lastCouponCodeParam;
   String? lastNotesParam;
   List<OrderItemInput>? lastItemsParam;
+  int? lastRedeemPointsParam;
   String? lastIdempotencyKeyParam;
 
   int? lastPageParam;
@@ -110,6 +117,7 @@ class MockOrderRepository implements OrderRepository {
     String? couponCode,
     String? notes,
     required List<OrderItemInput> items,
+    int? redeemPoints,
     String? idempotencyKey,
   }) async {
     createOrderCallCount++;
@@ -120,6 +128,7 @@ class MockOrderRepository implements OrderRepository {
     lastCouponCodeParam = couponCode;
     lastNotesParam = notes;
     lastItemsParam = items;
+    lastRedeemPointsParam = redeemPoints;
     lastIdempotencyKeyParam = idempotencyKey;
 
     if (customCreateOrderHandler != null) {
@@ -131,6 +140,7 @@ class MockOrderRepository implements OrderRepository {
         couponCode: couponCode,
         notes: notes,
         items: items,
+        redeemPoints: redeemPoints,
         idempotencyKey: idempotencyKey,
       );
     }
@@ -139,6 +149,25 @@ class MockOrderRepository implements OrderRepository {
       return Result.failure(failureToReturn!);
     }
     return Result.success(orderToReturn ?? defaultOrder);
+  }
+
+  @override
+  Future<Result<CustomerPointsInfo>> getStorePointsInfo(String storeId) async {
+    getStorePointsInfoCallCount++;
+    if (customGetStorePointsInfoHandler != null) {
+      return customGetStorePointsInfoHandler!(storeId);
+    }
+    if (failureToReturn != null) {
+      return Result.failure(failureToReturn!);
+    }
+    return Result.success(
+      pointsInfoToReturn ??
+          const CustomerPointsInfo(
+            isEnabled: false,
+            pointsPerCurrencyUnit: 0.10,
+            balance: 0,
+          ),
+    );
   }
 
   @override

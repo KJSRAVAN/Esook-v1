@@ -6,6 +6,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/flutter_secure_storage_impl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
+import '../../application/points_notifier.dart';
 import '../../cart/application/cart_notifier.dart';
 import '../../cart/data/cart_repository_impl.dart';
 import '../../cart/domain/cart_repository.dart';
@@ -33,6 +34,7 @@ class CustomerShell extends StatefulWidget {
   final CartRepository? cartRepository;
   final OrderRepository? orderRepository;
   final CartNotifier? cartNotifier;
+  final PointsNotifier? pointsNotifier;
   final StoreModel? initialSelectedStore;
   final ValueNotifier<StoreModel?>? selectedStoreNotifier;
   final ValueNotifier<int>? ordersRefreshNotifier;
@@ -46,6 +48,7 @@ class CustomerShell extends StatefulWidget {
     this.cartRepository,
     this.orderRepository,
     this.cartNotifier,
+    this.pointsNotifier,
     this.initialSelectedStore,
     this.selectedStoreNotifier,
     this.ordersRefreshNotifier,
@@ -68,6 +71,8 @@ class _CustomerShellState extends State<CustomerShell> {
   late final OrderRepository _orderRepository;
   late final CartNotifier _cartNotifier;
   late final bool _ownsCartNotifier;
+  late final PointsNotifier _pointsNotifier;
+  late final bool _ownsPointsNotifier;
 
   @override
   void initState() {
@@ -91,10 +96,11 @@ class _CustomerShellState extends State<CustomerShell> {
     }
 
     final config = AppConfig.fromEnvironment();
+    const secureStorage = FlutterSecureStorageImpl();
     final defaultApiClient = DefaultApiClient(
       baseUrl: config.apiBaseUrl,
-      tokenProvider: () =>
-          const FlutterSecureStorageImpl().read(key: StorageKeys.authToken),
+      tokenProvider: () => secureStorage.read(key: StorageKeys.authToken),
+      secureStorage: secureStorage,
       timeout: config.connectTimeout,
     );
 
@@ -119,11 +125,20 @@ class _CustomerShellState extends State<CustomerShell> {
       _ownsCartNotifier = true;
     }
 
+    if (widget.pointsNotifier != null) {
+      _pointsNotifier = widget.pointsNotifier!;
+      _ownsPointsNotifier = false;
+    } else {
+      _pointsNotifier = PointsNotifier(orderRepository: _orderRepository);
+      _ownsPointsNotifier = true;
+    }
+
     _storeNotifier.addListener(_onStoreChanged);
 
     final initialStore = _storeNotifier.value;
     if (initialStore != null) {
       _cartNotifier.loadForStore(initialStore.id);
+      _pointsNotifier.loadForStore(initialStore.id);
     }
   }
 
@@ -131,6 +146,7 @@ class _CustomerShellState extends State<CustomerShell> {
     final store = _storeNotifier.value;
     if (store != null) {
       _cartNotifier.loadForStore(store.id);
+      _pointsNotifier.loadForStore(store.id);
     }
     setState(() {});
   }
@@ -138,6 +154,9 @@ class _CustomerShellState extends State<CustomerShell> {
   @override
   void dispose() {
     _storeNotifier.removeListener(_onStoreChanged);
+    if (_ownsPointsNotifier) {
+      _pointsNotifier.dispose();
+    }
     if (_ownsCartNotifier) {
       _cartNotifier.dispose();
     }
@@ -168,6 +187,7 @@ class _CustomerShellState extends State<CustomerShell> {
       cartRepository: _cartRepository,
       orderRepository: _orderRepository,
       cartNotifier: _cartNotifier,
+      pointsNotifier: _pointsNotifier,
       selectedStoreNotifier: _storeNotifier,
       child: Scaffold(
         backgroundColor: AppColors.background,
@@ -179,9 +199,12 @@ class _CustomerShellState extends State<CustomerShell> {
               productRepository: _productRepository,
               selectedStoreNotifier: _storeNotifier,
               cartNotifier: _cartNotifier,
+              pointsNotifier: _pointsNotifier,
               onViewCart: () => _onNavigationTabSelected(2),
             ),
-            const CustomerChatScreen(),
+            CustomerChatScreen(
+              onBackToMarket: () => _onNavigationTabSelected(0),
+            ),
             CartScreen(
               cartNotifier: _cartNotifier,
               orderRepository: _orderRepository,
@@ -190,6 +213,7 @@ class _CustomerShellState extends State<CustomerShell> {
               onExploreMarket: () => _onNavigationTabSelected(0),
               onOrderPlaced: (_) {
                 _ordersRefreshNotifier.value++;
+                _pointsNotifier.refresh();
                 _onNavigationTabSelected(3);
               },
             ),
@@ -197,7 +221,10 @@ class _CustomerShellState extends State<CustomerShell> {
               orderRepository: _orderRepository,
               refreshSignal: _ordersRefreshNotifier,
             ),
-            CustomerAccountScreen(authRepository: widget.authRepository),
+            CustomerAccountScreen(
+              authRepository: widget.authRepository,
+              pointsNotifier: _pointsNotifier,
+            ),
           ],
         ),
         bottomNavigationBar: CustomerBottomNavigation(

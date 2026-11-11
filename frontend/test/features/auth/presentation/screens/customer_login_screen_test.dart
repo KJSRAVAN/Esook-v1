@@ -436,6 +436,46 @@ void main() {
       expect(find.text('Code sent'), findsOneWidget);
     });
 
+    testWidgets('Step 2: displays rate limit error banner when resendOtp fails with 429', (tester) async {
+      setupViewport(tester);
+      mockRepo.sendOtpResult = Result.success('Code sent');
+
+      await tester.pumpWidget(buildTestWidget());
+
+      // Step 1
+      await tester.enterText(
+        find.byKey(const Key('customer_name_field')),
+        'Ahmed Ali',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_email_field')),
+        'ahmed@example.com',
+      );
+      await tester.enterText(
+        find.byKey(const Key('customer_phone_field')),
+        '+966501234567',
+      );
+      await tester.tap(find.byKey(const Key('customer_request_otp_button')));
+      await tester.pumpAndSettle();
+
+      // Configure next sendOtp to fail with rate limit
+      mockRepo.sendOtpResult = Result.failure(
+        const RateLimitFailure(
+          message: 'Too many OTP requests. Please wait before requesting another code.',
+        ),
+      );
+
+      // Resend OTP in Step 2
+      await tester.tap(find.byKey(const Key('customer_resend_otp_button')));
+      await tester.pumpAndSettle();
+
+      expect(mockRepo.sendOtpCallCount, equals(2));
+      expect(
+        find.text('Too many OTP requests. Please wait before requesting another code.'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('Step 2: Change number returns to Step 1', (tester) async {
       setupViewport(tester);
       mockRepo.sendOtpResult = Result.success('Code sent');

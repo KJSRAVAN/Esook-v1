@@ -18,7 +18,7 @@ void main() {
         expect(config.isStaging, isFalse);
         expect(
           config.apiBaseUrl,
-          equals('https://esook-production-production.up.railway.app'),
+          equals('https://esook-production.onrender.com'),
         );
       },
     );
@@ -45,7 +45,7 @@ void main() {
     });
 
     test(
-      'DefaultApiClient using AppConfig defaults produces Railway URL without /api',
+      'DefaultApiClient using AppConfig defaults produces Render URL without /api',
       () async {
         final config = AppConfig.fromEnvironment();
         expect(config.apiBaseUrl.endsWith('/api'), isFalse);
@@ -60,14 +60,14 @@ void main() {
         await client.get<dynamic>('/cart');
         expect(
           mockTransport.lastUri.toString(),
-          equals('https://esook-production-production.up.railway.app/cart'),
+          equals('https://esook-production.onrender.com/cart'),
         );
 
         await client.get<dynamic>('/stores/store-123/items');
         expect(
           mockTransport.lastUri.toString(),
           equals(
-            'https://esook-production-production.up.railway.app/stores/store-123/items',
+            'https://esook-production.onrender.com/stores/store-123/items',
           ),
         );
       },

@@ -25,7 +25,7 @@ class AppConfig {
 
   /// Factory creating configuration from environment definitions.
   factory AppConfig.fromEnvironment() {
-    const defaultBaseUrl = 'https://esook-production-production.up.railway.app';
+    const defaultBaseUrl = 'https://esook-production.onrender.com';
     const baseUrl = String.fromEnvironment(
       'API_BASE_URL',
       defaultValue: defaultBaseUrl,

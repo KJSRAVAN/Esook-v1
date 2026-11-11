@@ -15,12 +15,44 @@ class AuthResponseModel {
   });
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
-    final userJson = json['user'] as Map<String, dynamic>? ?? {};
+    Map<String, dynamic> userJson;
+    if (json['user'] is Map<String, dynamic>) {
+      userJson = json['user'] as Map<String, dynamic>;
+    } else if (json['data'] is Map<String, dynamic> &&
+        (json['data'] as Map<String, dynamic>)['user'] is Map<String, dynamic>) {
+      userJson = (json['data'] as Map<String, dynamic>)['user'] as Map<String, dynamic>;
+    } else if (json['data'] is Map<String, dynamic> &&
+        (json['data'] as Map<String, dynamic>)['role'] != null) {
+      userJson = json['data'] as Map<String, dynamic>;
+    } else if (json['role'] != null || json['id'] != null) {
+      userJson = json;
+    } else {
+      userJson = {};
+    }
+
     final token =
-        json['token'] as String? ?? json['accessToken'] as String? ?? '';
+        json['token'] as String? ??
+        json['accessToken'] as String? ??
+        json['access_token'] as String? ??
+        (json['data'] is Map<String, dynamic>
+            ? (json['data'] as Map<String, dynamic>)['token'] as String? ??
+                (json['data'] as Map<String, dynamic>)['accessToken'] as String?
+            : null) ??
+        '';
     final refreshToken =
-        json['refreshToken'] as String? ?? json['refresh_token'] as String?;
-    final isNew = json['isNew'] as bool? ?? json['is_new'] as bool? ?? false;
+        json['refreshToken'] as String? ??
+        json['refresh_token'] as String? ??
+        (json['data'] is Map<String, dynamic>
+            ? (json['data'] as Map<String, dynamic>)['refreshToken'] as String? ??
+                (json['data'] as Map<String, dynamic>)['refresh_token'] as String?
+            : null);
+    final isNew = json['isNew'] as bool? ??
+        json['is_new'] as bool? ??
+        (json['data'] is Map<String, dynamic>
+            ? (json['data'] as Map<String, dynamic>)['isNew'] as bool? ??
+                (json['data'] as Map<String, dynamic>)['is_new'] as bool?
+            : null) ??
+        false;
 
     return AuthResponseModel(
       user: UserModel.fromJson(userJson),

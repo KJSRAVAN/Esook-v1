@@ -1,9 +1,11 @@
 import 'package:esouq/core/error/failures.dart';
 import 'package:esouq/core/theme/app_theme.dart';
+import 'package:esouq/features/admin/presentation/widgets/admin_csv_import_dialog.dart';
 import 'package:esouq/features/auth/domain/models/user_model.dart';
 import 'package:esouq/features/auth/domain/models/user_role.dart';
 import 'package:esouq/features/auth/domain/repositories/auth_repository.dart';
 import 'package:esouq/features/customer/domain/models/product_model.dart';
+import 'package:esouq/features/store/domain/models/csv_import_result_model.dart';
 import 'package:esouq/features/store/domain/models/store_category_model.dart';
 import 'package:esouq/features/store/domain/repositories/store_categories_repository.dart';
 import 'package:esouq/features/store/domain/repositories/store_orders_repository.dart';
@@ -33,6 +35,16 @@ class MockStoreProductsRepository implements StoreProductsRepository {
       isAvailable: false,
       storeId: 'store-1',
     ),
+    const ProductModel(
+      id: 'p-3',
+      name: 'Special Honey 500g',
+      price: 20.00,
+      offerPrice: 15.00,
+      category: 'Pantry',
+      description: 'Raw mountain honey',
+      isAvailable: true,
+      storeId: 'store-1',
+    ),
   ];
 
   String? lastToggledId;
@@ -49,6 +61,8 @@ class MockStoreProductsRepository implements StoreProductsRepository {
     required String name,
     String? description,
     required double price,
+    double? offerPrice,
+    int? pointsValue,
     String? categoryId,
     String? category,
     String? imageUrl,
@@ -58,6 +72,7 @@ class MockStoreProductsRepository implements StoreProductsRepository {
       id: 'p-${products.length + 1}',
       name: name,
       price: price,
+      offerPrice: offerPrice,
       description: description,
       category: category,
       imageUrl: imageUrl,
@@ -75,6 +90,9 @@ class MockStoreProductsRepository implements StoreProductsRepository {
     String? name,
     String? description,
     double? price,
+    double? offerPrice,
+    bool clearOfferPrice = false,
+    int? pointsValue,
     String? categoryId,
     String? category,
     String? imageUrl,
@@ -88,6 +106,7 @@ class MockStoreProductsRepository implements StoreProductsRepository {
         id: existing.id,
         name: name ?? existing.name,
         price: price ?? existing.price,
+        offerPrice: offerPrice ?? existing.offerPrice,
         description: description ?? existing.description,
         category: category ?? existing.category,
         imageUrl: imageUrl ?? existing.imageUrl,
@@ -200,32 +219,43 @@ void main() {
     // Staff sees Add Product FAB
     expect(find.byKey(const Key('store_add_product_fab')), findsOneWidget);
 
-    // Staff sees individual product edit buttons and availability toggle switches
+    // Staff sees individual product edit buttons, but inline availability switches are removed
     expect(find.byKey(const Key('product_edit_btn_p-1')), findsOneWidget);
-    expect(find.byKey(const Key('product_toggle_p-1')), findsOneWidget);
+    expect(find.byKey(const Key('product_toggle_p-1')), findsNothing);
     expect(find.byKey(const Key('product_edit_btn_p-2')), findsOneWidget);
-    expect(find.byKey(const Key('product_toggle_p-2')), findsOneWidget);
+    expect(find.byKey(const Key('product_toggle_p-2')), findsNothing);
 
     // Super Admin-only CSV bulk import must NOT be present on store products screen
     expect(find.byKey(const Key('admin_catalog_csv_import_btn')), findsNothing);
     expect(find.text('Bulk Import Products (CSV)'), findsNothing);
   });
 
-  testWidgets('Store STAFF can toggle availability on a product', (tester) async {
+  testWidgets('Store STAFF can toggle availability on a product via EditProductDialog', (tester) async {
     await tester.pumpWidget(buildScreenForUser(role: UserRole.storeStaff));
     await tester.pumpAndSettle();
 
-    final toggle = find.byKey(const Key('product_toggle_p-1'));
-    expect(toggle, findsOneWidget);
+    // Inline toggle is not present
+    expect(find.byKey(const Key('product_toggle_p-1')), findsNothing);
 
-    // Tap toggle switch for p-1
-    await tester.tap(toggle);
-    await tester.pump();
+    // Open EditProductDialog
+    await tester.tap(find.byKey(const Key('product_edit_btn_p-1')));
     await tester.pumpAndSettle();
 
-    expect(productsRepo.lastToggledId, 'p-1');
-    expect(productsRepo.lastToggledValue, isFalse);
-    expect(find.text('Fresh Apples 1kg is now Unavailable'), findsOneWidget);
+    expect(find.text('Edit Store Item'), findsOneWidget);
+
+    // Toggle availability switch
+    final availabilitySwitch = find.byKey(const Key('edit_product_availability_switch'));
+    expect(availabilitySwitch, findsOneWidget);
+    await tester.tap(availabilitySwitch);
+    await tester.pumpAndSettle();
+
+    // Submit edit
+    await tester.ensureVisible(find.byKey(const Key('edit_product_submit_btn')));
+    await tester.tap(find.byKey(const Key('edit_product_submit_btn')));
+    await tester.pumpAndSettle();
+
+    expect(productsRepo.products.firstWhere((p) => p.id == 'p-1').isAvailable, isFalse);
+    expect(find.text('Fresh Apples 1kg updated successfully'), findsOneWidget);
   });
 
   testWidgets('Store STAFF can open CreateProductDialog and add a single product', (tester) async {
@@ -286,7 +316,72 @@ void main() {
 
     // Management controls are hidden
     expect(find.byKey(const Key('store_add_product_fab')), findsNothing);
+    expect(find.byKey(const Key('store_products_import_csv_btn')), findsNothing);
     expect(find.byKey(const Key('product_edit_btn_p-1')), findsNothing);
     expect(find.byKey(const Key('product_toggle_p-1')), findsNothing);
+  });
+
+  testWidgets('Store Manager sees Bulk Import CSV button and can open AdminCsvImportDialog', (tester) async {
+    await tester.pumpWidget(buildScreenForUser(role: UserRole.storeManager));
+    await tester.pumpAndSettle();
+
+    final importBtn = find.byKey(const Key('store_products_import_csv_btn'));
+    expect(importBtn, findsOneWidget);
+
+    await tester.tap(importBtn);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AdminCsvImportDialog), findsOneWidget);
+  });
+
+  testWidgets('Store Staff does NOT see Bulk Import CSV button', (tester) async {
+    await tester.pumpWidget(buildScreenForUser(role: UserRole.storeStaff));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('store_products_import_csv_btn')), findsNothing);
+  });
+
+  testWidgets('Successful CSV import refreshes the products list on StoreProductsScreen', (tester) async {
+    await tester.pumpWidget(buildScreenForUser(role: UserRole.storeManager));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Fresh Apples 1kg'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('store_products_import_csv_btn')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AdminCsvImportDialog), findsOneWidget);
+
+    productsRepo.products.add(
+      const ProductModel(
+        id: 'p-csv-imported',
+        name: 'Imported Organic Mangoes',
+        price: 18.00,
+        category: 'Produce',
+        isAvailable: true,
+        storeId: 'store-1',
+      ),
+    );
+
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator).last);
+    navigator.pop(const CsvImportResultModel(imported: 1, updated: 0, skipped: 0));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AdminCsvImportDialog), findsNothing);
+    expect(find.text('Imported Organic Mangoes'), findsOneWidget);
+  });
+
+  testWidgets('Renders offer price and discount percentage badge for products with active offers', (tester) async {
+    await tester.pumpWidget(buildScreenForUser(role: UserRole.storeStaff));
+    await tester.pumpAndSettle();
+
+    // Verify product with offer is rendered
+    expect(find.text('Special Honey 500g'), findsOneWidget);
+    // Regular price 20.00 AED
+    expect(find.text('20.00 AED'), findsOneWidget);
+    // Offer price 15.00 AED
+    expect(find.text('15.00 AED'), findsOneWidget);
+    // Discount badge: (20 - 15) / 20 = 25%
+    expect(find.text('-25%'), findsOneWidget);
   });
 }

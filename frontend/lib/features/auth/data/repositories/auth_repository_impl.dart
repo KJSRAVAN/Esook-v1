@@ -336,32 +336,38 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Result<UserModel?>> checkSession() async {
+    String? token;
     try {
-      final token = await _secureStorage.read(key: StorageKeys.authToken);
-      if (token == null || token.trim().isEmpty) {
-        _currentUser = null;
-        return Result.success(null);
-      }
-
-      final userResult = await getCurrentUser();
-      if (userResult.isSuccess) {
-        return Result.success(userResult.dataOrNull);
-      }
-
-      final failure = userResult.failureOrNull;
-      if (failure is UnauthorizedFailure || failure is ForbiddenFailure) {
-        await logout();
-        return Result.success(null);
-      }
-
-      return Result.failure(
-        failure ?? const UnknownFailure(message: 'Session verification failed'),
-      );
-    } catch (e) {
-      return Result.failure(
-        UnknownFailure(message: 'Session check failed: $e'),
-      );
+      token = await _secureStorage.read(key: StorageKeys.authToken);
+    } catch (_) {
+      // Storage corrupted, Keystore reset, or unreadable -> purge corrupted storage and treat as no session
+      try {
+        await _secureStorage.deleteAll();
+      } catch (_) {}
+      _currentUser = null;
+      return Result.success(null);
     }
+
+    if (token == null || token.trim().isEmpty || token.trim() == 'null') {
+      _currentUser = null;
+      return Result.success(null);
+    }
+
+    final userResult = await getCurrentUser();
+    if (userResult.isSuccess) {
+      return Result.success(userResult.dataOrNull);
+    }
+
+    final failure = userResult.failureOrNull;
+    // Temporary network or server error -> retain session and allow user to retry
+    if (failure is NetworkFailure || failure is ServerFailure) {
+      return Result.failure(failure!);
+    }
+
+    // Invalid, expired, unauthenticated, forbidden, or corrupted profile payload:
+    // Safely clear credentials and route cleanly to login
+    await logout();
+    return Result.success(null);
   }
 
   @override

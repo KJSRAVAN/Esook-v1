@@ -162,5 +162,39 @@ void main() {
         expect(find.text('Customer Home Shell'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'displays retry card on transient server failure without logging out',
+      (tester) async {
+        mockRepo.checkSessionResult = Result.failure(
+          const ServerFailure(message: 'Internal server error 500'),
+        );
+
+        await tester.pumpWidget(buildBootstrapWidget());
+        await tester.pumpAndSettle();
+
+        expect(mockRepo.checkSessionCallCount, equals(1));
+        expect(find.text('Connection Issue'), findsOneWidget);
+        expect(find.text('Try Again'), findsOneWidget);
+        expect(mockRepo.logoutCallCount, equals(0));
+      },
+    );
+
+    testWidgets(
+      'clears invalid/corrupted session and redirects directly to login on non-transient failure',
+      (tester) async {
+        mockRepo.checkSessionResult = Result.failure(
+          const UnauthorizedFailure(message: 'Token expired or revoked'),
+        );
+
+        await tester.pumpWidget(buildBootstrapWidget());
+        await tester.pumpAndSettle();
+
+        expect(mockRepo.checkSessionCallCount, equals(1));
+        expect(mockRepo.logoutCallCount, equals(1));
+        expect(find.text('Customer Login Shell'), findsOneWidget);
+        expect(find.text('Connection Issue'), findsNothing);
+      },
+    );
   });
 }

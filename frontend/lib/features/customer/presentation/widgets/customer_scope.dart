@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../application/points_notifier.dart';
 import '../../cart/application/cart_notifier.dart';
 import '../../cart/domain/cart_repository.dart';
 import '../../domain/models/store_model.dart';
@@ -14,6 +15,7 @@ class CustomerScope extends InheritedWidget {
   final CartRepository cartRepository;
   final OrderRepository orderRepository;
   final CartNotifier cartNotifier;
+  final PointsNotifier? pointsNotifier;
   final ValueNotifier<StoreModel?> selectedStoreNotifier;
 
   const CustomerScope({
@@ -23,6 +25,7 @@ class CustomerScope extends InheritedWidget {
     required this.cartRepository,
     required this.orderRepository,
     required this.cartNotifier,
+    this.pointsNotifier,
     required this.selectedStoreNotifier,
     required super.child,
   });
@@ -59,6 +62,10 @@ class CustomerScope extends InheritedWidget {
     return of(context).cartNotifier;
   }
 
+  static PointsNotifier? pointsNotifierOf(BuildContext context) {
+    return maybeOf(context)?.pointsNotifier;
+  }
+
   static StoreModel? selectedStoreOf(BuildContext context) {
     return of(context).selectedStoreNotifier.value;
   }
@@ -70,6 +77,7 @@ class CustomerScope extends InheritedWidget {
         cartRepository != oldWidget.cartRepository ||
         orderRepository != oldWidget.orderRepository ||
         cartNotifier != oldWidget.cartNotifier ||
+        pointsNotifier != oldWidget.pointsNotifier ||
         selectedStoreNotifier != oldWidget.selectedStoreNotifier;
   }
 }

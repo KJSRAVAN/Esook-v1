@@ -220,11 +220,73 @@ void main() {
         total: 10.0,
       );
 
-      final updated = order.copyWith(status: OrderStatus.delivered);
+      final updated = order.copyWith(
+        status: OrderStatus.delivered,
+        pointsDiscount: 5.0,
+        redeemedPoints: 50,
+      );
 
       expect(updated.status, equals(OrderStatus.delivered));
       expect(updated.id, equals('ord-1'));
       expect(updated.total, equals(10.0));
+      expect(updated.pointsDiscount, equals(5.0));
+      expect(updated.redeemedPoints, equals(50));
+    });
+
+    test('OrderModel parses pointsDiscount and redeemedPoints correctly', () {
+      final json = {
+        'id': 'ord-pts-01',
+        'customerId': 'usr-1',
+        'storeId': 'store-1',
+        'status': 'PENDING',
+        'fulfillment': 'DELIVERY',
+        'subtotal': '50.00',
+        'total': '45.00',
+        'discount': '0.00',
+        'pointsDiscount': '5.00',
+        'redeemedPoints': 50,
+      };
+
+      final order = OrderModel.fromJson(json);
+
+      expect(order.pointsDiscount, equals(5.00));
+      expect(order.redeemedPoints, equals(50));
+      expect(order.discount, equals(0.00));
+      expect(order.total, equals(45.00));
+
+      final jsonOut = order.toJson();
+      expect(jsonOut['pointsDiscount'], equals(5.00));
+      expect(jsonOut['redeemedPoints'], equals(50));
+    });
+
+    test('points discount total consistency verifies net payable calculation', () {
+      const subtotal = 100.0;
+      const couponDiscount = 10.0;
+      const pointsDiscount = 15.0;
+      const deliveryFee = 5.0;
+      const expectedTotal = subtotal - couponDiscount - pointsDiscount + deliveryFee;
+
+      final order = OrderModel(
+        id: 'ord-consistent-1',
+        customerId: 'usr-1',
+        storeId: 'store-1',
+        status: OrderStatus.accepted,
+        fulfillment: FulfillmentType.delivery,
+        subtotal: subtotal,
+        discount: couponDiscount,
+        pointsDiscount: pointsDiscount,
+        redeemedPoints: 1500,
+        deliveryFee: deliveryFee,
+        total: expectedTotal,
+      );
+
+      expect(order.subtotal - order.discount - order.pointsDiscount + order.deliveryFee, equals(order.total));
+      expect(order.total, equals(80.0));
+
+      final json = order.toJson();
+      expect(json['pointsDiscount'], equals(15.0));
+      expect(json['redeemedPoints'], equals(1500));
+      expect(json['total'], equals(80.0));
     });
   });
 }

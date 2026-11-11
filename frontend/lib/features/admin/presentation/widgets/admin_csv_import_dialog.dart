@@ -121,10 +121,10 @@ class _AdminCsvImportDialogState extends State<AdminCsvImportDialog> {
   }
 
   void _loadSampleCsv() {
-    const sample = 'name,price,category,description,isAvailable\n'
-        'Organic Red Apples,8.50,Produce,Fresh red apples per kg,true\n'
-        'Whole Wheat Bread,4.25,Bakery,Freshly baked bread loaf,true\n'
-        'Full Cream Milk 1L,6.00,Dairy,Pasteurized full cream milk,true';
+    const sample = 'name,price,offerPrice,variantName,category,description,sku,imageUrl,pointsValue\n'
+        'Organic Red Apples,8.50,6.99,1kg,Produce,Fresh red apples per kg,APP-001,,10\n'
+        'Whole Wheat Bread,4.25,,Default,Bakery,Freshly baked bread loaf,BRD-002,,5\n'
+        'Full Cream Milk 1L,6.00,5.25,1 Liter,Dairy,Pasteurized full cream milk,MLK-003,,15';
     _rawCsvController.text = sample;
     setState(() {
       _selectedFile = SelectedCsvFile.fromString(

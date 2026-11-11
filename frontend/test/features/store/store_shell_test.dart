@@ -84,6 +84,8 @@ class FakeStoreProductsRepository implements StoreProductsRepository {
     required String name,
     String? description,
     required double price,
+    double? offerPrice,
+    int? pointsValue,
     String? category,
     String? categoryId,
     String? imageUrl,
@@ -94,6 +96,7 @@ class FakeStoreProductsRepository implements StoreProductsRepository {
       storeId: storeId,
       name: name,
       price: price,
+      offerPrice: offerPrice,
       category: category,
       categoryId: categoryId,
       description: description,
@@ -109,6 +112,9 @@ class FakeStoreProductsRepository implements StoreProductsRepository {
     String? name,
     String? description,
     double? price,
+    double? offerPrice,
+    bool clearOfferPrice = false,
+    int? pointsValue,
     String? category,
     String? categoryId,
     String? imageUrl,
@@ -123,6 +129,7 @@ class FakeStoreProductsRepository implements StoreProductsRepository {
         storeId: existing.storeId,
         name: name ?? existing.name,
         price: price ?? existing.price,
+        offerPrice: offerPrice ?? existing.offerPrice,
         description: description ?? existing.description,
         category: category ?? existing.category,
         categoryId: categoryId ?? existing.categoryId,
@@ -166,6 +173,15 @@ class FakeStoreProductsRepository implements StoreProductsRepository {
     required String fileName,
   }) async {
     return Result.success(const CsvImportResultModel());
+  }
+
+  @override
+  Future<Result<String>> uploadProductImage({
+    required String storeId,
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    return Result.success('https://example.com/$fileName');
   }
 }
 
@@ -333,7 +349,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('store_add_product_fab')), findsOneWidget);
         expect(find.byKey(const Key('product_edit_btn_prod-1')), findsOneWidget);
-        expect(find.byKey(const Key('product_toggle_prod-1')), findsOneWidget);
+        expect(find.byKey(const Key('product_toggle_prod-1')), findsNothing);
 
         // Go to Categories
         await tester.tap(find.text('Categories'));
@@ -356,7 +372,7 @@ void main() {
           find.byKey(const Key('product_edit_btn_prod-1')),
           findsOneWidget,
         );
-        expect(find.byKey(const Key('product_toggle_prod-1')), findsOneWidget);
+        expect(find.byKey(const Key('product_toggle_prod-1')), findsNothing);
 
         // Verify delete product button does not exist for Manager
         expect(

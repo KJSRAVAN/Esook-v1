@@ -1,6 +1,7 @@
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/auth_phone_helper.dart';
 import '../../../../core/utils/result.dart';
 import '../../../auth/domain/models/user_role.dart';
 import '../../domain/models/admin_user_model.dart';
@@ -21,11 +22,13 @@ class AdminDriversRepositoryImpl implements AdminDriversRepository {
     String? storeId,
   }) async {
     try {
+      final normalizedPhone =
+          AuthPhoneHelper.normalizeAuthPhone(phone) ?? phone.trim();
       final response = await _apiClient.post<dynamic>(
         '/auth/register/driver',
         body: {
           'name': name.trim(),
-          'phone': phone.trim(),
+          'phone': normalizedPhone,
           'password': password,
         },
       );
@@ -101,7 +104,7 @@ class AdminDriversRepositoryImpl implements AdminDriversRepository {
   }) async {
     try {
       final response = await _apiClient.patch<dynamic>(
-        '/users/$driverId',
+        '/users/drivers/$driverId/status',
         body: {
           'is_active': isActive,
           'isActive': isActive,

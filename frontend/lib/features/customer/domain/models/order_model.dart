@@ -133,6 +133,8 @@ class OrderModel {
   final String? notes;
   final double subtotal;
   final double discount;
+  final double pointsDiscount;
+  final int redeemedPoints;
   final double deliveryFee;
   final double total;
   final int pointsEarned;
@@ -155,6 +157,8 @@ class OrderModel {
     this.notes,
     required this.subtotal,
     this.discount = 0.0,
+    this.pointsDiscount = 0.0,
+    this.redeemedPoints = 0,
     this.deliveryFee = 0.0,
     required this.total,
     this.pointsEarned = 0,
@@ -248,6 +252,12 @@ class OrderModel {
       notes: json['notes'] as String?,
       subtotal: subtotalVal,
       discount: parseDouble(json['discount']),
+      pointsDiscount: parseDouble(
+        json['pointsDiscount'] ?? json['points_discount'],
+      ),
+      redeemedPoints: parseInt(
+        json['redeemedPoints'] ?? json['redeemed_points'],
+      ),
       deliveryFee: parseDouble(json['deliveryFee'] ?? json['delivery_fee']),
       total: totalVal,
       pointsEarned: parseInt(json['pointsEarned'] ?? json['points_earned']),
@@ -275,6 +285,8 @@ class OrderModel {
       if (notes != null) 'notes': notes,
       'subtotal': subtotal,
       'discount': discount,
+      if (pointsDiscount > 0) 'pointsDiscount': pointsDiscount,
+      if (redeemedPoints > 0) 'redeemedPoints': redeemedPoints,
       'deliveryFee': deliveryFee,
       'total': total,
       'pointsEarned': pointsEarned,
@@ -299,6 +311,8 @@ class OrderModel {
     String? notes,
     double? subtotal,
     double? discount,
+    double? pointsDiscount,
+    int? redeemedPoints,
     double? deliveryFee,
     double? total,
     int? pointsEarned,
@@ -321,6 +335,8 @@ class OrderModel {
       notes: notes ?? this.notes,
       subtotal: subtotal ?? this.subtotal,
       discount: discount ?? this.discount,
+      pointsDiscount: pointsDiscount ?? this.pointsDiscount,
+      redeemedPoints: redeemedPoints ?? this.redeemedPoints,
       deliveryFee: deliveryFee ?? this.deliveryFee,
       total: total ?? this.total,
       pointsEarned: pointsEarned ?? this.pointsEarned,

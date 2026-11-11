@@ -219,5 +219,62 @@ void main() {
       expect(mockOrderRepository.createOrderCallCount, equals(0));
       expect(find.textContaining('added to cart from Order'), findsOneWidget);
     });
+
+    testWidgets('renders Points Discount row when pointsDiscount and redeemedPoints are present', (
+      tester,
+    ) async {
+      final orderWithPoints = OrderModel(
+        id: 'ord-pts-1',
+        orderNumber: 'ESK-PTS-100',
+        customerId: 'usr-1',
+        storeId: 'store-1',
+        storeName: 'eSOuQ Olaya Flagship',
+        status: OrderStatus.accepted,
+        fulfillment: FulfillmentType.delivery,
+        subtotal: 50.0,
+        discount: 0.0,
+        pointsDiscount: 5.0,
+        redeemedPoints: 500,
+        deliveryFee: 10.0,
+        total: 55.0,
+        pointsEarned: 25,
+        items: const [
+          OrderItemModel(
+            itemId: 'prod-1',
+            itemName: 'Fresh Milk 1L',
+            itemPrice: 25.0,
+            quantity: 2,
+            subtotal: 50.0,
+          ),
+        ],
+        createdAt: DateTime.parse('2026-09-15T15:00:00Z'),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () {
+                  OrderDetailsSheet.show(
+                    context,
+                    order: orderWithPoints,
+                    orderRepository: mockOrderRepository,
+                  );
+                },
+                child: const Text('Open Order'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open Order'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Points Discount (500 pts)'), findsOneWidget);
+      expect(find.text('-5.00 SAR'), findsOneWidget);
+    });
   });
 }

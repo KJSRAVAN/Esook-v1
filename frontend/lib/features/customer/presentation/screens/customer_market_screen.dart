@@ -4,6 +4,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../application/points_notifier.dart';
 import '../../cart/application/cart_notifier.dart';
 import '../../cart/presentation/screens/cart_screen.dart';
 import '../../domain/models/product_model.dart';
@@ -11,6 +12,7 @@ import '../../domain/models/store_model.dart';
 import '../../domain/repositories/product_repository.dart';
 import '../../domain/repositories/store_repository.dart';
 import '../widgets/category_filter_bar.dart';
+import '../widgets/customer_points_badge.dart';
 import '../widgets/customer_scope.dart';
 import '../widgets/product_card.dart';
 import '../widgets/product_detail_sheet.dart';
@@ -23,6 +25,7 @@ class CustomerMarketScreen extends StatefulWidget {
   final StoreRepository? storeRepository;
   final ValueNotifier<StoreModel?>? selectedStoreNotifier;
   final CartNotifier? cartNotifier;
+  final PointsNotifier? pointsNotifier;
   final VoidCallback? onViewCart;
   final VoidCallback? onOpenOrderHistory;
   final String currency;
@@ -33,6 +36,7 @@ class CustomerMarketScreen extends StatefulWidget {
     this.storeRepository,
     this.selectedStoreNotifier,
     this.cartNotifier,
+    this.pointsNotifier,
     this.onViewCart,
     this.onOpenOrderHistory,
     this.currency = AppConstants.defaultCurrency,
@@ -235,6 +239,10 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
             appBar: AppBar(
               title: const Text('Market'),
               actions: [
+                CustomerPointsBadge(
+                  pointsNotifier: widget.pointsNotifier,
+                  currency: widget.currency,
+                ),
                 PopupMenuButton<String>(
                   key: const Key('customer_market_overflow_menu'),
                   icon: const Icon(Icons.more_vert_rounded),
@@ -353,6 +361,10 @@ class _CustomerMarketScreenState extends State<CustomerMarketScreen> {
               ),
             ),
             actions: [
+              CustomerPointsBadge(
+                pointsNotifier: widget.pointsNotifier,
+                currency: widget.currency,
+              ),
               PopupMenuButton<String>(
                 key: const Key('customer_market_overflow_menu'),
                 icon: const Icon(Icons.more_vert_rounded),

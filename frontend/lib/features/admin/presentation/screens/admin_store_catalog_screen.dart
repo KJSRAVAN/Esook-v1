@@ -753,13 +753,54 @@ class _AdminStoreCatalogScreenState extends State<AdminStoreCatalogScreen> {
                     ),
                   ],
                   const SizedBox(height: 4),
-                  Text(
-                    '${product.price.toStringAsFixed(2)} AED',
-                    style: AppTextStyles.labelLarge.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
+                  if (product.hasOffer) ...[
+                    Row(
+                      children: [
+                        Text(
+                          '${product.price.toStringAsFixed(2)} AED',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                        if (product.discountPercentage != null) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEE2E2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '-${product.discountPercentage}%',
+                              style: const TextStyle(
+                                color: Color(0xFFDC2626),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                  ),
+                    Text(
+                      '${product.offerPrice!.toStringAsFixed(2)} AED',
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: const Color(0xFFDC2626),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ] else
+                    Text(
+                      '${product.price.toStringAsFixed(2)} AED',
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                 ],
               ),
             ),

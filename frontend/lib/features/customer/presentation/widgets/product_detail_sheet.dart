@@ -9,7 +9,7 @@ import '../../domain/models/product_model.dart';
 import 'customer_scope.dart';
 
 /// Modal bottom sheet displaying granular product details and cart interaction.
-class ProductDetailSheet extends StatelessWidget {
+class ProductDetailSheet extends StatefulWidget {
   final ProductModel product;
   final CartNotifier? cartNotifier;
   final String currency;
@@ -42,6 +42,18 @@ class ProductDetailSheet extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  State<ProductDetailSheet> createState() => _ProductDetailSheetState();
+}
+
+class _ProductDetailSheetState extends State<ProductDetailSheet> {
+  int _selectedQuantity = 1;
+  bool _isSubmitting = false;
+
+  ProductModel get product => widget.product;
+  String get currency => widget.currency;
+  CartNotifier? get cartNotifier => widget.cartNotifier;
 
   @override
   Widget build(BuildContext context) {
@@ -154,13 +166,58 @@ class ProductDetailSheet extends StatelessWidget {
                     const SizedBox(height: AppDimensions.spacingSm),
 
                     // Price Display
-                    Text(
-                      '${product.price.toStringAsFixed(2)} $currency',
-                      style: AppTextStyles.headlineSmall.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primaryDark,
+                    if (product.hasOffer)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            '${product.offerPrice!.toStringAsFixed(2)} $currency',
+                            style: AppTextStyles.headlineSmall.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFDC2626),
+                            ),
+                          ),
+                          const SizedBox(width: AppDimensions.spacingSm),
+                          Text(
+                            '${product.price.toStringAsFixed(2)} $currency',
+                            style: AppTextStyles.titleMedium.copyWith(
+                              color: AppColors.textTertiary,
+                              decoration: TextDecoration.lineThrough,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          if (product.discountPercentage != null) ...[
+                            const SizedBox(width: AppDimensions.spacingSm),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFEE2E2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '-${product.discountPercentage}%',
+                                style: const TextStyle(
+                                  color: Color(0xFFDC2626),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      )
+                    else
+                      Text(
+                        '${product.price.toStringAsFixed(2)} $currency',
+                        style: AppTextStyles.headlineSmall.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primaryDark,
+                        ),
                       ),
-                    ),
 
                     // Description Section
                     if (product.description != null &&
@@ -249,11 +306,43 @@ class ProductDetailSheet extends StatelessWidget {
           else
             _buildFallbackImage(),
 
-          // Loyalty Points Badge
-          if (product.loyaltyPointsPerUnit > 0)
+          // Promotional Discount Badge (Top-Left)
+          if (product.hasOffer && product.discountPercentage != null)
             Positioned(
               top: AppDimensions.spacingSm,
               left: AppDimensions.spacingSm,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3.5,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDC2626),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(40),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '-${product.discountPercentage}%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+
+          // Loyalty Points Badge (Top-Right, Non-overlapping)
+          if (product.loyaltyPointsPerUnit > 0)
+            Positioned(
+              top: AppDimensions.spacingSm,
+              right: AppDimensions.spacingSm,
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppDimensions.spacingSm,
@@ -262,7 +351,17 @@ class ProductDetailSheet extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.primaryLight,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-                  border: Border.all(color: AppColors.primary.withAlpha(80)),
+                  border: Border.all(
+                    color: AppColors.primary.withAlpha(100),
+                    width: 1.0,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(30),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -404,53 +503,148 @@ class ProductDetailSheet extends StatelessWidget {
         final isPending = effectiveCartNotifier.isProductPending(product.id);
 
         if (quantity == 0) {
-          return SizedBox(
-            width: double.infinity,
-            height: AppDimensions.buttonHeight,
-            child: ElevatedButton.icon(
-              key: const Key('detail_add_to_cart_button'),
-              onPressed: isPending
-                  ? null
-                  : () async {
-                      await effectiveCartNotifier.addItem(product.id, 1);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Added "${product.name}" to cart'),
-                            backgroundColor: AppColors.success,
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      }
-                    },
-              icon: isPending
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : const Icon(Icons.add_shopping_cart, size: 20),
-              label: Text(
-                isPending
-                    ? 'Adding...'
-                    : 'Add to Cart — ${product.price.toStringAsFixed(2)} $currency',
-                style: AppTextStyles.titleMedium.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
+          final totalEffectivePrice =
+              product.effectivePrice * _selectedQuantity;
+          return Row(
+            children: [
+              // Quantity Stepper: [-] [qty] [+]
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                  border: Border.all(color: AppColors.borderSubtle),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      key: const Key('detail_quantity_decrement'),
+                      icon: const Icon(Icons.remove_rounded),
+                      iconSize: 20,
+                      color: (_selectedQuantity > 1 &&
+                              !_isSubmitting &&
+                              !isPending)
+                          ? AppColors.primary
+                          : AppColors.textTertiary,
+                      onPressed: (_selectedQuantity > 1 &&
+                              !_isSubmitting &&
+                              !isPending)
+                          ? () => setState(() => _selectedQuantity--)
+                          : null,
+                      tooltip: 'Decrease quantity',
+                    ),
+                    Container(
+                      constraints: const BoxConstraints(minWidth: 28),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '$_selectedQuantity',
+                        key: const Key('detail_selected_quantity'),
+                        style: AppTextStyles.titleMedium.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      key: const Key('detail_quantity_increment'),
+                      icon: const Icon(Icons.add_rounded),
+                      iconSize: 20,
+                      color: (_selectedQuantity < 99 &&
+                              !_isSubmitting &&
+                              !isPending)
+                          ? AppColors.primary
+                          : AppColors.textTertiary,
+                      onPressed: (_selectedQuantity < 99 &&
+                              !_isSubmitting &&
+                              !isPending)
+                          ? () => setState(() => _selectedQuantity++)
+                          : null,
+                      tooltip: 'Increase quantity',
+                    ),
+                  ],
                 ),
               ),
-            ),
+              const SizedBox(width: AppDimensions.spacingSm),
+              // Prominent Add to Cart Button
+              Expanded(
+                child: SizedBox(
+                  height: AppDimensions.buttonHeight,
+                  child: ElevatedButton.icon(
+                    key: const Key('detail_add_to_cart_button'),
+                    onPressed: (isPending || _isSubmitting)
+                        ? null
+                        : () async {
+                            setState(() => _isSubmitting = true);
+                            try {
+                              await effectiveCartNotifier.addItem(
+                                product.primaryVariantOrProductId,
+                                _selectedQuantity,
+                                product.storeId,
+                              );
+                              if (context.mounted) {
+                                if (effectiveCartNotifier.error != null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        effectiveCartNotifier.error!.message,
+                                      ),
+                                      backgroundColor: AppColors.error,
+                                      duration: const Duration(seconds: 3),
+                                    ),
+                                  );
+                                } else {
+                                  final msg = _selectedQuantity > 1
+                                      ? 'Added $_selectedQuantity x "${product.name}" to cart'
+                                      : 'Added "${product.name}" to cart';
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(msg),
+                                      backgroundColor: AppColors.success,
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                  Navigator.of(context).pop();
+                                }
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() => _isSubmitting = false);
+                              }
+                            }
+                          },
+                    icon: (isPending || _isSubmitting)
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Icon(Icons.add_shopping_cart, size: 20),
+                    label: Text(
+                      (isPending || _isSubmitting)
+                          ? 'Adding...'
+                          : 'Add to Cart — ${totalEffectivePrice.toStringAsFixed(2)} $currency',
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppDimensions.radiusMd),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           );
         }
 
@@ -479,7 +673,7 @@ class ProductDetailSheet extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${(product.price * quantity).toStringAsFixed(2)} $currency',
+                    '${(product.effectivePrice * quantity).toStringAsFixed(2)} $currency',
                     style: AppTextStyles.titleMedium.copyWith(
                       color: AppColors.primaryDark,
                       fontWeight: FontWeight.w800,

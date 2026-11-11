@@ -2,12 +2,15 @@ import 'package:esouq/core/routing/app_routes.dart';
 import 'package:esouq/features/auth/domain/models/user_model.dart';
 import 'package:esouq/features/auth/domain/models/user_role.dart';
 import 'package:esouq/features/auth/presentation/widgets/auth_scope.dart';
+import 'package:esouq/features/customer/application/points_notifier.dart';
+import 'package:esouq/features/customer/domain/repositories/order_repository.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_account_screen.dart';
 import 'package:esouq/features/customer/presentation/screens/customer_edit_profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../auth/mocks/mock_auth_repository.dart';
+import '../../mocks/mock_order_repository.dart';
 
 void main() {
   group('CustomerAccountScreen', () {
@@ -27,7 +30,10 @@ void main() {
       mockAuthRepository.currentUser = testUser;
     });
 
-    Widget buildTestWidget({UserModel? initialUser}) {
+    Widget buildTestWidget({
+      UserModel? initialUser,
+      PointsNotifier? pointsNotifier,
+    }) {
       return MaterialApp(
         onGenerateRoute: (settings) {
           if (settings.name == AppRoutes.login) {
@@ -40,6 +46,7 @@ void main() {
         home: CustomerAccountScreen(
           authRepository: mockAuthRepository,
           initialUser: initialUser,
+          pointsNotifier: pointsNotifier,
         ),
       );
     }
@@ -162,5 +169,114 @@ void main() {
         expect(find.text('+966501234567'), findsOneWidget);
       },
     );
+
+    testWidgets('renders loyalty points card with available balance and monetary worth', (
+      tester,
+    ) async {
+      final mockOrderRepo = MockOrderRepository();
+      final pointsNotifier = PointsNotifier(
+        orderRepository: mockOrderRepo,
+        initialPointsInfo: const CustomerPointsInfo(
+          isEnabled: true,
+          pointsPerCurrencyUnit: 0.10,
+          balance: 250,
+        ),
+      );
+
+      await tester.pumpWidget(
+        buildTestWidget(
+          initialUser: testUser,
+          pointsNotifier: pointsNotifier,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('account_loyalty_points_card')), findsOneWidget);
+      expect(find.text('Loyalty Points'), findsOneWidget);
+      expect(find.byKey(const Key('account_points_balance_text')), findsOneWidget);
+      expect(find.text('Available Points: 250'), findsOneWidget);
+      expect(find.text('Worth 25.00 SAR (1 pt = 0.10 SAR)'), findsOneWidget);
+      expect(
+        find.text('Redeemable at checkout for discounts on eligible orders.'),
+        findsOneWidget,
+      );
+
+      pointsNotifier.dispose();
+    });
+
+    testWidgets('loyalty points card renders 0 points gracefully when notifier has no points', (
+      tester,
+    ) async {
+      final mockOrderRepo = MockOrderRepository();
+      final pointsNotifier = PointsNotifier(
+        orderRepository: mockOrderRepo,
+        initialPointsInfo: const CustomerPointsInfo(
+          isEnabled: true,
+          pointsPerCurrencyUnit: 0.10,
+          balance: 0,
+        ),
+      );
+
+      await tester.pumpWidget(
+        buildTestWidget(
+          initialUser: testUser,
+          pointsNotifier: pointsNotifier,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('account_loyalty_points_card')), findsOneWidget);
+      expect(find.text('Available Points: 0'), findsOneWidget);
+      expect(find.textContaining('Worth'), findsNothing);
+
+      pointsNotifier.dispose();
+    });
+
+    testWidgets('refreshing account profile triggers points balance refresh', (
+      tester,
+    ) async {
+      final mockOrderRepo = MockOrderRepository();
+      mockOrderRepo.pointsInfoToReturn = const CustomerPointsInfo(
+        isEnabled: true,
+        pointsPerCurrencyUnit: 0.10,
+        balance: 50,
+      );
+      final pointsNotifier = PointsNotifier(
+        orderRepository: mockOrderRepo,
+        initialPointsInfo: const CustomerPointsInfo(
+          isEnabled: true,
+          pointsPerCurrencyUnit: 0.10,
+          balance: 10,
+        ),
+      );
+      await pointsNotifier.loadForStore('store-1');
+
+      await tester.pumpWidget(
+        buildTestWidget(
+          initialUser: testUser,
+          pointsNotifier: pointsNotifier,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Available Points: 50'), findsOneWidget);
+
+      // Now update mock order repository points
+      mockOrderRepo.pointsInfoToReturn = const CustomerPointsInfo(
+        isEnabled: true,
+        pointsPerCurrencyUnit: 0.10,
+        balance: 120,
+      );
+
+      // Tap refresh button on AppBar
+      final refreshBtn = find.byKey(const Key('account_refresh_button'));
+      await tester.tap(refreshBtn);
+      await tester.pumpAndSettle();
+
+      // Verify points were refreshed
+      expect(find.text('Available Points: 120'), findsOneWidget);
+
+      pointsNotifier.dispose();
+    });
   });
 }

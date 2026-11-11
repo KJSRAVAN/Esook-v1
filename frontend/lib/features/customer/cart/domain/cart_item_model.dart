@@ -8,6 +8,9 @@ class CartItemModel {
   final String? imageUrl;
   final bool isAvailable;
   final int loyaltyPointsPerUnit;
+  final double? originalPrice;
+  final double? offerPrice;
+  final String? variantName;
 
   const CartItemModel({
     String? itemId,
@@ -20,6 +23,9 @@ class CartItemModel {
     this.imageUrl,
     this.isAvailable = true,
     this.loyaltyPointsPerUnit = 0,
+    this.originalPrice,
+    this.offerPrice,
+    this.variantName,
     double? itemSubtotal,
   }) : itemId = itemId ?? productId ?? '',
        productId = productId ?? itemId ?? '',
@@ -37,6 +43,23 @@ class CartItemModel {
 
   /// Total loyalty points earned for this line item.
   int get subtotalPoints => loyaltyPointsPerUnit * quantity;
+
+  /// Whether this item has an active offer/discount.
+  bool get hasOffer =>
+      (originalPrice != null && originalPrice! > price) ||
+      (offerPrice != null && offerPrice! > 0 && offerPrice! < (originalPrice ?? price));
+
+  /// Base price before discount.
+  double get regularPrice => originalPrice ?? price;
+
+  /// Calculated discount percentage.
+  int get discountPercent =>
+      hasOffer && regularPrice > 0
+          ? (((regularPrice - price) / regularPrice) * 100).round()
+          : 0;
+
+  /// Total amount saved on this line item.
+  double get totalSavings => hasOffer ? (regularPrice - price) * quantity : 0.0;
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
     double parsePrice(dynamic value) {
@@ -57,6 +80,35 @@ class CartItemModel {
     final resolvedProdId = rawProdId ?? rawItemId ?? '';
     final resolvedItemId = rawItemId ?? rawProdId ?? '';
 
+    double resolvedPrice = parsePrice(
+      json['price'] ?? json['unitPrice'] ?? json['unit_price'] ?? json['effectivePrice'] ?? json['effective_price'],
+    );
+    double? parsedOriginalPrice = json['originalPrice'] != null || json['original_price'] != null
+        ? parsePrice(json['originalPrice'] ?? json['original_price'])
+        : null;
+    double? parsedOfferPrice = json['offerPrice'] != null || json['offer_price'] != null
+        ? parsePrice(json['offerPrice'] ?? json['offer_price'])
+        : null;
+    String? parsedVariant = json['variantName'] as String? ??
+        json['variant_name'] as String? ??
+        json['variant'] as String?;
+
+    if (resolvedPrice == 0.0 && json['variants'] is List && (json['variants'] as List).isNotEmpty) {
+      final variants = (json['variants'] as List).whereType<Map<String, dynamic>>().toList();
+      if (variants.isNotEmpty) {
+        final primary = variants.firstWhere(
+          (v) => v['isDefault'] == true || v['name'] == 'Default',
+          orElse: () => variants.first,
+        );
+        final offer = parsePrice(primary['offerPrice'] ?? primary['offer_price']);
+        final reg = parsePrice(primary['price']);
+        parsedOriginalPrice = reg > 0 ? reg : null;
+        parsedOfferPrice = offer > 0 ? offer : null;
+        parsedVariant ??= primary['name'] as String?;
+        resolvedPrice = (offer > 0 && offer < reg) ? offer : reg;
+      }
+    }
+
     return CartItemModel(
       itemId: resolvedItemId,
       productId: resolvedProdId,
@@ -65,17 +117,20 @@ class CartItemModel {
           json['productName'] as String? ??
           json['product_name'] as String? ??
           '',
-      price: parsePrice(
-        json['price'] ?? json['unitPrice'] ?? json['unit_price'],
-      ),
+      price: resolvedPrice,
       quantity: parseQuantity(json['quantity']),
       imageUrl: json['imageUrl'] as String? ?? json['image_url'] as String?,
       isAvailable:
           json['isAvailable'] as bool? ?? json['is_available'] as bool? ?? true,
       loyaltyPointsPerUnit:
+          (json['pointsValue'] as num?)?.toInt() ??
+          (json['points_value'] as num?)?.toInt() ??
           (json['loyaltyPointsPerUnit'] as num?)?.toInt() ??
           (json['loyalty_points_per_unit'] as num?)?.toInt() ??
           0,
+      originalPrice: parsedOriginalPrice,
+      offerPrice: parsedOfferPrice,
+      variantName: parsedVariant,
     );
   }
 
@@ -96,6 +151,9 @@ class CartItemModel {
       'is_available': isAvailable,
       'loyalty_points_per_unit': loyaltyPointsPerUnit,
       'item_subtotal': itemSubtotal.toStringAsFixed(2),
+      if (originalPrice != null) 'originalPrice': originalPrice,
+      if (offerPrice != null) 'offerPrice': offerPrice,
+      if (variantName != null) 'variantName': variantName,
     };
   }
 
@@ -107,6 +165,9 @@ class CartItemModel {
     String? imageUrl,
     bool? isAvailable,
     int? loyaltyPointsPerUnit,
+    double? originalPrice,
+    double? offerPrice,
+    String? variantName,
     String? productId,
     String? productName,
     double? unitPrice,
@@ -121,6 +182,9 @@ class CartItemModel {
       imageUrl: imageUrl ?? this.imageUrl,
       isAvailable: isAvailable ?? this.isAvailable,
       loyaltyPointsPerUnit: loyaltyPointsPerUnit ?? this.loyaltyPointsPerUnit,
+      originalPrice: originalPrice ?? this.originalPrice,
+      offerPrice: offerPrice ?? this.offerPrice,
+      variantName: variantName ?? this.variantName,
     );
   }
 
@@ -136,7 +200,10 @@ class CartItemModel {
           quantity == other.quantity &&
           imageUrl == other.imageUrl &&
           isAvailable == other.isAvailable &&
-          loyaltyPointsPerUnit == other.loyaltyPointsPerUnit;
+          loyaltyPointsPerUnit == other.loyaltyPointsPerUnit &&
+          originalPrice == other.originalPrice &&
+          offerPrice == other.offerPrice &&
+          variantName == other.variantName;
 
   @override
   int get hashCode =>
@@ -147,9 +214,12 @@ class CartItemModel {
       quantity.hashCode ^
       imageUrl.hashCode ^
       isAvailable.hashCode ^
-      loyaltyPointsPerUnit.hashCode;
+      loyaltyPointsPerUnit.hashCode ^
+      (originalPrice?.hashCode ?? 0) ^
+      (offerPrice?.hashCode ?? 0) ^
+      (variantName?.hashCode ?? 0);
 
   @override
   String toString() =>
-      'CartItemModel(itemId: $itemId, productId: $productId, name: $name, price: $price, quantity: $quantity)';
+      'CartItemModel(itemId: $itemId, productId: $productId, name: $name, price: $price, quantity: $quantity, isAvailable: $isAvailable, originalPrice: $originalPrice, offerPrice: $offerPrice)';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/config/app_config.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/routing/app_routes.dart';
@@ -12,6 +13,8 @@ import '../../../auth/data/repositories/auth_repository_impl.dart';
 import '../../../auth/domain/models/user_model.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../../auth/presentation/widgets/auth_scope.dart';
+import '../../application/points_notifier.dart';
+import '../widgets/customer_scope.dart';
 import 'customer_edit_profile_screen.dart';
 
 /// Customer Account screen displaying the authenticated user profile and settings.
@@ -23,11 +26,15 @@ import 'customer_edit_profile_screen.dart';
 class CustomerAccountScreen extends StatefulWidget {
   final AuthRepository? authRepository;
   final UserModel? initialUser;
+  final PointsNotifier? pointsNotifier;
+  final String currency;
 
   const CustomerAccountScreen({
     super.key,
     this.authRepository,
     this.initialUser,
+    this.pointsNotifier,
+    this.currency = AppConstants.defaultCurrency,
   });
 
   @override
@@ -56,6 +63,9 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
     );
   }
 
+  PointsNotifier? get _pointsNotifier =>
+      widget.pointsNotifier ?? CustomerScope.pointsNotifierOf(context);
+
   bool _isInitialized = false;
 
   @override
@@ -81,6 +91,7 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
     setState(() => _isLoading = true);
 
     final result = await _repository.getCurrentUser();
+    _pointsNotifier?.refresh();
 
     if (!mounted) return;
 
@@ -96,6 +107,7 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
     if (_isLoggingOut) return;
     setState(() => _isLoggingOut = true);
 
+    CustomerScope.maybeOf(context)?.cartNotifier.reset();
     await _repository.logout();
     if (context.mounted) {
       Navigator.of(
@@ -396,6 +408,11 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                             ),
                           ),
 
+                          const SizedBox(height: AppDimensions.spacingSm),
+
+                          // Loyalty Points Card
+                          _buildLoyaltyPointsCard(theme),
+
                           const SizedBox(height: AppDimensions.spacingMd),
 
                           // Sign Out Button
@@ -436,6 +453,159 @@ class _CustomerAccountScreenState extends State<CustomerAccountScreen> {
                 ),
               ),
       ),
+    );
+  }
+
+  Widget _buildLoyaltyPointsCard(ThemeData theme) {
+    final notifier = _pointsNotifier;
+    if (notifier == null) {
+      return Card(
+        key: const Key('account_loyalty_points_card'),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          side: const BorderSide(color: AppColors.borderSubtle),
+        ),
+        color: AppColors.surface,
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.spacingMd),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                ),
+                child: const Icon(
+                  Icons.stars_rounded,
+                  size: 24,
+                  color: Color(0xFFD97706),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.spacingSm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Loyalty Points', style: AppTextStyles.titleMedium),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Available Points: 0',
+                      key: const Key('account_points_balance_text'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFD97706),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListenableBuilder(
+      listenable: notifier,
+      builder: (context, _) {
+        final balance = notifier.balance;
+        final info = notifier.pointsInfo;
+        final monetaryVal = info?.monetaryValue ?? 0.0;
+        final rate = info?.pointsPerCurrencyUnit ?? 0.10;
+
+        return Card(
+          key: const Key('account_loyalty_points_card'),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            side: const BorderSide(color: AppColors.borderSubtle),
+          ),
+          color: AppColors.surface,
+          child: Padding(
+            padding: const EdgeInsets.all(AppDimensions.spacingMd),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF3C7),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMd,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.stars_rounded,
+                        size: 24,
+                        color: Color(0xFFD97706),
+                      ),
+                    ),
+                    const SizedBox(width: AppDimensions.spacingSm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Loyalty Points',
+                            style: AppTextStyles.titleMedium,
+                          ),
+                          const SizedBox(height: 2),
+                          if (notifier.isLoading && info == null)
+                            const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xFFD97706),
+                                ),
+                              ),
+                            )
+                          else
+                            Text(
+                              'Available Points: $balance',
+                              key: const Key('account_points_balance_text'),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFFD97706),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (balance > 0) ...[
+                  const SizedBox(height: AppDimensions.spacingSm),
+                  const Divider(height: 1),
+                  const SizedBox(height: AppDimensions.spacingSm),
+                  Text(
+                    'Worth ${monetaryVal.toStringAsFixed(2)} ${widget.currency} (1 pt = ${rate.toStringAsFixed(2)} ${widget.currency})',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Redeemable at checkout for discounts on eligible orders.',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textTertiary,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

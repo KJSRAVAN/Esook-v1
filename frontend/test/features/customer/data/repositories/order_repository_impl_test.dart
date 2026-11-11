@@ -362,5 +362,60 @@ void main() {
       expect(result.isFailure, isTrue);
       expect(result.failureOrNull?.message, contains('cannot be cancelled'));
     });
+
+    test('createOrder sends redeemPoints when provided in parameters', () async {
+      mockTransport.statusCode = 201;
+      mockTransport.responseBody = jsonEncode({
+        'order': {
+          'id': 'ord-pts-1',
+          'orderNumber': 'ESK-2026-PTS',
+          'customerId': 'usr-1',
+          'storeId': 'store-1',
+          'status': 'PENDING',
+          'fulfillment': 'DELIVERY',
+          'deliveryAddress': 'Building 4B, Riyadh',
+          'subtotal': 25.00,
+          'discount': 2.50,
+          'total': 22.50,
+          'redeemedPoints': 25,
+          'pointsDiscount': 2.50,
+          'items': [],
+        },
+      });
+
+      final result = await orderRepository.createOrder(
+        storeId: 'store-1',
+        fulfillment: FulfillmentType.delivery,
+        paymentMethod: PaymentMethod.cash,
+        deliveryAddress: 'Building 4B, Riyadh',
+        items: const [OrderItemInput(itemId: 'prod-1', quantity: 1)],
+        redeemPoints: 25,
+      );
+
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull?.redeemedPoints, equals(25));
+      expect(result.dataOrNull?.pointsDiscount, equals(2.50));
+
+      final decoded = jsonDecode(mockTransport.lastBody!) as Map<String, dynamic>;
+      expect(decoded['redeemPoints'], equals(25));
+    });
+
+    test('getStorePointsInfo retrieves config and balance and calculates monetaryValue', () async {
+      mockTransport.statusCode = 200;
+      mockTransport.responseBody = jsonEncode({
+        'isEnabled': true,
+        'pointsPerCurrencyUnit': 0.10,
+        'balance': 50,
+      });
+
+      final result = await orderRepository.getStorePointsInfo('store-1');
+
+      expect(result.isSuccess, isTrue);
+      final info = result.dataOrNull!;
+      expect(info.isEnabled, isTrue);
+      expect(info.balance, equals(50));
+      expect(info.pointsPerCurrencyUnit, equals(0.10));
+      expect(info.monetaryValue, equals(5.0)); // 50 * 0.10 = 5.0
+    });
   });
 }

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/auth_phone_helper.dart';
 import '../../../auth/presentation/widgets/auth_password_field.dart';
-import '../../../auth/presentation/widgets/auth_primary_button.dart';
 import '../../../auth/presentation/widgets/auth_text_field.dart';
 import '../../domain/models/admin_user_model.dart';
 import '../../domain/repositories/admin_drivers_repository.dart';
@@ -60,7 +60,8 @@ class _CreateDriverDialogState extends State<CreateDriverDialog> {
     setState(() => _isSubmitting = true);
 
     final name = _nameController.text.trim();
-    final phone = _phoneController.text.trim();
+    final phone = AuthPhoneHelper.normalizeAuthPhone(_phoneController.text) ??
+        _phoneController.text.trim();
     final password = _passwordController.text;
 
     final result = await widget.driversRepository.registerDriver(
@@ -201,8 +202,9 @@ class _CreateDriverDialogState extends State<CreateDriverDialog> {
                       if (val == null || val.trim().isEmpty) {
                         return 'Please enter phone number';
                       }
-                      if (val.trim().length < 8) {
-                        return 'Please enter a valid phone number';
+                      final normalized = AuthPhoneHelper.normalizeAuthPhone(val);
+                      if (normalized == null) {
+                        return 'Enter a valid international phone (e.g. +966501234567)';
                       }
                       return null;
                     },
@@ -254,14 +256,27 @@ class _CreateDriverDialogState extends State<CreateDriverDialog> {
                         child: const Text('Cancel'),
                       ),
                       const SizedBox(width: AppDimensions.spacingSm),
-                      SizedBox(
-                        width: 140,
-                        child: AuthPrimaryButton(
-                          key: const Key('submit_driver_button'),
-                          label: 'Create Driver',
-                          isLoading: _isSubmitting,
-                          onPressed: _handleSubmit,
+                      ElevatedButton(
+                        key: const Key('submit_driver_button'),
+                        onPressed: _isSubmitting ? null : _handleSubmit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEA580C),
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(0, AppDimensions.buttonHeight),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.spacingLg,
+                          ),
                         ),
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Text('Create Driver'),
                       ),
                     ],
                   ),

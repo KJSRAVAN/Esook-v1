@@ -15,6 +15,7 @@ import '../widgets/rider_scope.dart';
 import 'rider_account_screen.dart';
 import 'rider_active_order_screen.dart';
 import 'rider_available_orders_screen.dart';
+import 'rider_history_screen.dart';
 
 /// Main responsive navigation shell for the Rider (Delivery Driver) Portal.
 ///
@@ -22,9 +23,10 @@ import 'rider_available_orders_screen.dart';
 /// Tablet/Desktop (>= 720px): NavigationRail
 ///
 /// Tabs:
-/// 0 — Active Delivery
-/// 1 — Available Orders
-/// 2 — Account
+/// 0 — Available Orders (5s auto-polling)
+/// 1 — Active Delivery
+/// 2 — Delivery History
+/// 3 — Account
 class RiderShell extends StatefulWidget {
   final int initialIndex;
   final AuthRepository? authRepository;
@@ -61,6 +63,7 @@ class _RiderShellState extends State<RiderShell> {
     final apiClient = DefaultApiClient(
       baseUrl: config.apiBaseUrl,
       tokenProvider: () => secureStorage.read(key: StorageKeys.authToken),
+      secureStorage: secureStorage,
       timeout: config.connectTimeout,
     );
 
@@ -137,15 +140,23 @@ class _RiderShellState extends State<RiderShell> {
 
   Widget _buildMobileLayout() {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF8FAFC),
       body: IndexedStack(index: _currentIndex, children: _buildScreens()),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: _onTabSelected,
-        backgroundColor: AppColors.surface,
+        backgroundColor: Colors.white,
         elevation: 2,
         indicatorColor: const Color(0xFFFFF7ED),
         destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.list_alt_outlined),
+            selectedIcon: Icon(
+              Icons.list_alt_rounded,
+              color: Color(0xFFEA580C),
+            ),
+            label: 'Available',
+          ),
           NavigationDestination(
             icon: Icon(Icons.delivery_dining_outlined),
             selectedIcon: Icon(
@@ -155,12 +166,12 @@ class _RiderShellState extends State<RiderShell> {
             label: 'Active',
           ),
           NavigationDestination(
-            icon: Icon(Icons.list_alt_outlined),
+            icon: Icon(Icons.history_rounded),
             selectedIcon: Icon(
-              Icons.list_alt_rounded,
+              Icons.history_rounded,
               color: Color(0xFFEA580C),
             ),
-            label: 'Available',
+            label: 'History',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline_rounded),
@@ -174,14 +185,14 @@ class _RiderShellState extends State<RiderShell> {
 
   Widget _buildWideLayout() {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: const Color(0xFFF8FAFC),
       body: Row(
         children: [
           NavigationRail(
             selectedIndex: _currentIndex,
             onDestinationSelected: _onTabSelected,
             labelType: NavigationRailLabelType.all,
-            backgroundColor: AppColors.surface,
+            backgroundColor: Colors.white,
             indicatorColor: const Color(0xFFFFF7ED),
             leading: Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -192,7 +203,7 @@ class _RiderShellState extends State<RiderShell> {
                     height: 44,
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFF7ED),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: const Color(0xFFFED7AA)),
                     ),
                     child: const Icon(
@@ -201,10 +212,10 @@ class _RiderShellState extends State<RiderShell> {
                       size: 24,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   const Text(
-                    'eSOuQ Rider',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
+                    'ESOOK Driver',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11),
                   ),
                 ],
               ),
@@ -228,6 +239,14 @@ class _RiderShellState extends State<RiderShell> {
             ),
             destinations: const [
               NavigationRailDestination(
+                icon: Icon(Icons.list_alt_outlined),
+                selectedIcon: Icon(
+                  Icons.list_alt_rounded,
+                  color: Color(0xFFEA580C),
+                ),
+                label: Text('Available'),
+              ),
+              NavigationRailDestination(
                 icon: Icon(Icons.delivery_dining_outlined),
                 selectedIcon: Icon(
                   Icons.delivery_dining_rounded,
@@ -236,12 +255,12 @@ class _RiderShellState extends State<RiderShell> {
                 label: Text('Active'),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.list_alt_outlined),
+                icon: Icon(Icons.history_rounded),
                 selectedIcon: Icon(
-                  Icons.list_alt_rounded,
+                  Icons.history_rounded,
                   color: Color(0xFFEA580C),
                 ),
-                label: Text('Available'),
+                label: Text('History'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.person_outline_rounded),
@@ -253,7 +272,7 @@ class _RiderShellState extends State<RiderShell> {
               ),
             ],
           ),
-          const VerticalDivider(width: 1, thickness: 1),
+          const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE2E8F0)),
           Expanded(
             child: IndexedStack(
               index: _currentIndex,
@@ -267,22 +286,29 @@ class _RiderShellState extends State<RiderShell> {
 
   List<Widget> _buildScreens() {
     return [
+      RiderAvailableOrdersScreen(
+        riderRepository: _riderRepository,
+        isOnline: true,
+        onOrderAccepted: () {
+          _onTabSelected(1); // Switch to Active tab after accepting order
+        },
+      ),
       RiderActiveOrderScreen(
         riderRepository: _riderRepository,
         onOrderCompleted: () {
-          // After completing a delivery, rider may want to see available orders
+          _onTabSelected(2); // Switch to History tab on delivery completion
+        },
+        onBrowseAvailable: () {
+          _onTabSelected(0); // Switch to Available tab
         },
       ),
-      RiderAvailableOrdersScreen(
+      RiderHistoryScreen(
         riderRepository: _riderRepository,
-        onOrderAccepted: () {
-          // Switch to Active tab after accepting an order
-          _onTabSelected(0);
-        },
       ),
       RiderAccountScreen(
         authRepository: _authRepository,
         currentUser: _currentUser,
+        isOnline: true,
       ),
     ];
   }

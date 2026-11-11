@@ -666,6 +666,27 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                               ],
                             ),
                           ],
+                          if (_order.pointsDiscount > 0) ...[
+                            const SizedBox(height: 4.0),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  _order.redeemedPoints > 0
+                                      ? 'Points Discount (${_order.redeemedPoints} pts)'
+                                      : 'Points Discount',
+                                  style: AppTextStyles.bodyMedium,
+                                ),
+                                Text(
+                                  '-${_order.pointsDiscount.toStringAsFixed(2)} ${widget.currency}',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.success,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                           if (_order.deliveryFee > 0) ...[
                             const SizedBox(height: 4.0),
                             Row(

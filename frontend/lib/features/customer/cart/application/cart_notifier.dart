@@ -38,8 +38,22 @@ class CartNotifier extends ChangeNotifier {
   bool get hasUnavailableItems => _cart?.hasUnavailableItems ?? false;
 
   /// Returns whether a mutation is currently in-flight for a specific product.
-  bool isProductPending(String productId) =>
-      _pendingProductIds.contains(productId);
+  bool isProductPending(String productId) {
+    if (_pendingProductIds.contains(productId)) return true;
+    if (_cart != null) {
+      for (final item in _cart!.items) {
+        if (item.productId == productId &&
+            _pendingProductIds.contains(item.itemId)) {
+          return true;
+        }
+        if (item.itemId == productId &&
+            _pendingProductIds.contains(item.productId)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
   /// Helper to get the quantity of a specific product currently in the cart.
   int quantityForProduct(String productId) {
@@ -87,97 +101,131 @@ class CartNotifier extends ChangeNotifier {
   }
 
   /// Adds a product to the cart or increments its count.
-  Future<void> addItem(String productId, [int quantity = 1]) {
-    return _enqueueMutation(productId, (storeId) async {
-      final result = await _cartRepository.addItem(
-        itemId: productId,
-        productId: productId,
-        storeId: storeId,
-        quantity: quantity,
-      );
+  Future<void> addItem(String productId, [int quantity = 1, String? storeId]) {
+    if ((_currentStoreId == null || _currentStoreId!.isEmpty) &&
+        storeId != null &&
+        storeId.isNotEmpty) {
+      _currentStoreId = storeId;
+    }
+    return _enqueueMutation(
+      productId,
+      (targetStoreId) async {
+        final result = await _cartRepository.addItem(
+          itemId: productId,
+          productId: productId,
+          storeId: targetStoreId,
+          quantity: quantity,
+        );
 
-      result.fold(
-        onSuccess: (updatedCart) {
-          _cart = updatedCart;
-          _error = null;
-        },
-        onFailure: (failure) {
-          _error = failure;
-        },
-      );
-    });
+        result.fold(
+          onSuccess: (updatedCart) {
+            _cart = updatedCart;
+            if (updatedCart.storeId != null && updatedCart.storeId!.isNotEmpty) {
+              _currentStoreId = updatedCart.storeId;
+            }
+            _error = null;
+          },
+          onFailure: (failure) {
+            _error = failure;
+          },
+        );
+      },
+      fallbackStoreId: storeId,
+    );
   }
 
   /// Sets absolute quantity. If quantity <= 0, automatically routes to removeItem.
-  Future<void> setQuantity(String productId, int quantity) {
+  Future<void> setQuantity(String productId, int quantity, [String? storeId]) {
     if (quantity <= 0) {
-      return removeItem(productId);
+      return removeItem(productId, storeId);
     }
 
-    return _enqueueMutation(productId, (storeId) async {
-      final result = await _cartRepository.setItemQuantity(
-        itemId: productId,
-        productId: productId,
-        storeId: storeId,
-        quantity: quantity,
-      );
+    if ((_currentStoreId == null || _currentStoreId!.isEmpty) &&
+        storeId != null &&
+        storeId.isNotEmpty) {
+      _currentStoreId = storeId;
+    }
 
-      result.fold(
-        onSuccess: (updatedCart) {
-          _cart = updatedCart;
-          _error = null;
-        },
-        onFailure: (failure) {
-          _error = failure;
-        },
-      );
-    });
+    return _enqueueMutation(
+      productId,
+      (targetStoreId) async {
+        final result = await _cartRepository.setItemQuantity(
+          itemId: productId,
+          productId: productId,
+          storeId: targetStoreId,
+          quantity: quantity,
+        );
+
+        result.fold(
+          onSuccess: (updatedCart) {
+            _cart = updatedCart;
+            if (updatedCart.storeId != null && updatedCart.storeId!.isNotEmpty) {
+              _currentStoreId = updatedCart.storeId;
+            }
+            _error = null;
+          },
+          onFailure: (failure) {
+            _error = failure;
+          },
+        );
+      },
+      fallbackStoreId: storeId,
+    );
   }
 
   /// Removes an individual product from the cart.
-  Future<void> removeItem(String productId) {
-    return _enqueueMutation(productId, (storeId) async {
-      final result = await _cartRepository.removeItem(
-        itemId: productId,
-        productId: productId,
-        storeId: storeId,
-      );
+  Future<void> removeItem(String productId, [String? storeId]) {
+    if ((_currentStoreId == null || _currentStoreId!.isEmpty) &&
+        storeId != null &&
+        storeId.isNotEmpty) {
+      _currentStoreId = storeId;
+    }
 
-      result.fold(
-        onSuccess: (updatedCart) {
-          _cart = updatedCart;
-          _error = null;
-        },
-        onFailure: (failure) {
-          _error = failure;
-        },
-      );
-    });
+    return _enqueueMutation(
+      productId,
+      (targetStoreId) async {
+        final result = await _cartRepository.removeItem(
+          itemId: productId,
+          productId: productId,
+          storeId: targetStoreId,
+        );
+
+        result.fold(
+          onSuccess: (updatedCart) {
+            _cart = updatedCart;
+            if (updatedCart.storeId != null && updatedCart.storeId!.isNotEmpty) {
+              _currentStoreId = updatedCart.storeId;
+            }
+            _error = null;
+          },
+          onFailure: (failure) {
+            _error = failure;
+          },
+        );
+      },
+      fallbackStoreId: storeId,
+    );
   }
 
-  /// Clears all items from the active store cart.
+  /// Clears all items from the active customer cart.
   Future<void> clear() {
-    final storeId = _currentStoreId;
-    if (storeId == null || storeId.isEmpty) return Future.value();
-
     _isClearing = true;
     notifyListeners();
 
     final completer = Completer<void>();
     _mutationQueue = _mutationQueue.then((_) async {
       try {
+        final storeId = _currentStoreId ?? _cart?.storeId;
         final result = await _cartRepository.clearCart(storeId: storeId);
-        if (_currentStoreId == storeId) {
-          result.fold(
-            onSuccess: (clearedCart) {
-              _cart = clearedCart;
-              _error = null;
-            },
-            onFailure: (failure) {
-              _error = failure;
-            },
-          );
-        }
+        result.fold(
+          onSuccess: (clearedCart) {
+            _cart = clearedCart;
+            _error = null;
+          },
+          onFailure: (failure) {
+            _error = failure;
+          },
+        );
       } finally {
         _isClearing = false;
         notifyListeners();
@@ -188,16 +236,36 @@ class CartNotifier extends ChangeNotifier {
     return completer.future;
   }
 
+  /// Completely resets in-memory cart state (used on logout, account switch, or fresh start).
+  void reset() {
+    _cart = null;
+    _currentStoreId = null;
+    _error = null;
+    _isLoading = false;
+    _isClearing = false;
+    _pendingProductIds.clear();
+    notifyListeners();
+  }
+
   /// Enqueues an operation to run strictly sequentially after previous mutations finish.
   Future<void> _enqueueMutation(
     String productId,
-    Future<void> Function(String storeId) action,
-  ) {
-    final storeId = _currentStoreId;
+    Future<void> Function(String storeId) action, {
+    String? fallbackStoreId,
+  }) {
+    if ((_currentStoreId == null || _currentStoreId!.isEmpty) &&
+        fallbackStoreId != null &&
+        fallbackStoreId.isNotEmpty) {
+      _currentStoreId = fallbackStoreId;
+    }
+    final storeId = _currentStoreId ?? _cart?.storeId ?? fallbackStoreId;
     if (storeId == null || storeId.isEmpty) {
       _error = const ValidationFailure(message: 'No store currently selected.');
       notifyListeners();
       return Future.value();
+    }
+    if (_currentStoreId == null || _currentStoreId!.isEmpty) {
+      _currentStoreId = storeId;
     }
 
     _pendingProductIds.add(productId);
@@ -207,7 +275,7 @@ class CartNotifier extends ChangeNotifier {
 
     _mutationQueue = _mutationQueue.then((_) async {
       try {
-        if (_currentStoreId == storeId) {
+        if (_currentStoreId == storeId || _currentStoreId == null) {
           await action(storeId);
         }
       } finally {

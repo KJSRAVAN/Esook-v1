@@ -7,6 +7,7 @@ import '../../../customer/domain/models/product_model.dart';
 import '../../domain/models/store_category_model.dart';
 import '../../domain/repositories/store_categories_repository.dart';
 import '../../domain/repositories/store_products_repository.dart';
+import 'package:esouq/features/admin/presentation/widgets/admin_csv_import_dialog.dart';
 import '../widgets/create_product_dialog.dart';
 import '../widgets/edit_product_dialog.dart';
 import '../widgets/store_scope.dart';
@@ -94,50 +95,6 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
             productsRes.failureOrNull?.message ??
             'Failed to load store products';
       });
-    }
-  }
-
-  Future<void> _toggleProductAvailability(
-    ProductModel product,
-    bool newStatus,
-  ) async {
-    final storeId = _effectiveStoreId;
-    if (storeId == null) return;
-
-    final result = await _productsRepo.toggleAvailability(
-      storeId: storeId,
-      productId: product.id,
-      isAvailable: newStatus,
-    );
-
-    if (!mounted) return;
-
-    if (result.isSuccess) {
-      final updated = result.dataOrNull!;
-      setState(() {
-        _products = _products
-            .map((p) => p.id == updated.id ? updated : p)
-            .toList();
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${product.name} is now ${newStatus ? "Available" : "Unavailable"}',
-          ),
-          backgroundColor: newStatus
-              ? AppColors.success
-              : AppColors.textSecondary,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result.failureOrNull?.message ?? 'Failed to toggle availability',
-          ),
-          backgroundColor: AppColors.error,
-        ),
-      );
     }
   }
 
@@ -229,6 +186,25 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
       appBar: AppBar(
         title: const Text('Store Products'),
         actions: [
+          if (currentUser != null &&
+              (currentUser.role.isStoreManager || currentUser.role.isSuperAdmin))
+            IconButton(
+              key: const Key('store_products_import_csv_btn'),
+              icon: const Icon(Icons.upload_file_rounded),
+              tooltip: 'Bulk Import CSV',
+              onPressed: () async {
+                final storeId = _effectiveStoreId;
+                if (storeId == null) return;
+                final result = await AdminCsvImportDialog.show(
+                  context,
+                  storeId: storeId,
+                  productsRepository: _productsRepo,
+                );
+                if (result != null && mounted) {
+                  _loadProductsAndCategories();
+                }
+              },
+            ),
           IconButton(
             key: const Key('store_products_refresh_btn'),
             icon: const Icon(Icons.refresh_rounded),
@@ -491,13 +467,54 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                     ),
                   ],
                   const SizedBox(height: 4),
-                  Text(
-                    '${product.price.toStringAsFixed(2)} AED',
-                    style: AppTextStyles.labelLarge.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
+                  if (product.hasOffer) ...[
+                    Row(
+                      children: [
+                        Text(
+                          '${product.price.toStringAsFixed(2)} AED',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                        if (product.discountPercentage != null) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEE2E2),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '-${product.discountPercentage}%',
+                              style: const TextStyle(
+                                color: Color(0xFFDC2626),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                  ),
+                    Text(
+                      '${product.offerPrice!.toStringAsFixed(2)} AED',
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: const Color(0xFFDC2626),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ] else
+                    Text(
+                      '${product.price.toStringAsFixed(2)} AED',
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -531,30 +548,14 @@ class _StoreProductsScreenState extends State<StoreProductsScreen> {
                 ),
                 if (canManageProducts) ...[
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Inline Availability Toggle
-                      Transform.scale(
-                        scale: 0.8,
-                        child: Switch.adaptive(
-                          key: Key('product_toggle_${product.id}'),
-                          value: product.isAvailable,
-                          activeThumbColor: AppColors.primary,
-                          onChanged: (val) =>
-                              _toggleProductAvailability(product, val),
-                        ),
-                      ),
-                      // Edit Button
-                      IconButton(
-                        key: Key('product_edit_btn_${product.id}'),
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                        tooltip: 'Edit Product',
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        onPressed: () => _openEditProductDialog(product),
-                      ),
-                    ],
+                  // Edit Button (Availability is managed inside Edit Product dialog)
+                  IconButton(
+                    key: Key('product_edit_btn_${product.id}'),
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    tooltip: 'Edit Product',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => _openEditProductDialog(product),
                   ),
                 ],
               ],
